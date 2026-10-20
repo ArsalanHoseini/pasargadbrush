@@ -49,7 +49,7 @@ class Product extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(ProductCategory::class, 'category_product');
+        return $this->belongsToMany(ProductCategory::class, 'category_product', 'product_id', 'category_id');
     }
 
     public function variants(): HasMany
@@ -65,6 +65,11 @@ class Product extends Model
     public function quoteRequests(): HasMany
     {
         return $this->hasMany(QuoteRequest::class);
+    }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function ogImage(): BelongsTo

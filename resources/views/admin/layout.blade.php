@@ -14,6 +14,11 @@
                     <a href="{{ route('admin.dashboard') }}" class="font-semibold">پاسارگاد برس | مدیریت</a>
                     <a href="{{ route('admin.dashboard') }}" class="text-neutral-600 hover:text-neutral-900">داشبورد</a>
                     <a href="{{ route('admin.media.index') }}" class="text-neutral-600 hover:text-neutral-900">کتابخانه مدیا</a>
+                    <a href="{{ route('admin.categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی‌ها</a>
+                    <a href="{{ route('admin.products.index') }}" class="text-neutral-600 hover:text-neutral-900">محصولات</a>
+                    <a href="{{ route('admin.blog-categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی بلاگ</a>
+                    <a href="{{ route('admin.blog-posts.index') }}" class="text-neutral-600 hover:text-neutral-900">مقالات</a>
+                    <a href="{{ route('admin.import.index') }}" class="text-neutral-600 hover:text-neutral-900">ایمپورت وردپرس</a>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf

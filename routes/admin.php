@@ -1,8 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\Auth\LoginController;
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\ProductCategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\WordpressImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -17,4 +22,15 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+
+    Route::get('/import', [WordpressImportController::class, 'index'])->name('import.index');
+    Route::post('/import/{step}', [WordpressImportController::class, 'run'])->name('import.run');
+
+    Route::resource('categories', ProductCategoryController::class)
+        ->parameters(['categories' => 'product_category'])
+        ->except('show');
+
+    Route::resource('blog-categories', BlogCategoryController::class)->except('show');
+    Route::resource('blog-posts', BlogPostController::class)->except('show');
+    Route::resource('products', ProductController::class)->except('show');
 });

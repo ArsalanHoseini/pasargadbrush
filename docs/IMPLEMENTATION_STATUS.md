@@ -45,7 +45,7 @@ composer require laravel/boost --dev && php artisan boost:install
 
 ## Tests executed
 
-`php artisan test` — 13/13 passing (2 default + 6 admin-auth + 5 media-upload feature tests).
+`php artisan test` — 41/41 passing (2 default + 6 admin-auth + 5 media-upload + 11 WordPress-import + 5 category-management + 5 blog-management + 5 product-management + 2 upload-related). Two real bugs were caught by these tests while writing them (a wrong pivot foreign key, and `validated()` omitting absent keys) — see `docs/DECISIONS.md`.
 
 **Also manually verified against a real running server** (not just PHPUnit's in-process client): started `php artisan serve`, walked the full HTTP flow with `curl` (cookie jar, real CSRF tokens, a real generated JPEG) — login, dashboard, media library page, upload (confirmed thumbnail served back with HTTP 200, correct width/height extracted from the real file), delete (confirmed removed from both disk and DB). See `docs/DECISIONS.md` for a `php artisan serve` + multipart/`Expect: 100-continue` gotcha hit during this (environment quirk, not an app bug). No actual browser/screenshot was taken (no `chromium-cli`/Playwright available on this machine) — the RTL/Persian layout has not been visually eyeballed yet, only confirmed present in the rendered HTML.
 
@@ -72,6 +72,22 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - 5 feature tests (guest blocked, successful upload with correct metadata, non-image rejected, oversized rejected, delete removes DB+disk) — all passing.
 - Enabled the `public` storage symlink (`php artisan storage:link`).
 
+**WordPress import (owner-requested, pulled forward from Phase 9) — completed and run for real**
+- Read-only `wordpress` DB connection (`config/database.php`) pointed at the local WP copy (`pasargardbrush`) — never the live site.
+- Discovered via direct inspection (not assumed): WPML actually has full fa/ar/en product translations (not just installed); all 40 real products have **no price, SKU, or variations at all** in the source — confirms the entire migrated catalog is `type = quote`; `codevz-plus` is a WooCommerce page-layout plugin, not a pricing/inquiry mechanism. Full findings in `docs/WORDPRESS_MIGRATION.md`.
+- Built `app/Services/WordPressImport/{ProductCategoryImporter,ProductImporter,BlogCategoryImporter,BlogImporter,MediaCopier}.php` + 4 Artisan commands (`wp:import-*`, default dry-run, `--commit` to write, idempotent via `migration_mappings`).
+- **Actually run against the real local WP copy and committed**: 8 product categories, 40 products (with real categories + 102 real copied images), 4 blog categories, 42 published blog posts — all verified in the dev database, not just dry-run text.
+- 11 automated tests against a fixture SQLite "wordpress" connection (don't depend on the real local copy being present): dry-run writes nothing, commit persists correctly, idempotent re-run, parent-category resolution, image copying, language/status filtering.
+- Exposed in the admin dashboard at `/admin/import` (dry-run / real-run buttons per step + results log), per the owner's request to drive this from the UI.
+
+**Admin CRUD ("complete the dashboard" — owner-requested, pulled forward from Phase 6)**
+- Product categories (`/admin/categories`): list, create, edit, delete (blocked if it has products or child categories), parent hierarchy, SEO fields, Persian-safe slug auto-generation (`App\Support\PersianSlug` — `Str::slug()` mangles Persian to nothing, so this keeps Unicode letters and only normalizes punctuation/whitespace to dashes).
+- Products (`/admin/products`): list, create, edit, delete; quote-vs-priced type toggle (Alpine.js shows/hides the variants section); dynamic variant rows (add/remove, price entered in Toman and stored as Rial ×10); category (primary + secondary) and image-gallery pickers from the media library.
+- Blog categories and posts (`/admin/blog-categories`, `/admin/blog-posts`): list, create, edit, delete; featured-image picker from the media library; publish/draft toggle that sets/clears `published_at` correctly (doesn't reset the date on every re-save of an already-published post — caught and fixed via a test).
+- 15 feature tests covering all of the above (auth gating, slug generation, delete guards, variant sync including deletion of removed rows, image/category pivot sync, publish-date handling, uniqueness validation).
+- **Real bug caught and fixed during testing** (not just by inspection): `FormRequest::validated()`/`safe()` omits a key entirely when it's absent from the request, so `$data['slug']` threw `Undefined array key` whenever the slug field wasn't submitted — fixed everywhere with `($data['slug'] ?? null) ?: ...`.
+- Wired Alpine.js into `resources/js/app.js` (previously an empty placeholder) since the product form needed it for the dynamic variant rows.
+
 ## Next concrete step
 
-Move to Phase 3 (public design system + homepage) — real logo/product images can now be uploaded through `/admin/media` rather than scripted out of the WordPress export. Will check in before making brand/visual decisions (colors beyond the master prompt's stated direction, hero imagery choice, etc).
+Move to Phase 3 (public design system + homepage) — real logo/product images and the 40 imported products are now available to build real pages against, rather than placeholders. Will check in before making brand/visual decisions (colors beyond the master prompt's stated direction, hero imagery choice, etc). Remaining admin gaps (not blocking Phase 3): orders/customers management, settings, roles beyond the current admin/editor enum, SEO redirect management, quote-request inbox.

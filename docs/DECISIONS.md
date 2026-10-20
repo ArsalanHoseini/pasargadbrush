@@ -4,6 +4,39 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-20 — WordPress import reads the local DB directly, not export files
+
+**Decision:** Owner confirmed (when asked): import products/blog/categories by reading the local WordPress copy's database directly (`App\Services\WordPressImport\*` + a read-only `wordpress` Eloquent connection), not by uploading WXR/CSV export files through the admin.
+
+**Why:** Faster, more complete (real attachment files, exact category relationships), and repeatable/idempotent via `migration_mappings` — matches the master prompt's migration requirements better than one-off file uploads. Never touches the live site.
+
+---
+
+## 2026-10-20 — All migrated products are `type = quote`; no currency conversion needed
+
+**Decision:** Every one of the 40 real WooCommerce products was verified to have zero price, SKU, or variation data. All imports land as `requires_quote`/`type = quote`. The `priced` + `product_variants` machinery exists for products the owner adds going forward, not for anything migrated.
+
+**Why:** Verified directly against the data before writing the importer (`SELECT` across all 40 products for `_price`/`_regular_price`/`_sku`) rather than assuming — avoids guessing a Rial/Toman conversion where none is needed, and avoids fabricating prices that don't exist in the source.
+
+---
+
+## 2026-10-20 — Persian-safe slugs: custom helper, not `Str::slug()`
+
+**Decision:** Added `App\Support\PersianSlug::make()` — keeps Unicode letters/digits and only normalizes whitespace/punctuation to dashes.
+
+**Why:** Laravel's `Str::slug()` transliterates to ASCII, which mangles or empties Persian text. This also matches how the existing WordPress site's real Persian slugs are shaped, which matters for preserving URLs later.
+
+---
+
+## 2026-10-20 — Two real bugs caught by writing tests (not just by inspection)
+
+1. **`Product::categories()` / `ProductCategory::products()` belongsToMany** used the default guessed pivot foreign key (`product_category_id`) instead of the actual migration column name (`category_id`). Caught immediately when running the real product import (`--commit`) against the local WP copy — a live `QueryException`, not a test. Fixed by passing explicit pivot keys to `belongsToMany()`.
+2. **`FormRequest::validated()` / `->safe()->except()` omit a key entirely** when it wasn't present in the request at all (as opposed to present-but-empty) — `$data['slug']` then threw `Undefined array key` in every admin create/update controller that auto-generates a slug. Caught by a feature test that (correctly, like a minimal API client would) only submitted the fields it cared about. Fixed everywhere with `($data['slug'] ?? null) ?: ...`. Not a practical problem through the actual Blade forms (every text input is always rendered, so the key is always present, just possibly empty), but the code is now correct regardless of caller.
+
+**How to apply:** When adding a `belongsToMany` on a non-conventionally-named pivot table, always pass explicit foreign/related pivot key names — don't rely on Laravel's naming guess. When reading `validated()`/`safe()` for an optional field, access it with `??`, never direct array access.
+
+---
+
 ## 2026-10-20 — Enabled `pdo_sqlite`/`sqlite3` in the local PHP install
 
 **Decision:** Uncommented `extension=pdo_sqlite` and `extension=sqlite3` in `C:\laragon\bin\php\php-8.4.25-Win32-vs17-x64\php.ini`.

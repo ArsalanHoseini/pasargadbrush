@@ -64,6 +64,21 @@ return [
             ]) : [],
         ],
 
+        // Read-only access to the local WordPress copy used as the migration
+        // source (see docs/WORDPRESS_MIGRATION.md). Never written to.
+        'wordpress' => [
+            'driver' => 'mysql',
+            'host' => env('WP_DB_HOST', '127.0.0.1'),
+            'port' => env('WP_DB_PORT', '3306'),
+            'database' => env('WP_DB_DATABASE', 'pasargardbrush'),
+            'username' => env('WP_DB_USERNAME', 'root'),
+            'password' => env('WP_DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => env('WP_DB_PREFIX', 'wp_'),
+            'strict' => false,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
