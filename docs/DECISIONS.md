@@ -30,6 +30,20 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-20 — Admin media library (manual upload) built in Phase 2, ahead of Phase 6
+
+**Decision:** Built a working media library page (`/admin/media`) with manual upload/delete now, instead of waiting for the full Phase 6 admin dashboard.
+
+**Why:** Owner asked for the ability to upload files manually. It also unblocks Phase 3 (homepage/design) without having to script extraction from the WordPress media library for every asset — real logo/product photos can just be uploaded through the admin UI.
+
+**Security notes:** uploads are restricted to `jpg`/`jpeg`/`png`/`webp` — SVG is deliberately excluded (stored-XSS risk if ever rendered inline); stored filenames are always random (`Str::random(40)`), never the original filename; Laravel's `image` rule verifies real file content via `getimagesize`/finfo, not just the extension (verified with an automated test that renames a PHP file to `.jpg`-style multipart but keeps a non-image mime, which is correctly rejected). Max upload size 5 MB.
+
+**Verified (not just unit-tested):** ran the app for real with `php artisan serve` + a `curl` cookie-jar walkthrough (login → dashboard → media page → upload → confirm thumbnail serves with HTTP 200 → delete → confirm removed from disk and DB). No `chromium-cli`/Playwright was available on this Windows machine, so this was an HTTP-level verification, not a pixel screenshot — actual visual/RTL rendering in a real browser window still needs a human look before Phase 3 design work is called "verified," not just "implemented."
+
+**Gotcha found (environment, not app bug):** `php artisan serve`'s built-in PHP dev server mishandles `Expect: 100-continue`, which `curl` sends automatically once a multipart body exceeds ~1KB — this made multipart uploads appear to fail CSRF validation when tested via curl (`curl -H "Expect:"` fixes it). Confirmed this does not happen through PHPUnit's in-process test client (which is why the automated tests passed before this was even noticed) and does not affect real production servers (Nginx/PHP-FPM, Apache). Worth remembering if a future manual curl test of any file upload route mysteriously 419s.
+
+---
+
 ## 2026-10-20 — Owner confirmations: language, unrelated sites, payment, Torob
 
 **Decisions (owner-confirmed):**

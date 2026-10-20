@@ -7,6 +7,30 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-neutral-50 text-neutral-900 antialiased">
-    @yield('content')
+    @auth
+        <nav class="border-b border-neutral-200 bg-white px-6 py-3">
+            <div class="mx-auto flex max-w-5xl items-center justify-between">
+                <div class="flex items-center gap-6 text-sm">
+                    <a href="{{ route('admin.dashboard') }}" class="font-semibold">پاسارگاد برس | مدیریت</a>
+                    <a href="{{ route('admin.dashboard') }}" class="text-neutral-600 hover:text-neutral-900">داشبورد</a>
+                    <a href="{{ route('admin.media.index') }}" class="text-neutral-600 hover:text-neutral-900">کتابخانه مدیا</a>
+                </div>
+                <form method="POST" action="{{ route('admin.logout') }}">
+                    @csrf
+                    <button type="submit" class="text-sm text-neutral-600 hover:text-neutral-900">خروج</button>
+                </form>
+            </div>
+        </nav>
+    @endauth
+
+    <main class="mx-auto max-w-5xl px-6 py-8">
+        @if (session('status'))
+            <div class="mb-6 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @yield('content')
+    </main>
 </body>
 </html>

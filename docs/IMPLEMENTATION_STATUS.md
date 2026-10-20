@@ -45,7 +45,9 @@ composer require laravel/boost --dev && php artisan boost:install
 
 ## Tests executed
 
-`php artisan test` — 8/8 passing (2 default + 6 new admin-auth feature tests).
+`php artisan test` — 13/13 passing (2 default + 6 admin-auth + 5 media-upload feature tests).
+
+**Also manually verified against a real running server** (not just PHPUnit's in-process client): started `php artisan serve`, walked the full HTTP flow with `curl` (cookie jar, real CSRF tokens, a real generated JPEG) — login, dashboard, media library page, upload (confirmed thumbnail served back with HTTP 200, correct width/height extracted from the real file), delete (confirmed removed from both disk and DB). See `docs/DECISIONS.md` for a `php artisan serve` + multipart/`Expect: 100-continue` gotcha hit during this (environment quirk, not an app bug). No actual browser/screenshot was taken (no `chromium-cli`/Playwright available on this machine) — the RTL/Persian layout has not been visually eyeballed yet, only confirmed present in the rendered HTML.
 
 ## Known issues
 
@@ -64,6 +66,12 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 3. Payment gateway: Zarinpal now, extensible for more later.
 4. Torob: owner registers the merchant account themselves.
 
+**Media library (admin, manual upload) — added ahead of schedule at owner's request**
+- `/admin/media`: upload (image only: jpg/jpeg/png/webp, 5MB max, SVG deliberately excluded for XSS safety, random generated filenames, real content-type verified not just extension) + grid listing + delete (removes DB row and the file from disk).
+- `App\Actions\Media\StoreUploadedMedia` — reusable action, will be reused by product/blog image upload in later phases instead of duplicating upload handling.
+- 5 feature tests (guest blocked, successful upload with correct metadata, non-image rejected, oversized rejected, delete removes DB+disk) — all passing.
+- Enabled the `public` storage symlink (`php artisan storage:link`).
+
 ## Next concrete step
 
-Finish Phase 2 (factories/seeders for catalog data, `docs/ARCHITECTURE.md`), then move to Phase 3 (public design system + homepage) — which will need real logo/product images pulled from the local WordPress media library (`C:\laragon\www\pasargadbrush\wp-content\uploads`). Will check in before using specific brand assets.
+Move to Phase 3 (public design system + homepage) — real logo/product images can now be uploaded through `/admin/media` rather than scripted out of the WordPress export. Will check in before making brand/visual decisions (colors beyond the master prompt's stated direction, hero imagery choice, etc).
