@@ -4,6 +4,42 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-20 — Enabled `pdo_sqlite`/`sqlite3` in the local PHP install
+
+**Decision:** Uncommented `extension=pdo_sqlite` and `extension=sqlite3` in `C:\laragon\bin\php\php-8.4.25-Win32-vs17-x64\php.ini`.
+
+**Why:** `phpunit.xml` (Laravel default) runs the test suite against an in-memory SQLite database, isolated from the real MySQL dev database — this is the standard, fast, safe way to run Laravel tests and avoids any risk of tests touching `pasargadbrush_laravel`. The extension wasn't enabled by default on this machine.
+
+---
+
+## 2026-10-20 — Shared media library instead of per-entity image tables
+
+**Decision:** One `media` table + a polymorphic `mediables` pivot (role + sort_order), used by products, blog posts, pages, categories — instead of separate `product_images`, `blog_post_images`, etc.
+
+**Why:** Matches how the admin "media management" domain is supposed to work per the master prompt (upload once, reuse anywhere) and avoids duplicating the same upload-handling logic per entity.
+
+---
+
+## 2026-10-20 — Admin auth: hand-rolled, not a starter kit
+
+**Decision:** Built a minimal session-based login (`routes/admin.php`, `Admin\Auth\LoginController`, `EnsureUserIsAdminStaff` middleware) directly on Laravel's default `users` table + a `role` enum column (`admin`/`editor`), rather than installing Breeze/Jetstream.
+
+**Why:** The platform is meant to be custom-coded with its own design system; a starter kit's scaffolded Blade/Tailwind would just get replaced. Role check is a single enum for now — a full permissions package is deferred until real multi-role needs appear (not pre-built speculatively).
+
+**Follow-up:** `redirectGuestsTo()` in `bootstrap/app.php` currently always points to `admin.login`. Once Phase 5 adds customer-facing auth (storefront login for `priced` checkout), this needs to become guard-aware (admin guests → `admin.login`, storefront guests → the future customer login route).
+
+---
+
+## 2026-10-20 — Owner confirmations: language, unrelated sites, payment, Torob
+
+**Decisions (owner-confirmed):**
+- **Language:** site is single-language Persian for now; English may be added later. Build the schema/content model in a way that doesn't block adding a locale later (e.g. don't hardcode Persian strings into structured data that would need a schema change to translate), but **do not build a bilingual UI or WPML-style translation system now** — that's explicitly deferred.
+- **`parsbrush` / `parsbrush-new`:** confirmed unrelated to this project (a different site for the same client). Must not be touched, read from, or referenced by this project's migration work.
+- **Payment gateway:** Zarinpal is the target for now, with the possibility of adding other gateways later. Payment integration should go behind a small gateway abstraction (even if Zarinpal is the only implementation initially) rather than hardcoding Zarinpal calls throughout checkout code.
+- **Torob:** owner will handle merchant registration themselves. We build the feed/integration to be technically ready; no dependency on us for the registration step.
+
+---
+
 ## 2026-10-20 — Use the local WordPress copy as migration source, not live production
 
 **Decision:** Treat `C:\laragon\www\pasargadbrush` (local files) + local MySQL database `pasargardbrush` as the authoritative migration source, instead of connecting to the live cPanel account.

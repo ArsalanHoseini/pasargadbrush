@@ -21,6 +21,15 @@ Last updated: 2026-10-20
 - Installed `laravel/boost` (dev) per the Laravel skeleton's own agent-setup instructions — installation in progress/being verified.
 - Fixed environment issues: removed `@laravel/multiplex` optional dependency (triggered a known npm/Vite 8 arborist crash), upgraded global npm to 10.9.2, used `--legacy-peer-deps` for base install.
 
+**Phase 2 — Database and core architecture (in progress)**
+- Designed full schema in `docs/DATABASE_DESIGN.md` (catalog, hybrid quote/priced products, variants, attributes, shared media library, customers/addresses, cart/orders/payments, quote requests, blog/pages, SEO redirects, migration mappings, settings, audit logs). Currency convention fixed: integer Rial everywhere, Toman is display-only.
+- Created and ran 28 migrations against MySQL (`pasargadbrush_laravel`) — all applied cleanly.
+- Created Eloquent models for every table with real relationships (no bare stubs).
+- Added `role` (`admin`/`editor`) to `users`; admin session auth implemented by hand (not a starter kit): `routes/admin.php`, `Admin\Auth\LoginController`, `EnsureUserIsAdminStaff` middleware, minimal placeholder login/dashboard Blade views (RTL, real design comes in Phase 3/6).
+- `AdminUserSeeder` creates a local-only default admin (`admin@pasargadbrush.local` / `password` — **must be changed before any shared/staging deploy**).
+- 6 feature tests for admin auth (login page, successful login, failed login, guest blocked from dashboard, staff can access dashboard, logout) — all passing. Full suite: 8/8 passing.
+- Enabled `pdo_sqlite`/`sqlite3` PHP extensions (were disabled) so the test suite's in-memory SQLite database works, isolated from the real MySQL dev database.
+
 ## Commands executed (this session)
 
 ```
@@ -36,7 +45,7 @@ composer require laravel/boost --dev && php artisan boost:install
 
 ## Tests executed
 
-None yet — no application code written beyond the default Laravel skeleton. Test suite setup is a Phase 2 deliverable.
+`php artisan test` — 8/8 passing (2 default + 6 new admin-auth feature tests).
 
 ## Known issues
 
@@ -48,13 +57,13 @@ None yet — no application code written beyond the default Laravel skeleton. Te
 
 Everything from Phase 2 onward: database schema, auth/authorization, design system + homepage, catalog, cart/checkout, admin dashboard, blog/about/contact, Torob feed, WordPress data import commands, SEO implementation, testing, deployment docs.
 
-## Pending owner input (blocking further migration-specific work)
+## Resolved owner input (2026-10-20)
 
-1. Is the site genuinely bilingual (FA/EN), or was WPML installed but unused for a second language?
-2. Are `C:\laragon\www\parsbrush` / `parsbrush-new` related to this project or unrelated?
-3. Payment gateway preference for the priced/variant products (none confirmed; WooCommerce order history shows effectively no real transactions to infer from).
-4. Torob: register merchant account now, or defer entirely to a later phase?
+1. Persian-only for now (English maybe later — not built now).
+2. `parsbrush` / `parsbrush-new` confirmed unrelated — never touched.
+3. Payment gateway: Zarinpal now, extensible for more later.
+4. Torob: owner registers the merchant account themselves.
 
 ## Next concrete step
 
-Once the above is answered: finalize `docs/DATABASE_DESIGN.md` and `docs/ARCHITECTURE.md`, then start Phase 2 (migrations, auth, core models) while continuing WordPress content inspection (Elementor/Gravity Forms/Yoast data extraction) in parallel.
+Finish Phase 2 (factories/seeders for catalog data, `docs/ARCHITECTURE.md`), then move to Phase 3 (public design system + homepage) — which will need real logo/product images pulled from the local WordPress media library (`C:\laragon\www\pasargadbrush\wp-content\uploads`). Will check in before using specific brand assets.
