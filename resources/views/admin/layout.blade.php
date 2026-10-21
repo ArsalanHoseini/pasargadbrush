@@ -26,6 +26,8 @@
                             <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $newCount }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('admin.pages.index') }}" class="text-neutral-600 hover:text-neutral-900">صفحات ثابت</a>
+                    <a href="{{ route('admin.settings.edit') }}" class="text-neutral-600 hover:text-neutral-900">تنظیمات</a>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf

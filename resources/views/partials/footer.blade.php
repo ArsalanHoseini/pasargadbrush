@@ -13,6 +13,7 @@
                 <ul class="space-y-2 text-sm">
                     <li><a href="{{ route('home') }}" class="hover:text-white">صفحه اصلی</a></li>
                     <li><a href="{{ route('blog.index') }}" class="hover:text-white">مقالات</a></li>
+                    <li><a href="{{ route('pages.show', 'contact-us') }}" class="hover:text-white">تماس با ما</a></li>
                     @foreach ($navCategories ?? [] as $category)
                         <li><a href="{{ route('categories.show', $category['slug']) }}" class="hover:text-white">{{ $category['name'] }}</a></li>
                     @endforeach
@@ -34,6 +35,23 @@
                     </li>
                     <li class="text-neutral-400">{{ setting('contact_address') }}</li>
                 </ul>
+
+                @if (setting('social_instagram_url') || setting('social_telegram_url') || setting('social_linkedin_url') || setting('social_youtube_url'))
+                    <div class="mt-4 flex gap-3 text-xs">
+                        @if (setting('social_instagram_url'))
+                            <a href="{{ setting('social_instagram_url') }}" target="_blank" rel="noopener" class="hover:text-white">اینستاگرام</a>
+                        @endif
+                        @if (setting('social_telegram_url'))
+                            <a href="{{ setting('social_telegram_url') }}" target="_blank" rel="noopener" class="hover:text-white">تلگرام</a>
+                        @endif
+                        @if (setting('social_linkedin_url'))
+                            <a href="{{ setting('social_linkedin_url') }}" target="_blank" rel="noopener" class="hover:text-white">لینکدین</a>
+                        @endif
+                        @if (setting('social_youtube_url'))
+                            <a href="{{ setting('social_youtube_url') }}" target="_blank" rel="noopener" class="hover:text-white">یوتیوب</a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 

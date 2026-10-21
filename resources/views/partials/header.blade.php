@@ -25,7 +25,7 @@
             </div>
 
             <a href="{{ route('blog.index') }}" class="text-neutral-700 hover:text-neutral-950">مقالات</a>
-            <a href="#contact" class="text-neutral-700 hover:text-neutral-950">تماس با ما</a>
+            <a href="{{ route('pages.show', 'contact-us') }}" class="text-neutral-700 hover:text-neutral-950">تماس با ما</a>
         </nav>
 
         <form method="GET" action="{{ route('search.index') }}" class="hidden max-w-xs grow md:flex">

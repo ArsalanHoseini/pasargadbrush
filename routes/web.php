@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteRequestController;
@@ -20,3 +21,5 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('pages.show');
