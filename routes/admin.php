@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\QuoteRequestController;
 use App\Http\Controllers\Admin\WordpressImportController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +34,6 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::resource('blog-categories', BlogCategoryController::class)->except('show');
     Route::resource('blog-posts', BlogPostController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
+
+    Route::resource('quote-requests', QuoteRequestController::class)->only(['index', 'edit', 'update', 'destroy']);
 });

@@ -81,13 +81,14 @@
             @endif
 
             <div class="flex flex-wrap gap-3">
-                <a href="tel:{{ setting('contact_mobile') }}"
+                <a href="#quote-form"
                    class="rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
-                    درخواست قیمت و تماس
+                    درخواست استعلام قیمت
                 </a>
-                <a href="mailto:{{ setting('contact_email') }}?subject={{ rawurlencode('استعلام قیمت: '.$product->name) }}"
-                   class="rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-800 hover:border-neutral-500">
-                    ارسال ایمیل استعلام
+                <a href="tel:{{ setting('contact_mobile') }}"
+                   class="rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-800 hover:border-neutral-500"
+                   dir="ltr">
+                    {{ setting('contact_mobile') }}
                 </a>
             </div>
 
@@ -111,6 +112,10 @@
                 </div>
             @endif
         </div>
+    </div>
+
+    <div class="mt-12 max-w-xl">
+        <x-quote-request-form :product="$product" />
     </div>
 
     @if ($related->isNotEmpty())

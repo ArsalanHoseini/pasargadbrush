@@ -62,7 +62,7 @@ class PublicSiteTest extends TestCase
 
         $this->get(route('products.show', $product))
             ->assertOk()
-            ->assertSee('درخواست قیمت و تماس');
+            ->assertSee('درخواست استعلام قیمت');
     }
 
     public function test_inactive_product_returns_404(): void

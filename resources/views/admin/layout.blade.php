@@ -19,6 +19,13 @@
                     <a href="{{ route('admin.blog-categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی بلاگ</a>
                     <a href="{{ route('admin.blog-posts.index') }}" class="text-neutral-600 hover:text-neutral-900">مقالات</a>
                     <a href="{{ route('admin.import.index') }}" class="text-neutral-600 hover:text-neutral-900">ایمپورت وردپرس</a>
+                    <a href="{{ route('admin.quote-requests.index') }}" class="text-neutral-600 hover:text-neutral-900">
+                        درخواست‌های استعلام
+                        @php($newCount = \App\Models\QuoteRequest::where('status', 'new')->count())
+                        @if ($newCount > 0)
+                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $newCount }}</span>
+                        @endif
+                    </a>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
