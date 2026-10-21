@@ -2,7 +2,7 @@
 
 @section('title', $category->name)
 @section('meta_description', $category->meta_description ?? $category->name)
-@section('canonical', url()->current())
+@section('canonical', route('categories.show', $category))
 
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -17,8 +17,29 @@
         <p class="mb-8 max-w-2xl text-sm text-neutral-600">{{ $category->description }}</p>
     @endif
 
+    <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
+        <input type="search" name="q" value="{{ $search }}" placeholder="جستجو در این دسته…"
+               class="w-full max-w-xs rounded border border-neutral-300 px-3 py-2 text-sm sm:w-auto">
+        <select name="sort" onchange="this.form.submit()" class="rounded border border-neutral-300 px-3 py-2 text-sm">
+            <option value="newest" @selected($sort === 'newest')>جدیدترین</option>
+            <option value="name" @selected($sort === 'name')>نام (الف تا ی)</option>
+        </select>
+        <button type="submit" class="rounded border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50">اعمال</button>
+        @if ($search !== '' || $sort !== 'newest')
+            <a href="{{ route('categories.show', $category) }}" class="text-sm text-neutral-500 hover:text-neutral-800">
+                حذف فیلترها
+            </a>
+        @endif
+    </form>
+
     @if ($products->isEmpty())
-        <p class="text-sm text-neutral-500">محصولی در این دسته ثبت نشده است.</p>
+        <p class="text-sm text-neutral-500">
+            @if ($search !== '')
+                نتیجه‌ای برای «{{ $search }}» پیدا نشد.
+            @else
+                محصولی در این دسته ثبت نشده است.
+            @endif
+        </p>
     @else
         <p class="mb-6 text-xs text-neutral-500">{{ $products->total() }} محصول</p>
 

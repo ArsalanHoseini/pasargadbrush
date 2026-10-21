@@ -37,6 +37,10 @@ class StoreProductRequest extends FormRequest
             'image_ids' => ['array'],
             'image_ids.*' => ['exists:media,id'],
 
+            'specifications' => ['array'],
+            'specifications.*.key' => ['nullable', 'string', 'max:255'],
+            'specifications.*.value' => ['nullable', 'string', 'max:255'],
+
             'variants' => ['array'],
             'variants.*.id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'variants.*.label' => ['required_with:variants', 'string', 'max:255'],

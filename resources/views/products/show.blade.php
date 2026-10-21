@@ -96,6 +96,20 @@
                     {!! $product->description !!}
                 </div>
             @endif
+
+            @if (! empty($product->specifications))
+                <div class="mt-8 border-t border-neutral-100 pt-6">
+                    <h2 class="mb-3 text-sm font-bold text-neutral-900">مشخصات فنی</h2>
+                    <dl class="divide-y divide-neutral-100 text-sm">
+                        @foreach ($product->specifications as $key => $value)
+                            <div class="flex justify-between gap-4 py-2">
+                                <dt class="text-neutral-500">{{ $key }}</dt>
+                                <dd class="font-medium text-neutral-900">{{ $value }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </div>
+            @endif
         </div>
     </div>
 

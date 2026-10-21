@@ -4,6 +4,16 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-21 — Lesson: never round-trip Persian text through bash for manual admin testing
+
+**What happened:** While manually curl-testing the new admin "specifications" field against the real dev database, Persian form values were extracted from HTML via `grep`/`sed` under `LC_ALL=C` (needed for other reasons in the same pipeline). That silently corrupted the Persian bytes into literal `?` characters, which then got genuinely submitted and saved — overwriting a real imported product's `name` (and, as a side effect of `PersianSlug::make()` producing an empty string from `"???"`, its `slug`) with garbage, and separately wiped its category and image associations because the test request omitted `category_ids`/`image_ids`/`primary_category_id` (fields a real browser form always sends, even if empty) — the admin controller's "sync" methods correctly treat an omitted field as "clear this," which is correct behavior for a real form submission but dangerous for a hand-rolled partial test request.
+
+**Recovery:** Deleted the corrupted product + its `migration_mappings` row + orphaned pivot rows, then re-ran `php artisan wp:import-products --commit`, which is idempotent and recreated it correctly from the untouched WordPress source. Verified counts (40 products, 40 category links, 102 images) matched exactly before and after.
+
+**Rule going forward:** Automated tests (real PHP strings, no shell round-trip) are the right way to verify behavior involving Persian/non-ASCII data — several already exist and correctly proved this specific feature works before this incident. Manual `curl` against the real dev database is fine for structural checks (HTTP status, presence of elements, ASCII content) but must never be used to round-trip Persian form data, and any manual admin-form POST must include every field a real form would send (or expect fields to be cleared, by design).
+
+---
+
 ## 2026-10-21 — Never cache Eloquent models/Collections on the `database` cache driver
 
 **Decision:** `App\Models\Setting::get()` and the header/footer nav-categories composer (`AppServiceProvider`) now cache plain arrays of scalar values, never Eloquent models or Collections.

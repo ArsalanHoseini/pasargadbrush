@@ -92,6 +92,9 @@ class ProductController extends Controller
             'selectedCategoryIds' => $product->exists ? $product->categories->pluck('id')->all() : [],
             'selectedImageIds' => $product->exists ? $product->images->pluck('id')->all() : [],
             'variants' => $product->exists ? $product->variants()->orderBy('sort_order')->get() : collect(),
+            'specificationRows' => collect($product->specifications ?? [])
+                ->map(fn ($value, $key) => ['key' => $key, 'value' => $value])
+                ->values(),
         ]);
     }
 
@@ -100,12 +103,23 @@ class ProductController extends Controller
      */
     private function prepared(StoreProductRequest $request): array
     {
-        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants']);
+        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications']);
         $data['slug'] = ($data['slug'] ?? null) ?: PersianSlug::make($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active'] = $request->boolean('is_active');
+        $data['specifications'] = $this->specificationsFromRequest($request);
 
         return $data;
+    }
+
+    /** @return array<string, string>|null */
+    private function specificationsFromRequest(StoreProductRequest $request): ?array
+    {
+        $rows = collect($request->input('specifications', []))
+            ->filter(fn ($row) => filled($row['key'] ?? null) && filled($row['value'] ?? null))
+            ->mapWithKeys(fn ($row) => [$row['key'] => $row['value']]);
+
+        return $rows->isEmpty() ? null : $rows->all();
     }
 
     /** @param array<int, int|string> $categoryIds */

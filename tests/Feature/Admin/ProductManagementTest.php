@@ -93,6 +93,21 @@ class ProductManagementTest extends TestCase
         $this->assertCount(2, $product->images);
     }
 
+    public function test_specifications_are_saved_as_key_value_pairs_and_blanks_are_ignored(): void
+    {
+        $this->actingAs($this->staff())->post(route('admin.products.store'), [
+            'name' => 'محصول', 'sku' => 'SKU-500', 'type' => 'quote',
+            'specifications' => [
+                ['key' => 'قطر', 'value' => '۲۰ سانتی‌متر'],
+                ['key' => '', 'value' => ''],
+                ['key' => 'طول', 'value' => ''],
+            ],
+        ]);
+
+        $product = Product::first();
+        $this->assertSame(['قطر' => '۲۰ سانتی‌متر'], $product->specifications);
+    }
+
     public function test_sku_must_be_unique(): void
     {
         Product::create(['sku' => 'DUPLICATE', 'slug' => 'p1', 'name' => 'محصول یک', 'type' => 'quote']);

@@ -28,6 +28,11 @@
             <a href="#contact" class="text-neutral-700 hover:text-neutral-950">تماس با ما</a>
         </nav>
 
+        <form method="GET" action="{{ route('search.index') }}" class="hidden max-w-xs grow md:flex">
+            <input type="search" name="q" placeholder="جستجوی محصول…" value="{{ request('q') }}"
+                   class="w-full rounded-full border border-neutral-300 px-4 py-1.5 text-sm">
+        </form>
+
         <a href="tel:{{ setting('contact_mobile') }}"
            class="hidden shrink-0 items-center gap-2 rounded-full bg-brand-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 sm:flex"
            dir="ltr">

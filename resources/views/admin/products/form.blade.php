@@ -25,6 +25,7 @@
               'stock_quantity' => $v->stock_quantity,
               'is_default' => $v->is_default,
           ])->values())) }},
+          specifications: {{ json_encode(old('specifications', $specificationRows)) }},
       }">
     @csrf
     @if ($product->exists) @method('PUT') @endif
@@ -118,6 +119,38 @@
                 </label>
             </div>
         </div>
+    </div>
+
+    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-medium">مشخصات فنی</h2>
+            <button type="button" @click="specifications.push({key: '', value: ''})"
+                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                + افزودن مشخصه
+            </button>
+        </div>
+
+        <template x-if="specifications.length === 0">
+            <p class="text-sm text-neutral-500">مشخصه‌ای ثبت نشده است.</p>
+        </template>
+
+        <template x-for="(spec, index) in specifications" :key="index">
+            <div class="mb-2 flex items-end gap-3">
+                <div class="flex-1">
+                    <label class="mb-1 block text-xs text-neutral-500">عنوان (مثلاً قطر)</label>
+                    <input :name="`specifications[${index}][key]`" x-model="spec.key"
+                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                </div>
+                <div class="flex-1">
+                    <label class="mb-1 block text-xs text-neutral-500">مقدار (مثلاً ۲۰ سانتی‌متر)</label>
+                    <input :name="`specifications[${index}][value]`" x-model="spec.value"
+                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                </div>
+                <button type="button" @click="specifications.splice(index, 1)" class="text-xs text-red-600 hover:text-red-800">
+                    حذف
+                </button>
+            </div>
+        </template>
     </div>
 
     <div class="rounded-lg border border-neutral-200 bg-white p-6" x-show="type === 'priced'" x-cloak>
