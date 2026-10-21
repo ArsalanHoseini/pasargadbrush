@@ -4,6 +4,18 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-21 — About Us content: real, sourced verbatim, one inferred unit
+
+**Decision:** Seeded a real "About Us" page (`PagesSeeder`) using the owner-provided live URL (`https://pasargadbrush.com/about-us-2/`). The exact Persian wording was pulled from the local WordPress copy's `post_content` for page ID 8 ("درباره ما") — not paraphrased from the live page's rendered text — since WebFetch's quoting limit would have forced paraphrasing. Also copied the two real images referenced in that content (`pasargadbrush-group2-1024x739-1.jpg`, `بق-min-3.png`) into the media library.
+
+**One inferred detail, flagged rather than silently guessed:** the source content includes four stats with no stated unit ("110", "89", "97", "1000"). Two (110 product varieties, 1000 contracts) are clearly counts. The other two ("89 رضایتمندی مشتری", "97 تضمین کیفیت محصولات") read naturally as percentages given their labels (customer satisfaction, quality assurance) — rendered as `89٪` / `97٪`. These are the company's own authored numbers, not invented, but the % unit itself is an inference from context, not something explicitly labeled in the source; worth the owner double-checking.
+
+**Omitted, not fabricated:** the source page also has a customer-logo carousel (a dozen small unlabeled logo images) and animated counters that were broken on the live site itself ("product statistics... display as 0" per the live-site check). The logo carousel was skipped — the images have no real identifying alt text, so reproducing them would be decorative at best — rather than guessing which real companies they represent.
+
+**Contact Us page left unchanged:** also checked the owner-provided `https://pasargadbrush.com/contact-us/` URL against the already-seeded Contact Us page; the real contact widgets on that page are exactly the phone/email (already in `settings`) with no additional body copy, so no changes were needed there.
+
+---
+
 ## 2026-10-21 — Lesson: never round-trip Persian text through bash for manual admin testing
 
 **What happened:** While manually curl-testing the new admin "specifications" field against the real dev database, Persian form values were extracted from HTML via `grep`/`sed` under `LC_ALL=C` (needed for other reasons in the same pipeline). That silently corrupted the Persian bytes into literal `?` characters, which then got genuinely submitted and saved — overwriting a real imported product's `name` (and, as a side effect of `PersianSlug::make()` producing an empty string from `"???"`, its `slug`) with garbage, and separately wiped its category and image associations because the test request omitted `category_ids`/`image_ids`/`primary_category_id` (fields a real browser form always sends, even if empty) — the admin controller's "sync" methods correctly treat an omitted field as "clear this," which is correct behavior for a real form submission but dangerous for a hand-rolled partial test request.

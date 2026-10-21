@@ -25,6 +25,7 @@
             </div>
 
             <a href="{{ route('blog.index') }}" class="text-neutral-700 hover:text-neutral-950">مقالات</a>
+            <a href="{{ route('pages.show', 'about-us') }}" class="text-neutral-700 hover:text-neutral-950">درباره ما</a>
             <a href="{{ route('pages.show', 'contact-us') }}" class="text-neutral-700 hover:text-neutral-950">تماس با ما</a>
         </nav>
 

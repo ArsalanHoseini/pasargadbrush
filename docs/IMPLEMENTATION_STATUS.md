@@ -124,6 +124,14 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - 15 new tests (settings validation/update/cache-invalidation, page CRUD/slug/publish-state, public rendering of both templates, draft/unknown-slug 404s). Full suite 82/82 passing.
 - Manually verified end-to-end on a real running server (ASCII-only data per the established lesson): confirmed `/admin` itself still resolves correctly after adding the new page route (the exact risk called out above), settings update round-trips and invalidates the cache, contact page renders live settings data. The real settings I temporarily overwrote with ASCII test values during this verification were restored immediately afterward (re-ran `SettingsSeeder`, deleted the two fabricated test-only keys) — verified via a direct DB query that all values matched the pre-test state exactly.
 
+**About Us page populated with real content (completed)**
+- Owner provided the live URLs (`/about-us-2/`, `/contact-us/`) to source from. Pulled the exact Persian wording from the local WordPress copy's `post_content` (not a paraphrase) and copied the two real images it references into the media library. Full sourcing/inference notes in `docs/DECISIONS.md` (one unit — % — was inferred from context for two stats that had no explicit unit in the source; everything else is verbatim or a straight copy).
+- Deliberately omitted the source page's customer-logo carousel (unlabeled images, decorative value only) rather than guessing which real companies they represent.
+- Checked the real Contact Us page too — no body copy beyond the phone/email widgets already represented in `settings`, so nothing needed changing there.
+- Header/footer now link to the real About Us page.
+- `PagesSeeder` is idempotent (verified by running it twice — no duplicate media rows created).
+- Manually verified on a real running server: both real images serve with HTTP 200, page renders the real history/capabilities/industries/testimonial content.
+
 ## Next concrete step
 
-Remaining gaps, none blocking what's been built so far: landline phone number and social media URLs (owner can now add these themselves via `/admin/settings`, or tell me and I will), "About Us" page content (owner can write it via `/admin/pages`, or tell me what to put and I will), real SMTP credentials for production email delivery, cart/checkout/Zarinpal for `priced` products (none exist yet since all real products are quote-type — the rest of Phase 5), orders/customers admin, SEO redirect management.
+Remaining gaps, none blocking what's been built so far: landline phone number and social media URLs (owner can now add these themselves via `/admin/settings`, or tell me and I will), real SMTP credentials for production email delivery, cart/checkout/Zarinpal for `priced` products (none exist yet since all real products are quote-type — the rest of Phase 5), orders/customers admin, SEO redirect management.
