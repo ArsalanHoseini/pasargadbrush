@@ -4,6 +4,42 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-21 — Never cache Eloquent models/Collections on the `database` cache driver
+
+**Decision:** `App\Models\Setting::get()` and the header/footer nav-categories composer (`AppServiceProvider`) now cache plain arrays of scalar values, never Eloquent models or Collections.
+
+**Why (real bug, found while verifying the homepage against a live server, not by inspection):** Caching a `Collection` of `ProductCategory` models via `Cache::remember()`/`rememberForever()` on this app's `database` cache store corrupted on read-back — the first bug surfaced as `unserialize(): incomplete object` for a cached `Collection`, the second as `Attempt to read property "name" on string` for a cached `Collection` of models, even though the raw serialized value in the `cache` table's `value` column was well-formed PHP `serialize()` output. Root cause not fully isolated (likely an interaction between this Laravel version's database cache store and PHP object unserialization in this environment), but the fix is correct regardless of root cause: caching plain arrays is cheaper, has no coupling to model internals, and this is standard Laravel advice independent of this bug.
+
+**How to apply:** Any future `Cache::remember()` call must store scalars/arrays, never Eloquent models, Collections, or other objects with non-trivial internal state. If a model is needed after a cache hit, re-fetch it by id or re-hydrate from the cached array.
+
+---
+
+## 2026-10-21 — Real contact info confirmed by owner; one field still open
+
+**Decision:** Seeded (`SettingsSeeder`) and now live in the footer/contact sections: mobile `09174287445`, email `pbc_info@yahoo.com`, address «مرودشت، کیلومتر ۶۰ جاده شیراز-اصفهان، شهرک صنعتی انجیره مرودشت» — all owner-confirmed 2026-10-21, overriding earlier conflicting values found in the WordPress source (a second mobile number and a second address wording ("تخت جمشید") were found during migration and are now known to be wrong/outdated).
+
+**Open:** The landline/office phone number isn't in the local WordPress copy at all (checked DB and theme files — genuinely absent, meaning that local backup predates whatever added it to the live site) and displays with broken/reversed formatting even on the live site itself. No landline is in `settings` yet — asked the owner directly rather than guessing a real business's phone number. Add a `contact_landline` setting once confirmed.
+
+**Why real logo works:** Found and copied the actual brand logo from the local WordPress media library (`wp-content/uploads/2021/10/logo.png`) into `public/images/logo.png` — this is the real asset, not a placeholder.
+
+---
+
+## 2026-10-21 — Self-hosted Vazirmatn (Persian font), not a font CDN
+
+**Decision:** Installed the `vazirmatn` npm package and self-host 4 static weights (400/500/600/700, woff2) via `@font-face` in `app.css`, built by Vite. Removed the default Laravel skeleton's Bunny-Fonts-CDN "Instrument Sans" setup (`laravel-vite-plugin/fonts`) from `vite.config.js` entirely — it's irrelevant now that the site is Persian-first.
+
+**Why:** Reliable loading without a third-party font request at runtime (matches master prompt's "reliable loading behavior" requirement); a variable woff2 wasn't available in the installed package version, so static per-weight files are used instead (still small: ~200KB total for 4 weights).
+
+---
+
+## 2026-10-21 — Brand accent color taken from the real site, not invented
+
+**Decision:** `--color-brand-accent: #ff7700` (orange/gold) and `--color-brand-charcoal: #1d1d1d` in `app.css` `@theme`, matching the master prompt's "white background, charcoal text, restrained gold/yellow accent" direction.
+
+**Why:** These exact hex values were found in the live site's own Elementor widget settings (icon background/hover colors on the real contact page), not guessed — so the new site's accent color matches the existing brand rather than introducing an arbitrary new one.
+
+---
+
 ## 2026-10-20 — WordPress import reads the local DB directly, not export files
 
 **Decision:** Owner confirmed (when asked): import products/blog/categories by reading the local WordPress copy's database directly (`App\Services\WordPressImport\*` + a read-only `wordpress` Eloquent connection), not by uploading WXR/CSV export files through the admin.

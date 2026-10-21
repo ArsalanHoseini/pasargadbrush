@@ -6,9 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class ProductCategory extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget('nav.categories'));
+        static::deleted(fn () => Cache::forget('nav.categories'));
+    }
+
     protected $fillable = [
         'parent_id',
         'name',

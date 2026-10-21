@@ -17,7 +17,10 @@ class Setting extends Model
 
     public static function get(string $key, ?string $default = null): ?string
     {
-        return Cache::rememberForever('settings', fn () => static::query()->pluck('value', 'key'))
-            ->get($key, $default);
+        // Cache a plain array, not a Collection — caching objects is fragile across
+        // cache-driver (de)serialization boundaries.
+        $all = Cache::rememberForever('settings', fn () => static::query()->pluck('value', 'key')->all());
+
+        return $all[$key] ?? $default;
     }
 }
