@@ -19,9 +19,4 @@ class Cart extends Model
     {
         return $this->hasMany(CartItem::class);
     }
-
-    public function totalRial(): int
-    {
-        return $this->items->sum(fn (CartItem $item) => $item->quantity * $item->variant->price_rial);
-    }
 }

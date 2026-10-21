@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Services\Checkout;
+
+use App\Models\Cart;
+use App\Models\Customer;
+use App\Models\Order;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use RuntimeException;
+
+/**
+ * Creates a real order from a cart's live contents. Every price is read from
+ * the product variant at this moment — never from the cart or the request —
+ * so nothing submitted by the browser can affect what gets charged.
+ *
+ * Shipping cost is currently always 0: no real shipping-rate rules have been
+ * confirmed yet (flat rate? free over a threshold? carrier-calculated?) — see
+ * docs/DECISIONS.md. Do not invent a rate here.
+ */
+class PlaceOrder
+{
+    /**
+     * @param  array{name: string, phone: string, email: ?string, province: string, city: string, address_line: string, postal_code: ?string}  $details
+     */
+    public function handle(Cart $cart, array $details): Order
+    {
+        $cart->loadMissing('items.variant.product');
+
+        if ($cart->items->isEmpty()) {
+            throw new RuntimeException('Cannot place an order from an empty cart.');
+        }
+
+        return DB::transaction(function () use ($cart, $details) {
+            $customer = Customer::query()->updateOrCreate(
+                ['phone' => $details['phone']],
+                ['name' => $details['name'], 'email' => $details['email'] ?? null],
+            );
+
+            $address = $customer->addresses()->create([
+                'province' => $details['province'],
+                'city' => $details['city'],
+                'address_line' => $details['address_line'],
+                'postal_code' => $details['postal_code'] ?? null,
+                'recipient_name' => $details['name'],
+                'recipient_phone' => $details['phone'],
+            ]);
+
+            $subtotal = 0;
+            $lineItems = [];
+
+            foreach ($cart->items as $item) {
+                $variant = $item->variant;
+                $lineTotal = $variant->price_rial * $item->quantity;
+                $subtotal += $lineTotal;
+
+                $lineItems[] = [
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variant->id,
+                    'name_snapshot' => $variant->product->name.' — '.$variant->label,
+                    'sku_snapshot' => $variant->sku,
+                    'unit_price_rial' => $variant->price_rial,
+                    'quantity' => $item->quantity,
+                    'line_total_rial' => $lineTotal,
+                ];
+            }
+
+            $shippingCost = 0;
+
+            $order = $customer->orders()->create([
+                'order_number' => $this->generateOrderNumber(),
+                'status' => 'pending',
+                'payment_status' => 'unpaid',
+                'shipping_address_id' => $address->id,
+                'subtotal_rial' => $subtotal,
+                'shipping_cost_rial' => $shippingCost,
+                'total_rial' => $subtotal + $shippingCost,
+                'placed_at' => now(),
+            ]);
+
+            $order->items()->createMany($lineItems);
+
+            $cart->items()->delete();
+
+            return $order;
+        });
+    }
+
+    private function generateOrderNumber(): string
+    {
+        do {
+            $candidate = 'PB-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
+        } while (Order::query()->where('order_number', $candidate)->exists());
+
+        return $candidate;
+    }
+}

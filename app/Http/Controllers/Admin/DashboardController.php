@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\QuoteRequest;
@@ -18,6 +19,8 @@ class DashboardController extends Controller
             'categoryCount' => ProductCategory::count(),
             'newQuoteRequestCount' => QuoteRequest::where('status', 'new')->count(),
             'recentQuoteRequests' => QuoteRequest::with('product')->latest()->limit(5)->get(),
+            'pendingOrderCount' => Order::where('status', 'pending')->count(),
+            'recentOrders' => Order::with('customer')->latest('placed_at')->limit(5)->get(),
         ]);
     }
 }

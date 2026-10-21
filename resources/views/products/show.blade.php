@@ -66,31 +66,48 @@
             <p class="mb-4 text-xs text-neutral-500" dir="ltr">SKU: {{ $product->sku }}</p>
 
             @if ($product->type === 'priced' && $product->variants->isNotEmpty())
+                @if (session('status'))
+                    <div class="mb-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                        {{ session('status') }}
+                        <a href="{{ route('cart.show') }}" class="font-medium underline">مشاهده سبد خرید</a>
+                    </div>
+                @endif
+
                 <div class="mb-6 space-y-2">
                     @foreach ($product->variants as $variant)
-                        <div class="flex items-center justify-between rounded border border-neutral-200 px-4 py-3">
+                        <form method="POST" action="{{ route('cart.items.store') }}"
+                              class="flex flex-wrap items-center justify-between gap-3 rounded border border-neutral-200 px-4 py-3">
+                            @csrf
+                            <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
                             <span class="text-sm">{{ $variant->label }}</span>
-                            <span class="font-medium" dir="ltr">{{ \App\Support\Money::toman($variant->price_rial) }}</span>
-                        </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-medium" dir="ltr">{{ \App\Support\Money::toman($variant->price_rial) }}</span>
+                                <input type="number" name="quantity" value="1" min="1" max="1000"
+                                       class="w-16 rounded border border-neutral-300 px-2 py-1 text-sm" dir="ltr">
+                                <button type="submit" class="rounded-full bg-brand-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-accent-dark">
+                                    افزودن به سبد
+                                </button>
+                            </div>
+                        </form>
                     @endforeach
                 </div>
             @else
                 <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     این محصول بر اساس نیاز شما (ابعاد، تیراژ، مشخصات فنی) تولید می‌شود. برای استعلام قیمت با ما تماس بگیرید.
                 </div>
-            @endif
 
-            <div class="flex flex-wrap gap-3">
-                <a href="#quote-form"
-                   class="rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
-                    درخواست استعلام قیمت
-                </a>
-                <a href="tel:{{ setting('contact_mobile') }}"
-                   class="rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-800 hover:border-neutral-500"
-                   dir="ltr">
-                    {{ setting('contact_mobile') }}
-                </a>
-            </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="#quote-form"
+                       class="rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+                        درخواست استعلام قیمت
+                    </a>
+                    <a href="tel:{{ setting('contact_mobile') }}"
+                       class="rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-800 hover:border-neutral-500"
+                       dir="ltr">
+                        {{ setting('contact_mobile') }}
+                    </a>
+                </div>
+            @endif
 
             @if ($product->description)
                 <div class="article-content mt-8 border-t border-neutral-100 pt-6 text-sm leading-7 text-neutral-700">
@@ -114,9 +131,11 @@
         </div>
     </div>
 
-    <div class="mt-12 max-w-xl">
-        <x-quote-request-form :product="$product" />
-    </div>
+    @if ($product->type === 'quote')
+        <div class="mt-12 max-w-xl">
+            <x-quote-request-form :product="$product" />
+        </div>
+    @endif
 
     @if ($related->isNotEmpty())
         <div class="mt-16">

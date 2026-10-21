@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\ProductCategory;
+use App\Services\Cart\CartResolver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -40,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
             );
 
             $view->with('navCategories', $categories);
+        });
+
+        View::composer('partials.header', function ($view) {
+            // Per-visitor, never cached globally (that would leak one
+            // visitor's cart count to everyone).
+            $cart = app(CartResolver::class)->resolveForDisplay(request());
+            $view->with('cartItemCount', $cart ? $cart->items->sum('quantity') : 0);
         });
     }
 }

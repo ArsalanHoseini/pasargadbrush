@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
+
+        // Not sensitive (a random cart identifier, no PII) — skipping encryption
+        // avoids pointless crypto overhead on every request.
+        $middleware->encryptCookies(except: ['cart_token']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

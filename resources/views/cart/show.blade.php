@@ -1,0 +1,60 @@
+@extends('layouts.public')
+
+@section('title', 'سبد خرید')
+
+@section('content')
+<div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <h1 class="mb-6 text-2xl font-bold text-neutral-900">سبد خرید</h1>
+
+    @if (session('status'))
+        <div class="mb-6 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if (! $cart || $cart->items->isEmpty())
+        <p class="text-sm text-neutral-500">
+            سبد خرید شما خالی است. <a href="{{ route('home') }}" class="text-brand-accent-dark hover:underline">مشاهده محصولات</a>
+        </p>
+    @else
+        <div class="space-y-3">
+            @foreach ($cart->items as $item)
+                <div class="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4">
+                    <div>
+                        <p class="font-medium text-neutral-900">{{ $item->variant->product->name }}</p>
+                        <p class="text-xs text-neutral-500">{{ $item->variant->label }}</p>
+                        <p class="mt-1 text-sm" dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial) }}</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <form method="POST" action="{{ route('cart.items.update', $item) }}">
+                            @csrf @method('PATCH')
+                            <input type="number" name="quantity" value="{{ $item->quantity }}" min="0" max="1000"
+                                   onchange="this.form.submit()"
+                                   class="w-16 rounded border border-neutral-300 px-2 py-1 text-sm" dir="ltr">
+                        </form>
+                        <p class="w-28 text-left text-sm font-medium" dir="ltr">
+                            {{ \App\Support\Money::toman($item->variant->price_rial * $item->quantity) }}
+                        </p>
+                        <form method="POST" action="{{ route('cart.items.destroy', $item) }}"
+                              onsubmit="return confirm('حذف شود؟');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-xs text-red-600 hover:text-red-800">حذف</button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-6 flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <span class="font-medium">جمع کل</span>
+            <span class="text-lg font-bold" dir="ltr">{{ \App\Support\Money::toman($total) }}</span>
+        </div>
+
+        <a href="{{ route('checkout.create') }}"
+           class="mt-6 block w-full rounded-full bg-brand-accent px-6 py-3 text-center text-sm font-semibold text-white hover:bg-brand-accent-dark">
+            ادامه و تکمیل سفارش
+        </a>
+    @endif
+</div>
+@endsection

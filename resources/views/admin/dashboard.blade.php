@@ -18,6 +18,32 @@
         <p class="text-xs text-neutral-500">درخواست استعلام جدید</p>
         <p class="text-2xl font-bold {{ $newQuoteRequestCount > 0 ? 'text-brand-accent-dark' : '' }}">{{ $newQuoteRequestCount }}</p>
     </div>
+    <div class="rounded-lg border border-neutral-200 bg-white p-5">
+        <p class="text-xs text-neutral-500">سفارش‌های در انتظار</p>
+        <p class="text-2xl font-bold {{ $pendingOrderCount > 0 ? 'text-brand-accent-dark' : '' }}">{{ $pendingOrderCount }}</p>
+    </div>
+</div>
+
+<div class="mb-8 rounded-lg border border-neutral-200 bg-white p-5">
+    <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-medium">آخرین سفارش‌ها</h2>
+        <a href="{{ route('admin.orders.index') }}" class="text-sm text-brand-accent-dark hover:underline">مشاهده همه</a>
+    </div>
+
+    @if ($recentOrders->isEmpty())
+        <p class="text-sm text-neutral-500">هنوز سفارشی ثبت نشده است.</p>
+    @else
+        <ul class="divide-y divide-neutral-100 text-sm">
+            @foreach ($recentOrders as $order)
+                <li class="flex items-center justify-between py-2">
+                    <a href="{{ route('admin.orders.edit', $order) }}" class="hover:text-brand-accent-dark" dir="ltr">
+                        {{ $order->order_number }} — {{ $order->customer?->name }}
+                    </a>
+                    <span class="text-xs text-neutral-400" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</span>
+                </li>
+            @endforeach
+        </ul>
+    @endif
 </div>
 
 <div class="rounded-lg border border-neutral-200 bg-white p-5">

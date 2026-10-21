@@ -3,8 +3,10 @@
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
@@ -43,4 +45,7 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     Route::resource('pages', PageController::class)->except('show');
+
+    Route::resource('orders', OrderController::class)->only(['index', 'edit', 'update']);
+    Route::resource('customers', CustomerController::class)->only(['index', 'show']);
 });

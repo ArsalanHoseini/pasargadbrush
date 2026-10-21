@@ -4,6 +4,24 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-21 — Cart: cookie-based, lazy-created, never encrypted
+
+**Decision:** Guest cart identity is a long-lived (`cart_token`) cookie, independent of login/session — resolved via `App\Services\Cart\CartResolver`. The cookie is excluded from Laravel's cookie encryption (`bootstrap/app.php`: `encryptCookies(except: ['cart_token'])`) since it holds no PII, just a random identifier. A `Cart` row is only ever created when something is actually added (`resolveForWrite`); merely browsing with no cart (`resolveForDisplay`) never touches the database.
+
+**Real bug this surfaced, caught while writing tests (not by inspection):** Laravel's test client's `withCookie()` silently **encrypts** the value before sending, to simulate a real browser round-trip through `EncryptCookies` — this has nothing to do with the app's own `except` list, which only governs real HTTP traffic. Using `withCookie()` in tests for an intentionally-unencrypted cookie made every test see an empty cart, because the server tried to match a raw token against an encrypted blob. Fixed by using `withUnencryptedCookie()` instead, which exists specifically for this. Worth remembering for any future unencrypted-cookie feature.
+
+---
+
+## 2026-10-21 — No online payment yet; orders are "pending, we'll call you"
+
+**Decision:** Checkout creates a real `Order` (status `pending`, `payment_status` `unpaid`) and tells the customer "همکاران ما ... برای هماهنگی پرداخت و ارسال با شما تماس می‌گیرند" (our team will contact you to arrange payment and shipping). No Zarinpal (or any) payment gateway API call is made.
+
+**Why:** The owner wants Zarinpal eventually but we have no real merchant credentials — inventing an API integration without them would mean either fabricating credentials (never do this) or shipping a payment flow that can't actually charge anyone. The `payments` table/`Payment` model already exist and are ready for a real gateway service to be added later without reworking checkout; `docs/TOROB_INTEGRATION.md`-style "ready but not activated" pattern.
+
+**Shipping cost is always 0** for the same class of reason: no real shipping-rate rule (flat? free over a threshold? carrier-calculated?) has been confirmed. Don't invent one — `PlaceOrder::handle()` has a comment pointing back here.
+
+---
+
 ## 2026-10-21 — About Us content: real, sourced verbatim, one inferred unit
 
 **Decision:** Seeded a real "About Us" page (`PagesSeeder`) using the owner-provided live URL (`https://pasargadbrush.com/about-us-2/`). The exact Persian wording was pulled from the local WordPress copy's `post_content` for page ID 8 ("درباره ما") — not paraphrased from the live page's rendered text — since WebFetch's quoting limit would have forced paraphrasing. Also copied the two real images referenced in that content (`pasargadbrush-group2-1024x739-1.jpg`, `بق-min-3.png`) into the media library.

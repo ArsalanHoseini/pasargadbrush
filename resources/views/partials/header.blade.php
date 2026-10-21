@@ -34,6 +34,17 @@
                    class="w-full rounded-full border border-neutral-300 px-4 py-1.5 text-sm">
         </form>
 
+        <a href="{{ route('cart.show') }}" class="relative shrink-0 text-neutral-700 hover:text-neutral-950" aria-label="سبد خرید">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-1.5 7h11.5M9 20a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            @if ($cartItemCount > 0)
+                <span class="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-brand-accent text-[10px] text-white">
+                    {{ $cartItemCount }}
+                </span>
+            @endif
+        </a>
+
         <a href="tel:{{ setting('contact_mobile') }}"
            class="hidden shrink-0 items-center gap-2 rounded-full bg-brand-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 sm:flex"
            dir="ltr">

@@ -9,8 +9,8 @@
 <body class="bg-neutral-50 text-neutral-900 antialiased">
     @auth
         <nav class="border-b border-neutral-200 bg-white px-6 py-3">
-            <div class="mx-auto flex max-w-5xl items-center justify-between">
-                <div class="flex items-center gap-6 text-sm">
+            <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-2">
+                <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                     <a href="{{ route('admin.dashboard') }}" class="font-semibold">پاسارگاد برس | مدیریت</a>
                     <a href="{{ route('admin.dashboard') }}" class="text-neutral-600 hover:text-neutral-900">داشبورد</a>
                     <a href="{{ route('admin.media.index') }}" class="text-neutral-600 hover:text-neutral-900">کتابخانه مدیا</a>
@@ -26,6 +26,8 @@
                             <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $newCount }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('admin.orders.index') }}" class="text-neutral-600 hover:text-neutral-900">سفارش‌ها</a>
+                    <a href="{{ route('admin.customers.index') }}" class="text-neutral-600 hover:text-neutral-900">مشتریان</a>
                     <a href="{{ route('admin.pages.index') }}" class="text-neutral-600 hover:text-neutral-900">صفحات ثابت</a>
                     <a href="{{ route('admin.settings.edit') }}" class="text-neutral-600 hover:text-neutral-900">تنظیمات</a>
                 </div>
