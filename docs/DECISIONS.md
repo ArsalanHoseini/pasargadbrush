@@ -4,6 +4,23 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-22 — Real price list applied; fresher live DB/uploads supersede the old local copy
+
+**What the owner provided:** a fresh SQL dump of the real production database (`docs/h421876_pasargadbrush.sql`, generated 2026-10-22 — matches the real cPanel account name), a real company price list (`docs/لیست قیمت(1).pdf`), and a more complete/current `wp-content/uploads` folder (393MB, through 2026/09 — vs. the older local Duplicator copy's 254MB through 2023/24). All three are gitignored (`/docs/*.sql`, `/docs/uploads/`, `/docs/*.pdf`) — never committed.
+
+**Source switched:** `WP_DB_DATABASE` now points at `pasargadbrush_live` (the freshly imported dump) and `WP_UPLOADS_PATH` at the new uploads folder, superseding the old local Duplicator copy used since Phase 0. The old copy is untouched, just no longer the active source.
+
+**Price list applied via `php artisan wp:apply-owner-price-list --commit`** (idempotent, re-runnable — the actual mapping lives in code, not this doc, so it stays in sync): 7 existing products converted from `quote` to `priced` with real variant(s) from the PDF (one, "برس قالیشویی", got two variants — two real sizes on the sheet). Every mapping ambiguity was put to the owner before running, not guessed:
+- Two near-duplicate "برس مبل شو" products existed (same description, WP slugs differing by `-2`) — owner said deactivate one, price the other. Deactivated `WP-25072`, priced `WP-25110`.
+- "فرچه قالیشویی" (قطر ۳۸۰میلیمتر) vs "برس قالیشویی" (سیلندری ۹۰سانتیمتر) — owner confirmed these are two real sizes of the same product, not two products. Modeled as two variants on one product.
+- "برس اسب" and "برس اسپیندل" (on the price list but not in our catalog at all) — owner said create them now from the price list alone.
+
+**Real bug found while doing this, not fabricated around:** those last two products *do* exist on the live site (added Sept 2026, full real SEO content + real images) but have **zero rows in `wp_icl_translations`** — WPML never registered them, so the normal fa-language-filtered importer structurally cannot see them (confirmed: even their own `product_cat` terms are mis-registered as `element_type='comment'`). Rather than placeholder-creating these two products from price-list text alone, or hacking the general importer's WPML filter (which is correct and tested for the other 40), they're imported directly by known WordPress post ID inside `ApplyOwnerPriceList`, reusing the same `MediaCopier` the real importer uses — so they ended up with their actual article-length descriptions and real photos, not placeholders.
+
+**Found but not acted on without asking:** comparing our 40 originally-imported products against this fresh dump, two (`WP-25040` برس صنایع نساجی, `WP-25127` برس آبرنگ) no longer exist on the live site at all (hard-deleted, not just unpublished) — still active on our site. Asked the owner whether to deactivate these to match (see chat) rather than silently removing real catalog entries.
+
+---
+
 ## 2026-10-21 — Cart: cookie-based, lazy-created, never encrypted
 
 **Decision:** Guest cart identity is a long-lived (`cart_token`) cookie, independent of login/session — resolved via `App\Services\Cart\CartResolver`. The cookie is excluded from Laravel's cookie encryption (`bootstrap/app.php`: `encryptCookies(except: ['cart_token'])`) since it holds no PII, just a random identifier. A `Cart` row is only ever created when something is actually added (`resolveForWrite`); merely browsing with no cart (`resolveForDisplay`) never touches the database.

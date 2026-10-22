@@ -25,3 +25,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Raw WordPress migration source material (DB dumps, media, price lists) —
+# large/sensitive, never committed. Processed data lives in the real app DB.
+/docs/*.sql
+/docs/uploads/
+/docs/*.pdf
