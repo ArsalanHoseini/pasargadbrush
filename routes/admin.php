@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
@@ -38,6 +39,11 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::resource('blog-categories', BlogCategoryController::class)->except('show');
     Route::resource('blog-posts', BlogPostController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
+
+    Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::post('/comments/{comment}/approve', [CommentController::class, 'approve'])->name('comments.approve');
+    Route::post('/comments/{comment}/spam', [CommentController::class, 'spam'])->name('comments.spam');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::resource('quote-requests', QuoteRequestController::class)->only(['index', 'edit', 'update', 'destroy']);
 

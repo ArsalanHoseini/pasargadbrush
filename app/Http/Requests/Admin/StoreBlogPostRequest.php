@@ -26,9 +26,13 @@ class StoreBlogPostRequest extends FormRequest
             'excerpt' => ['nullable', 'string', 'max:500'],
             'body' => ['required', 'string'],
             'status' => ['required', 'in:draft,published'],
+            'featured' => ['nullable', 'boolean'],
+            'published_at' => ['nullable', 'date'],
+            'tags' => ['nullable', 'string', 'max:500'],
             'featured_media_id' => ['nullable', 'exists:media,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
+            'focus_keyword' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreBlogPostRequest;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Media;
+use App\Models\Tag;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -28,10 +29,11 @@ class BlogPostController extends Controller
     public function store(StoreBlogPostRequest $request): RedirectResponse
     {
         $data = $this->prepared($request);
-        $data['published_at'] = $data['status'] === 'published' ? now() : null;
+        $data['published_at'] = $data['status'] === 'published' ? ($data['published_at'] ?? now()) : null;
 
         $post = BlogPost::create($data);
         $this->syncFeaturedImage($post, $request->integer('featured_media_id') ?: null);
+        $this->syncTags($post, $request->string('tags')->toString());
 
         return redirect()->route('admin.blog-posts.index')->with('status', 'مقاله ایجاد شد.');
     }
@@ -45,16 +47,15 @@ class BlogPostController extends Controller
     {
         $data = $this->prepared($request);
 
-        if ($data['status'] === 'published' && ! $blogPost->published_at) {
-            $data['published_at'] = now();
-        } elseif ($data['status'] === 'draft') {
-            $data['published_at'] = null;
+        if ($data['status'] === 'published') {
+            $data['published_at'] = $data['published_at'] ?? $blogPost->published_at ?? now();
         } else {
-            unset($data['published_at']);
+            $data['published_at'] = null;
         }
 
         $blogPost->update($data);
         $this->syncFeaturedImage($blogPost, $request->integer('featured_media_id') ?: null);
+        $this->syncTags($blogPost, $request->string('tags')->toString());
 
         return redirect()->route('admin.blog-posts.index')->with('status', 'مقاله به‌روزرسانی شد.');
     }
@@ -73,6 +74,7 @@ class BlogPostController extends Controller
             'categories' => BlogCategory::query()->orderBy('name')->get(),
             'media' => Media::query()->latest()->limit(60)->get(),
             'currentFeaturedId' => $post->exists ? $post->featuredImage->first()?->id : null,
+            'currentTags' => $post->exists ? $post->tags->pluck('name')->implode('، ') : '',
         ]);
     }
 
@@ -81,10 +83,25 @@ class BlogPostController extends Controller
      */
     private function prepared(StoreBlogPostRequest $request): array
     {
-        $data = $request->safe()->except('featured_media_id');
+        $data = $request->safe()->except(['featured_media_id', 'tags']);
         $data['slug'] = ($data['slug'] ?? null) ?: PersianSlug::make($data['title']);
+        $data['featured'] = $request->boolean('featured');
 
         return $data;
+    }
+
+    private function syncTags(BlogPost $post, string $tagsInput): void
+    {
+        $names = array_filter(array_map('trim', preg_split('/[،,]/u', $tagsInput) ?: []));
+
+        $tagIds = collect($names)->map(function (string $name) {
+            return Tag::firstOrCreate(
+                ['slug' => PersianSlug::make($name)],
+                ['name' => $name],
+            )->id;
+        });
+
+        $post->tags()->sync($tagIds);
     }
 
     private function syncFeaturedImage(BlogPost $post, ?int $mediaId): void

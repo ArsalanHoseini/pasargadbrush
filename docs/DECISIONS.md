@@ -4,6 +4,27 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-22 — Blog module upgraded to feature parity; first "dashboard features, one by one" increment
+
+**Context:** Owner asked to start adding admin dashboard features incrementally, starting with rebuilding the blog module (referencing `D:\Utab\blog-module-sample`, a Next.js/Prisma project, for *what a complete blog has* — not for code, since the stack is unrelated). A follow-up landing-page builder (referencing `D:\Utab\LMS\lead-automation`, which **is** Laravel but uses a full DDD module architecture — Domain/Application/Infrastructure/Presentation layers with Livewire) is noted as a later increment; that architecture style doesn't match this project's plain MVC/Service conventions and won't be copied wholesale if/when built.
+
+**What shipped:**
+- Rich text editor for post bodies (`<x-rich-text-editor>` + `resources/js/app.js`'s `richTextEditor` Alpine component), replacing the plain `<textarea>`. **Library: Quill.js** (owner's explicit choice over TipTap/Trix) — lazy dynamic-imported so it never bloats the public-site JS bundle (confirmed via `npm run build`: it lands in its own ~200KB chunk, loaded only when the admin editor mounts).
+- Tags: the `tags`/`blog_post_tag` tables existed since Phase 2 but were never wired up. Admin form takes a comma-or-«،»-separated text input (no new JS tag-picker dependency); public post page links to a new tag-archive route (`/blog/tag/{tag:slug}`).
+- `featured` (bool): shown as a separate hero block above the regular grid on `/blog`, excluded from the grid itself.
+- `reading_time`: auto-computed on every save from word count (not an admin input) — 150 words/minute estimate. Backfilled for all 42 pre-existing imported posts via `BlogPost::all()->each->save()` (one-off tinker command, not a persisted Artisan command, since it's a single migration-time maintenance action, not a repeatable business operation).
+- `view_count`: incremented on each public post view.
+- `focus_keyword`: plain SEO-reference text field, stored only (matches the reference schema's own purpose — it doesn't drive any algorithm here either).
+- **Scheduled publishing implemented without a new status or a cron job:** exposed `published_at` as an editable datetime field; public queries now require `status = published AND published_at <= now()` (`BlogPost::scopePublished()`). Setting a future `published_at` on a "published" post makes it invisible until that moment, then visible automatically on the next page load — no scheduler/queue needed. This is a deliberate simplification vs. the reference project's separate `SCHEDULED` enum value + polling cron.
+- RSS feed at `/blog/feed.xml` (plain Blade-rendered XML, no new dependency).
+- **Comments, with moderation — owner's explicit choice** (over "no comments at all", given spam/support burden on a B2B industrial site): flat (no reply-threading) `comments` table, `status` enum `pending/approved/spam`, default `pending`. Public submission reuses the exact honeypot pattern already established for quote requests (`website` field, `prohibited` rule, CSS-hidden not `aria-hidden`) plus `throttle:5,1`. Admin moderation UI at `/admin/comments` mirrors the existing quote-requests status-tabs pattern, with a pending-count badge in the nav (same pattern as the quote-requests badge).
+
+**Not done, deliberately out of scope for this increment:** reply-threading on comments (the reference schema supports nested replies; flat is enough for a B2B site and avoids speculative complexity — YAGNI). Pages' (`/admin/pages`) editor still uses a plain textarea — the owner's request named the blog specifically; applying the same `<x-rich-text-editor>` component there is a trivial, low-risk follow-up but wasn't done without being asked, per "don't scope-creep beyond what was requested."
+
+**Tests:** `tests/Feature/BlogFeaturesTest.php`, `tests/Feature/BlogCommentTest.php`, `tests/Feature/Admin/CommentModerationTest.php` — 118/118 suite passing after this change, no regressions.
+
+---
+
 ## 2026-10-22 — Real price list applied; fresher live DB/uploads supersede the old local copy
 
 **What the owner provided:** a fresh SQL dump of the real production database (`docs/h421876_pasargadbrush.sql`, generated 2026-10-22 — matches the real cPanel account name), a real company price list (`docs/لیست قیمت(1).pdf`), and a more complete/current `wp-content/uploads` folder (393MB, through 2026/09 — vs. the older local Duplicator copy's 254MB through 2023/24). All three are gitignored (`/docs/*.sql`, `/docs/uploads/`, `/docs/*.pdf`) — never committed.

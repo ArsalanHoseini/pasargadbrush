@@ -1,11 +1,37 @@
 @extends('layouts.public')
 
-@section('title', 'مقالات')
+@section('title', isset($tag) ? 'مقالات با برچسب «'.$tag->name.'»' : 'مقالات')
 @section('meta_description', 'مقالات و راهنمای فنی برس و فرچه صنعتی')
 
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-    <h1 class="mb-8 text-2xl font-bold text-neutral-900">مقالات</h1>
+    <div class="mb-8 flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-neutral-900">
+            @isset($tag)
+                مقالات با برچسب «{{ $tag->name }}»
+            @else
+                مقالات
+            @endisset
+        </h1>
+        <a href="{{ route('blog.feed') }}" class="text-xs text-neutral-500 hover:text-brand-accent-dark">خوراک RSS</a>
+    </div>
+
+    @if (! empty($featured))
+        <a href="{{ route('blog.show', $featured) }}"
+           class="mb-8 flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-4 transition hover:shadow-md sm:flex-row">
+            <div class="aspect-video w-full overflow-hidden rounded bg-neutral-100 sm:w-72 sm:shrink-0">
+                @if ($featured->featuredImage->isNotEmpty())
+                    <img src="{{ $featured->featuredImage->first()->url() }}" alt="{{ $featured->title }}"
+                         class="h-full w-full object-cover" loading="lazy">
+                @endif
+            </div>
+            <div>
+                <p class="mb-1 text-xs font-semibold text-brand-accent-dark">مقاله ویژه</p>
+                <h2 class="mb-2 text-lg font-bold text-neutral-900">{{ $featured->title }}</h2>
+                <p class="text-sm text-neutral-600">{{ $featured->excerpt }}</p>
+            </div>
+        </a>
+    @endif
 
     @if ($posts->isEmpty())
         <p class="text-sm text-neutral-500">هنوز مقاله‌ای منتشر نشده است.</p>
@@ -23,7 +49,14 @@
                         <p class="mb-1 text-xs text-brand-accent-dark">{{ $post->category->name }}</p>
                     @endif
                     <h2 class="mb-1 text-sm font-medium text-neutral-900 group-hover:text-brand-accent-dark">{{ $post->title }}</h2>
-                    <p class="text-xs text-neutral-500">{{ $post->published_at?->format('Y-m-d') }}</p>
+                    <p class="mb-2 text-xs text-neutral-500">{{ $post->published_at?->format('Y-m-d') }} · {{ $post->reading_time }} دقیقه مطالعه</p>
+                    @if ($post->tags->isNotEmpty())
+                        <p class="text-xs text-neutral-400">
+                            @foreach ($post->tags->take(3) as $postTag)
+                                #{{ $postTag->name }}
+                            @endforeach
+                        </p>
+                    @endif
                 </a>
             @endforeach
         </div>

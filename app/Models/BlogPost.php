@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class BlogPost extends Model
@@ -17,15 +19,28 @@ class BlogPost extends Model
         'body',
         'author_id',
         'status',
+        'featured',
         'published_at',
+        'view_count',
+        'reading_time',
         'meta_title',
         'meta_description',
         'canonical_url',
+        'focus_keyword',
     ];
 
     protected $casts = [
+        'featured' => 'boolean',
         'published_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (BlogPost $post) {
+            $wordCount = count(array_filter(preg_split('/\s+/u', trim(strip_tags($post->body))) ?: []));
+            $post->reading_time = max(1, (int) round($wordCount / 150));
+        });
+    }
 
     public function category(): BelongsTo
     {
@@ -46,5 +61,20 @@ class BlogPost extends Model
     {
         return $this->morphToMany(Media::class, 'mediable', 'mediables')
             ->wherePivot('role', 'featured');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function approvedComments(): HasMany
+    {
+        return $this->comments()->where('status', 'approved')->oldest();
+    }
+
+    public function scopePublished(Builder $query): void
+    {
+        $query->where('status', 'published')->where('published_at', '<=', now());
     }
 }

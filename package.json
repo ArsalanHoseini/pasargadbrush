@@ -16,6 +16,7 @@
     "dependencies": {
         "alpinejs": "^3.17.4",
         "gsap": "^3.15.0",
+        "quill": "^2.0.3",
         "vazirmatn": "^33.0.3"
     }
 }

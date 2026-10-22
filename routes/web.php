@@ -3,6 +3,7 @@
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
@@ -22,7 +23,12 @@ Route::get('/categories/{category:slug}', [ProductCategoryController::class, 'sh
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed');
+Route::get('/blog/tag/{tag:slug}', [BlogController::class, 'tag'])->name('blog.tag');
 Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{post:slug}/comments', [CommentController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('blog.comments.store');
 
 Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('pages.show');
 

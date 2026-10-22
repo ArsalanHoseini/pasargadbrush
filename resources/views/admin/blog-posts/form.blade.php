@@ -52,15 +52,33 @@
         </div>
     </div>
 
+    <div class="flex gap-4">
+        <div class="flex-1">
+            <label class="mb-1 block text-sm font-medium">تاریخ انتشار (خالی = هم‌اکنون؛ تاریخ آینده = زمان‌بندی‌شده)</label>
+            <input type="datetime-local" name="published_at" dir="ltr"
+                   value="{{ old('published_at', $post->published_at?->format('Y-m-d\TH:i')) }}"
+                   class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+        </div>
+        <div class="flex items-center gap-2 pt-6">
+            <input type="checkbox" name="featured" id="featured" value="1" @checked(old('featured', $post->featured))>
+            <label for="featured" class="text-sm font-medium">مقاله ویژه</label>
+        </div>
+    </div>
+
     <div>
         <label class="mb-1 block text-sm font-medium">خلاصه</label>
         <textarea name="excerpt" rows="2" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('excerpt', $post->excerpt) }}</textarea>
     </div>
 
     <div>
+        <label class="mb-1 block text-sm font-medium">برچسب‌ها (با کاما یا «،» جدا کنید)</label>
+        <input name="tags" value="{{ old('tags', $currentTags) }}"
+               class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+    </div>
+
+    <div>
         <label class="mb-1 block text-sm font-medium">متن مقاله</label>
-        <textarea name="body" rows="12" required
-                  class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('body', $post->body) }}</textarea>
+        <x-rich-text-editor name="body" :value="old('body', $post->body)" />
     </div>
 
     <div>
@@ -95,6 +113,8 @@
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
             <textarea name="meta_description" rows="2" placeholder="توضیحات متا"
                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('meta_description', $post->meta_description) }}</textarea>
+            <input name="focus_keyword" value="{{ old('focus_keyword', $post->focus_keyword) }}" placeholder="کلمه کلیدی کانونی"
+                   class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
         </div>
     </div>
 

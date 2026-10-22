@@ -152,6 +152,18 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Manually verified on a real running server: the real horse-brush product page shows its real title, real content, real photo (HTTP 200), and the exact price from the PDF (۲,۴۰۰,۰۰۰ تومان).
 - **Found, not yet acted on:** comparing this fresh dump against our original import, 2 more products (`WP-25040` برس صنایع نساجی, `WP-25127` برس آبرنگ) were hard-deleted from the live site entirely but are still active on our site — asked the owner whether to deactivate these to match.
 
+**Blog module rebuilt to feature parity — first "dashboard features, one by one" increment (completed, 2026-10-22)**
+- Rich text editor (Quill.js, owner's choice) replaces the plain `<textarea>` for post bodies — lazy-loaded so it never reaches the public-site JS bundle.
+- Tags (table existed since Phase 2, never wired up): admin comma/«،»-separated input, public tag-archive page `/blog/tag/{slug}`.
+- `featured` flag — shown as a hero block on `/blog`, excluded from the regular grid.
+- `reading_time` (auto-computed on save from word count, backfilled for all 42 pre-existing posts), `view_count` (incremented per view), `focus_keyword` (SEO reference field).
+- Scheduled publishing with **no new status and no cron**: `published_at` is now an editable field; public queries require `published_at <= now()`, so a future date simply stays invisible until then.
+- RSS feed at `/blog/feed.xml`.
+- Comments with moderation (owner's explicit choice for this B2B site): flat structure, `pending/approved/spam`, same honeypot + throttle pattern as the existing quote-request form; admin moderation UI at `/admin/comments` mirrors the quote-requests status-tabs pattern, with a pending-count nav badge.
+- Deliberately not done this round: comment reply-threading (YAGNI for a B2B site), rich-text editor on the static-pages admin form (only the blog was asked for; trivial follow-up if wanted).
+- 15 new tests (`BlogFeaturesTest`, `BlogCommentTest`, `Admin/CommentModerationTest`). Full suite 118/118 passing. Verified for real: dev server smoke-check of `/blog`, `/blog/feed.xml` (real RSS content type + real post titles), and `npm run build` confirms Quill lands in its own lazy chunk, not the main bundle.
+- Full reasoning and scope judgment calls in `docs/DECISIONS.md`.
+
 ## Next concrete step
 
-Awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.
+Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

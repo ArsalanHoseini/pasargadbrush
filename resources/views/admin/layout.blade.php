@@ -18,6 +18,13 @@
                     <a href="{{ route('admin.products.index') }}" class="text-neutral-600 hover:text-neutral-900">محصولات</a>
                     <a href="{{ route('admin.blog-categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی بلاگ</a>
                     <a href="{{ route('admin.blog-posts.index') }}" class="text-neutral-600 hover:text-neutral-900">مقالات</a>
+                    <a href="{{ route('admin.comments.index') }}" class="text-neutral-600 hover:text-neutral-900">
+                        دیدگاه‌ها
+                        @php($pendingCommentCount = \App\Models\Comment::where('status', 'pending')->count())
+                        @if ($pendingCommentCount > 0)
+                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $pendingCommentCount }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.import.index') }}" class="text-neutral-600 hover:text-neutral-900">ایمپورت وردپرس</a>
                     <a href="{{ route('admin.quote-requests.index') }}" class="text-neutral-600 hover:text-neutral-900">
                         درخواست‌های استعلام
