@@ -4,6 +4,16 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-24 — Homepage polish pass: cleaner hero collage, SEO copy for "برس پاسارگاد" / "خرید برس" / "خرید فرچه"
+
+**Why:** Owner's first pass feedback — the hero still didn't feel professional/responsive enough, and asked for SEO-targeted copy around the brand name and the two core purchase-intent phrases.
+
+**Visual changes:** Replaced the uneven 4-tile mosaic (irregular negative margins, risk of odd clipping on narrow screens) with a simpler, genuinely responsive 2-column flex collage (one large + two stacked images, percentage-based, degrades to a single image if fewer than 3 real product photos exist, hides entirely if none do). Added a soft accent-colored radial glow behind the hero text, a two-line headline treatment (brand name on its own accent-colored line), an arrow micro-interaction on the primary CTA, and made the diagonal section divider responsive (`h-8 sm:h-12`) instead of a fixed height that was proportionally too heavy on small screens.
+
+**SEO copy — all built from facts already sourced for the About Us page, nothing new invented:** `<title>`/meta description rewritten to include "خرید برس" / "خرید فرچه" / "برس پاسارگاد" naturally; the H1 now leads with "برس پاسارگاد"; the hero paragraph and primary CTA button both use "خرید برس" / "خرید فرچه" as real, clickable anchor text (not just invisible meta stuffing); added one short, genuine on-page paragraph block (with its own CTA, not just filler) repeating the founding year/company name naturally. Verified by curl that these phrases appear a handful of times each in the rendered body — natural density, not keyword-stuffed.
+
+---
+
 ## 2026-10-24 — Homepage redesign: "industrial-premium" direction, GSAP wired in for the first time
 
 **Scope (owner-confirmed):** homepage only for this pass — category/product/blog listing pages, cart/checkout, and the admin panel are untouched and still use the original plain styling. Visual direction chosen by the owner from three concrete options: **industrial-premium** (dark charcoal hero, bold typography, real product photography) over "editorial-minimal" and "technical/spec-sheet". Animation level: "moderate and professional" — subtle scroll-reveals and a counter animation, not showy/heavy motion.
