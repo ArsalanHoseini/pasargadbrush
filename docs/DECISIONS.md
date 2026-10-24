@@ -4,6 +4,20 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-24 — Homepage redesign: "industrial-premium" direction, GSAP wired in for the first time
+
+**Scope (owner-confirmed):** homepage only for this pass — category/product/blog listing pages, cart/checkout, and the admin panel are untouched and still use the original plain styling. Visual direction chosen by the owner from three concrete options: **industrial-premium** (dark charcoal hero, bold typography, real product photography) over "editorial-minimal" and "technical/spec-sheet". Animation level: "moderate and professional" — subtle scroll-reveals and a counter animation, not showy/heavy motion.
+
+**What changed:**
+- New dark hero (`--color-brand-charcoal-deep`, a faint dot-grid texture via `.bg-grid-industrial`, a diagonal `clip-path` divider into the next section) with a real-product-photo mosaic (reuses images already loaded by `HomeController` — no new asset pipeline).
+- A stats strip using **real, already-sourced facts** from the owner-provided About Us content (`database/seeders/PagesSeeder.php`): founded ۱۳۷۴, ۱۱۰+ product varieties, ۱۰۰۰+ successful contracts, ۹۷٪ quality guarantee. Nothing here is invented — same numbers already live on `/page/about-us`.
+- Category/product/blog cards upgraded (lift-on-hover, accent top-border reveal, consistent shadow) without changing the underlying grid/data.
+- **GSAP is now actually used** (it was an installed-but-dead dependency since Phase 1): a small lazy-loaded scroll-reveal (`[data-animate]`) and count-up (`[data-counter]`) system in `resources/js/app.js`, imported dynamically so it doesn't block first paint and is skipped entirely under `prefers-reduced-motion: reduce`. Confirmed via `npm run build` that `gsap`/`ScrollTrigger` land in their own chunks, same lazy pattern already used for Quill.
+
+**Verification caveat — be transparent about this:** no in-session browser/screenshot tool was available, so this was verified via `php artisan serve` + `curl` (HTTP 200, expected markup present, no server errors in the log) and the full test suite (118/118), **not** by actually looking at the rendered page in a browser. A real visual check by a human is still needed before calling this "done" — per the project's own UI-verification rule.
+
+---
+
 ## 2026-10-22 — Blog module upgraded to feature parity; first "dashboard features, one by one" increment
 
 **Context:** Owner asked to start adding admin dashboard features incrementally, starting with rebuilding the blog module (referencing `D:\Utab\blog-module-sample`, a Next.js/Prisma project, for *what a complete blog has* — not for code, since the stack is unrelated). A follow-up landing-page builder (referencing `D:\Utab\LMS\lead-automation`, which **is** Laravel but uses a full DDD module architecture — Domain/Application/Infrastructure/Presentation layers with Livewire) is noted as a later increment; that architecture style doesn't match this project's plain MVC/Service conventions and won't be copied wholesale if/when built.

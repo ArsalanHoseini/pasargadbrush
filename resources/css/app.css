@@ -43,8 +43,21 @@
        existing site's own real styling (contact-widget icon colors on the
        live site), not invented. */
     --color-brand-charcoal: #1d1d1d;
+    --color-brand-charcoal-deep: #121212;
+    --color-brand-steel: #2a2f36;
     --color-brand-accent: #ff7700;
     --color-brand-accent-dark: #d85f00;
+}
+
+/* Faint industrial dot-grid texture, used on dark hero sections for depth
+   without needing a photographic background. */
+.bg-grid-industrial {
+    background-image: radial-gradient(circle, color-mix(in srgb, white 14%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+[data-animate] {
+    will-change: transform, opacity;
 }
 
 [x-cloak] {
