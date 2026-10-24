@@ -115,8 +115,13 @@
                 </label>
                 <label class="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false))>
-                    محصول ویژه
+                    محصول ویژه (نمایش در صفحه اصلی)
                 </label>
+            </div>
+            <div class="w-32">
+                <label class="mb-1 block text-sm font-medium">ترتیب نمایش</label>
+                <input type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order ?? 0) }}"
+                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm" dir="ltr">
             </div>
         </div>
     </div>

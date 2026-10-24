@@ -37,6 +37,21 @@ class ProductManagementTest extends TestCase
         $this->assertNotNull($product->published_at);
     }
 
+    public function test_staff_can_mark_a_product_featured_with_a_sort_order(): void
+    {
+        $this->actingAs($this->staff())->post(route('admin.products.store'), [
+            'name' => 'برس تست',
+            'sku' => 'SKU-150',
+            'type' => 'quote',
+            'is_featured' => '1',
+            'sort_order' => '3',
+        ])->assertRedirect();
+
+        $product = Product::first();
+        $this->assertTrue($product->is_featured);
+        $this->assertSame(3, $product->sort_order);
+    }
+
     public function test_staff_can_create_a_priced_product_with_variants(): void
     {
         $this->actingAs($this->staff())->post(route('admin.products.store'), [

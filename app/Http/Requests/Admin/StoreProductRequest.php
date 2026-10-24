@@ -32,6 +32,7 @@ class StoreProductRequest extends FormRequest
             'stock_status' => ['nullable', 'in:in_stock,out_of_stock,made_to_order'],
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
+            'sort_order' => ['nullable', 'integer'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'image_ids' => ['array'],

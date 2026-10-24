@@ -4,6 +4,22 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-24 — Homepage products are now an owner-curated list, not "latest 8"
+
+**Decision:** Owner gave a specific ordered list of 18 product names to show on the homepage. Rather than hardcoding a list of IDs in the view/controller, used the `is_featured` + `sort_order` columns that already existed on `products` (migrated in Phase 2, model-fillable, even already half-wired into the admin form's `is_featured` checkbox) but were never actually used anywhere — `HomeController` used to just show the 8 most-recently-published active products. Now it queries `is_active && is_featured`, ordered by `sort_order`, capped at 24 as a sane safety limit (today: exactly 16).
+
+**Added the missing piece:** a `sort_order` number input in the admin product form (`sort_order` was already a real column/fillable field with zero UI to edit it) — so the owner can reorder or swap which products are featured later without needing a code change or a request to me. Relabeled the existing "محصول ویژه" checkbox to "محصول ویژه (نمایش در صفحه اصلی)" since it now actually does something.
+
+**Matching the owner's 18 names to real SKUs — 3 were ambiguous, asked rather than guessed (see `App\Console\Commands\SetHomepageFeaturedProducts`):**
+- "دستگاه برس چمن مصنوعی" has no matching product; owner confirmed it means the existing "برس چمن مصنوعی" (no new/duplicate entry).
+- "فرچه سورتینگ" was ambiguous between two real products ("برس سورتینگ خرما" and "برس سورتینگ مرکبات"); owner picked صرفاً مرکبات.
+- "فرچه قالیشویی" is not a separate product at all — per the 2026-10-22 price-list decision, it's already modeled as a second *variant* on "برس قالیشویی", not its own row; owner confirmed that's sufficient.
+- Net result: 18 requested names → 16 distinct real products (two names map to products already covered by another name on the list).
+
+**Idempotent, like `ApplyOwnerPriceList`:** `php artisan wp:set-homepage-featured-products --commit` sets `is_featured=true`/`sort_order` for exactly these 16 SKUs (by SKU, not name, so re-running is safe) and un-features anything previously featured but no longer on the list. Dry-run by default.
+
+---
+
 ## 2026-10-24 — Removed the "دسته‌بندی محصولات" (categories) grid section from the homepage
 
 **Decision:** Owner asked to remove this section entirely. The hero's and SEO block's primary CTAs, which used to scroll to `#categories`, now scroll to `#products` (the Featured Products grid, given an `id` for this) instead. `HomeController` no longer queries `ProductCategory` at all (it was only used by this section) — one less query per homepage load.

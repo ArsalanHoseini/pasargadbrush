@@ -20,24 +20,36 @@ class PublicSiteTest extends TestCase
         $this->seed(SettingsSeeder::class);
     }
 
-    public function test_homepage_shows_active_categories_and_products(): void
+    public function test_homepage_shows_only_featured_active_products_in_sort_order(): void
     {
         $category = ProductCategory::create(['name' => 'برس صنعتی', 'slug' => 'brush', 'is_active' => true]);
         Product::create([
-            'sku' => 'SKU-1', 'slug' => 'p1', 'name' => 'محصول یک', 'type' => 'quote',
-            'primary_category_id' => $category->id, 'is_active' => true, 'published_at' => now(),
+            'sku' => 'SKU-1', 'slug' => 'p1', 'name' => 'محصول دوم', 'type' => 'quote',
+            'primary_category_id' => $category->id, 'is_active' => true, 'is_featured' => true, 'sort_order' => 2,
+            'published_at' => now(),
         ]);
         Product::create([
-            'sku' => 'SKU-2', 'slug' => 'p2', 'name' => 'محصول غیرفعال', 'type' => 'quote',
-            'primary_category_id' => $category->id, 'is_active' => false,
+            'sku' => 'SKU-2', 'slug' => 'p2', 'name' => 'محصول اول', 'type' => 'quote',
+            'primary_category_id' => $category->id, 'is_active' => true, 'is_featured' => true, 'sort_order' => 1,
+            'published_at' => now(),
+        ]);
+        Product::create([
+            'sku' => 'SKU-3', 'slug' => 'p3', 'name' => 'محصول غیرویژه', 'type' => 'quote',
+            'primary_category_id' => $category->id, 'is_active' => true, 'is_featured' => false, 'published_at' => now(),
+        ]);
+        Product::create([
+            'sku' => 'SKU-4', 'slug' => 'p4', 'name' => 'محصول غیرفعال', 'type' => 'quote',
+            'primary_category_id' => $category->id, 'is_active' => false, 'is_featured' => true,
         ]);
 
         $response = $this->get(route('home'));
 
         $response->assertOk();
-        $response->assertSee('برس صنعتی');
-        $response->assertSee('محصول یک');
+        $response->assertSee('محصول اول');
+        $response->assertSee('محصول دوم');
+        $response->assertDontSee('محصول غیرویژه');
         $response->assertDontSee('محصول غیرفعال');
+        $response->assertSeeInOrder(['محصول اول', 'محصول دوم']);
     }
 
     public function test_category_page_lists_its_products_and_rejects_inactive_category(): void

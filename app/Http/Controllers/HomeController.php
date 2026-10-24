@@ -14,8 +14,9 @@ class HomeController extends Controller
             'products' => Product::query()
                 ->with(['images', 'primaryCategory'])
                 ->where('is_active', true)
-                ->latest('published_at')
-                ->limit(8)
+                ->where('is_featured', true)
+                ->orderBy('sort_order')
+                ->limit(24)
                 ->get(),
             'posts' => BlogPost::query()
                 ->with('featuredImage')
