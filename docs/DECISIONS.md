@@ -4,6 +4,14 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-24 — Removed the "دسته‌بندی محصولات" (categories) grid section from the homepage
+
+**Decision:** Owner asked to remove this section entirely. The hero's and SEO block's primary CTAs, which used to scroll to `#categories`, now scroll to `#products` (the Featured Products grid, given an `id` for this) instead. `HomeController` no longer queries `ProductCategory` at all (it was only used by this section) — one less query per homepage load.
+
+**Noticed but not acted on without asking:** the removed section's data (visible in the owner's own screenshot) included two junk category rows with 0 products each — "بدون دسته‌بندی" (uncategorized) and "فرشاة الصناعی" (Arabic text, likely a WordPress/WPML import artifact). These are a real data-quality issue independent of this removal; worth asking the owner whether to clean up or deactivate, since they'd still show up anywhere else categories are listed (e.g. the header's products dropdown).
+
+---
+
 ## 2026-10-24 — Homepage polish pass: cleaner hero collage, SEO copy for "برس پاسارگاد" / "خرید برس" / "خرید فرچه"
 
 **Why:** Owner's first pass feedback — the hero still didn't feel professional/responsive enough, and asked for SEO-targeted copy around the brand name and the two core purchase-intent phrases.

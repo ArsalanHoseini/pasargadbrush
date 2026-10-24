@@ -46,7 +46,7 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
                 خرید برس صنعتی و خرید فرچه با مشخصات دقیق، مستقیم از کارخانه و بدون واسطه — از برس‌های ابزاری و قالیشویی تا نمونه‌های سفارشی برای صنایع غذایی، نفت و پتروشیمی و نساجی.
             </p>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="#categories" class="group inline-flex items-center gap-2 rounded-full bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-accent/30 transition hover:bg-brand-accent-dark">
+                <a href="#products" class="group inline-flex items-center gap-2 rounded-full bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-accent/30 transition hover:bg-brand-accent-dark">
                     خرید برس و فرچه صنعتی
                     <svg class="h-4 w-4 transition group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -121,28 +121,9 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
     </div>
 </section>
 
-{{-- Categories --}}
-<section id="categories" class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-    <div data-animate class="mb-10 max-w-xl">
-        <h2 class="mb-2 text-xl font-bold text-neutral-900">دسته‌بندی محصولات</h2>
-        <p class="text-sm text-neutral-500">بر اساس کاربرد صنعتی، محصول مناسب خود را پیدا کنید.</p>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        @foreach ($categories as $category)
-            <a href="{{ route('categories.show', $category) }}" data-animate
-               class="group relative overflow-hidden rounded-lg border border-neutral-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-accent hover:shadow-lg hover:shadow-neutral-200/60">
-                <span class="absolute inset-x-0 top-0 h-0.5 scale-x-0 bg-brand-accent transition group-hover:scale-x-100"></span>
-                <h3 class="mb-1 font-medium text-neutral-900 group-hover:text-brand-accent-dark">{{ $category->name }}</h3>
-                <p class="text-xs text-neutral-500">{{ $category->primary_products_count }} محصول</p>
-            </a>
-        @endforeach
-    </div>
-</section>
-
 {{-- Featured products --}}
 @if ($products->isNotEmpty())
-<section class="bg-neutral-50 py-16">
+<section id="products" class="bg-neutral-50 py-16">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
         <div data-animate class="mb-10 max-w-xl">
             <h2 class="mb-2 text-xl font-bold text-neutral-900">محصولات</h2>
@@ -199,9 +180,9 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
         <p data-animate class="mb-7 leading-7 text-neutral-400">
             برس پاسارگاد (شرکت برس صنعت پاسارگاد) از سال ۱۳۷۴ تولیدکننده انواع برس و فرچه صنعتی در ایران است. برای خرید برس یا خرید فرچه با مشخصات دقیق و قیمت مناسب، سفارش خود را مستقیم از کارخانه و بدون واسطه ثبت کنید؛ تیم فنی ما برای هر کاربرد — از صنایع غذایی و نساجی تا نفت و پتروشیمی — محصول متناسب با نیاز شما را پیشنهاد می‌دهد.
         </p>
-        <a href="#categories" data-animate
+        <a href="#products" data-animate
            class="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5">
-            مشاهده دسته‌بندی محصولات
+            مشاهده محصولات
         </a>
     </div>
 </section>
