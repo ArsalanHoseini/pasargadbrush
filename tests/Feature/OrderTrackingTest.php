@@ -112,6 +112,30 @@ class OrderTrackingTest extends TestCase
             ->assertSee('123456789012345678');
     }
 
+    public function test_once_staff_set_a_shipping_cost_the_full_total_is_shown(): void
+    {
+        $this->order(['shipping_cost_rial' => 500_000, 'total_rial' => 2_500_000]);
+
+        $this->track('PB-20261031-ABC123', '09121234567');
+
+        $this->get(route('orders.track.show'))
+            ->assertSee('50,000 تومان')
+            ->assertSee('جمع کل')
+            ->assertSee('250,000 تومان')
+            ->assertDontSee('پس از هماهنگی اعلام می‌شود');
+    }
+
+    public function test_without_a_shipping_cost_the_page_says_it_will_be_announced(): void
+    {
+        $this->order();
+
+        $this->track('PB-20261031-ABC123', '09121234567');
+
+        $this->get(route('orders.track.show'))
+            ->assertSee('پس از هماهنگی اعلام می‌شود')
+            ->assertDontSee('جمع کل');
+    }
+
     public function test_a_cancelled_order_says_so_instead_of_showing_progress(): void
     {
         $this->order(['status' => 'cancelled']);

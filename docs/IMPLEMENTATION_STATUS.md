@@ -186,6 +186,7 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Admin order page: new «کد رهگیری مرسوله» field (migration `add_shipment_tracking_code_to_orders_table`, run locally).
 - Linked from the footer, the checkout confirmation page and the customer confirmation email.
 - New helpers: `PersianDate` (intl, no package), `PersianDigits` (now shared by `IranianMobile`).
+- Follow-up: shipping rule still undecided by the owner — customer-facing totals now read «جمع کالاها» + «هزینه ارسال: پس از هماهنگی اعلام می‌شود» instead of an implied-final «جمع کل» (3 tests; suite 179/179).
 - 13 new tests (`OrderTrackingTest`, `Unit/PersianDateTest`, admin tracking-code). Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step

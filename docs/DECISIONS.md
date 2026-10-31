@@ -4,6 +4,14 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-31 — Shipping rule still undecided; customer-facing totals no longer imply shipping is included
+
+**Owner asked (2026-10-31) for the shipping rule:** cash-on-delivery (پس‌کرایه), flat rate, per-province, or announced by phone — plus optional factory pickup / free-over-threshold. **Answer: not decided yet.** The old WooCommerce site had no shipping zones/methods configured either, so there's nothing to carry over. Still no rule invented; `shipping_cost_rial` stays 0 at checkout.
+
+**What changed instead (wording only):** the cart, checkout page, confirmation page, order emails and tracking page labeled the items sum «جمع کل» (grand total) with no mention of shipping — misleading when delivery is charged separately. They now show «جمع کالاها» plus «هزینه ارسال: پس از هماهنگی اعلام می‌شود». Order-based views (`orders/partials/totals`, the email summary) automatically switch to subtotal + shipping + «جمع کل» once an order's `shipping_cost_rial` is > 0, so they stay correct whenever a shipping rule — or a staff-entered shipping amount — is added.
+
+---
+
 ## 2026-10-31 — Guest order tracking by order number + mobile; Persian (Shamsi) dates via intl
 
 **Decision:** customers have no accounts (guest checkout), so tracking is a lookup at `/order-tracking`: order number + the mobile the order was placed with, both must match. Inputs are normalized (Persian digits, lowercase, spaces; any mobile spelling via `IranianMobile`). The lookup is throttled (`throttle:10,1`) and a miss gives one generic message that doesn't reveal which field was wrong, so order numbers can't be enumerated. The found order id goes into the session and the status page (`/order-tracking/status`) reads it from there — same pattern as the checkout confirmation page — so order details never sit in a URL.

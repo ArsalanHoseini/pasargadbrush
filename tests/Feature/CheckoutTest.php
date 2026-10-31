@@ -161,6 +161,26 @@ class CheckoutTest extends TestCase
             ]);
     }
 
+    public function test_no_page_presents_the_items_subtotal_as_a_final_total_while_shipping_is_undecided(): void
+    {
+        $token = $this->addToCart();
+        $pending = 'پس از هماهنگی اعلام می‌شود';
+
+        $this->withUnencryptedCookie('cart_token', $token)->get(route('cart.show'))
+            ->assertSee('جمع کالاها')->assertSee($pending)->assertDontSee('جمع کل');
+
+        $this->withUnencryptedCookie('cart_token', $token)->get(route('checkout.create'))
+            ->assertSee('جمع کالاها')->assertSee($pending)->assertDontSee('جمع کل');
+
+        $this->withUnencryptedCookie('cart_token', $token)->post(route('checkout.store'), [
+            'name' => 'علی', 'phone' => '09120000000',
+            'province' => 'فارس', 'city' => 'مرودشت', 'address_line' => 'آدرس',
+        ]);
+
+        $this->get(route('checkout.confirmation'))
+            ->assertSee('جمع کالاها')->assertSee($pending)->assertDontSee('جمع کل');
+    }
+
     public function test_confirmation_page_is_not_accessible_without_a_real_completed_checkout(): void
     {
         $this->get(route('checkout.confirmation'))->assertRedirect(route('home'));

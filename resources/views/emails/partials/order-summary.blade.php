@@ -16,9 +16,25 @@
         @endforeach
     </tbody>
     <tfoot>
+        {{-- Shipping isn't calculated at checkout yet — see orders/partials/totals.blade.php. --}}
         <tr>
-            <td colspan="2"><strong>جمع کل</strong></td>
-            <td style="text-align: left;" dir="ltr"><strong>{{ \App\Support\Money::toman($order->total_rial) }}</strong></td>
+            <td colspan="2"><strong>جمع کالاها</strong></td>
+            <td style="text-align: left;" dir="ltr"><strong>{{ \App\Support\Money::toman($order->subtotal_rial) }}</strong></td>
         </tr>
+        @if ($order->shipping_cost_rial > 0)
+            <tr>
+                <td colspan="2">هزینه ارسال</td>
+                <td style="text-align: left;" dir="ltr">{{ \App\Support\Money::toman($order->shipping_cost_rial) }}</td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>جمع کل</strong></td>
+                <td style="text-align: left;" dir="ltr"><strong>{{ \App\Support\Money::toman($order->total_rial) }}</strong></td>
+            </tr>
+        @else
+            <tr>
+                <td colspan="2">هزینه ارسال</td>
+                <td style="text-align: left;">پس از هماهنگی اعلام می‌شود</td>
+            </tr>
+        @endif
     </tfoot>
 </table>

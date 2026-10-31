@@ -61,9 +61,15 @@
             @endforeach
         </div>
 
-        <div class="mt-6 flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            <span class="font-medium">جمع کل</span>
-            <span class="text-lg font-bold" dir="ltr">{{ \App\Support\Money::toman($total) }}</span>
+        <div class="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            <div class="flex items-center justify-between">
+                <span class="font-medium">جمع کالاها</span>
+                <span class="text-lg font-bold" dir="ltr">{{ \App\Support\Money::toman($total) }}</span>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-sm text-neutral-600">
+                <span>هزینه ارسال</span>
+                <span>پس از هماهنگی اعلام می‌شود</span>
+            </div>
         </div>
 
         @if ($problems === [])

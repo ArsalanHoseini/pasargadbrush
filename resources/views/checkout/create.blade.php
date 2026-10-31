@@ -25,8 +25,12 @@
             @endforeach
         </ul>
         <div class="mt-3 flex justify-between border-t border-neutral-100 pt-3 font-bold">
-            <span>جمع کل</span>
+            <span>جمع کالاها</span>
             <span dir="ltr">{{ \App\Support\Money::toman($total) }}</span>
+        </div>
+        <div class="mt-2 flex justify-between text-sm text-neutral-600">
+            <span>هزینه ارسال</span>
+            <span>پس از هماهنگی اعلام می‌شود</span>
         </div>
     </div>
 
@@ -54,7 +58,7 @@
                class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
 
         <p class="text-xs text-neutral-500">
-            پرداخت در این سفارش به‌صورت آنلاین نیست — همکاران ما پس از ثبت سفارش برای هماهنگی پرداخت و ارسال با شما تماس می‌گیرند.
+            پرداخت در این سفارش به‌صورت آنلاین نیست — همکاران ما پس از ثبت سفارش برای هماهنگی پرداخت و ارسال با شما تماس می‌گیرند. هزینه ارسال جداگانه محاسبه می‌شود و در همان تماس به شما اعلام خواهد شد.
         </p>
 
         <button type="submit" class="w-full rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">

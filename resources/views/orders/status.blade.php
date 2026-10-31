@@ -86,16 +86,7 @@
                 </li>
             @endforeach
         </ul>
-        @if ($order->shipping_cost_rial > 0)
-            <div class="mt-3 flex justify-between border-t border-neutral-100 pt-3 text-sm">
-                <span>هزینه ارسال</span>
-                <span dir="ltr">{{ \App\Support\Money::toman($order->shipping_cost_rial) }}</span>
-            </div>
-        @endif
-        <div class="mt-3 flex justify-between border-t border-neutral-100 pt-3 font-bold">
-            <span>جمع کل</span>
-            <span dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</span>
-        </div>
+        @include('orders.partials.totals')
     </div>
 
     @if ($order->shippingAddress)
