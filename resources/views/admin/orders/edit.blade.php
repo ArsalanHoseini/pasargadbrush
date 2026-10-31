@@ -10,12 +10,20 @@
         <div class="rounded-lg border border-neutral-200 bg-white p-6">
             <h2 class="mb-4 text-sm font-medium text-neutral-500">مشتری</h2>
             <dl class="space-y-2 text-sm">
-                <div><dt class="text-neutral-500">نام</dt><dd class="font-medium">{{ $order->customer?->name }}</dd></div>
-                <div><dt class="text-neutral-500">تلفن</dt><dd class="font-medium" dir="ltr">{{ $order->customer?->phone }}</dd></div>
-                @if ($order->customer?->email)
-                    <div><dt class="text-neutral-500">ایمیل</dt><dd class="font-medium" dir="ltr">{{ $order->customer->email }}</dd></div>
+                <div><dt class="text-neutral-500">نام</dt><dd class="font-medium">{{ $order->customer_name ?? $order->customer?->name }}</dd></div>
+                <div><dt class="text-neutral-500">تلفن</dt><dd class="font-medium" dir="ltr">{{ $order->customer_phone ?? $order->customer?->phone }}</dd></div>
+                @if ($order->customer_email ?? $order->customer?->email)
+                    <div><dt class="text-neutral-500">ایمیل</dt><dd class="font-medium" dir="ltr">{{ $order->customer_email ?? $order->customer?->email }}</dd></div>
                 @endif
             </dl>
+
+            @if ($order->customer && $order->customer_name && $order->customer_name !== $order->customer->name)
+                <p class="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    نام واردشده در این سفارش با پرونده‌ی مشتری این شماره
+                    (<a href="{{ route('admin.customers.show', $order->customer) }}" class="font-medium underline">{{ $order->customer->name }}</a>)
+                    یکی نیست — قبل از ارسال، با تماس تلفنی تأیید کنید.
+                </p>
+            @endif
         </div>
 
         @if ($order->shippingAddress)

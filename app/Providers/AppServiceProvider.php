@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\ProductCategory;
 use App\Services\Cart\CartResolver;
+use App\Services\Sms\LogSmsSender;
+use App\Services\Sms\SmsSender;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(SmsSender::class, fn () => match (config('services.sms.driver')) {
+            default => new LogSmsSender,
+        });
     }
 
     /**

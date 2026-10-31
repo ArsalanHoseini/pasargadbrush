@@ -37,7 +37,7 @@
             @foreach ($recentOrders as $order)
                 <li class="flex items-center justify-between py-2">
                     <a href="{{ route('admin.orders.edit', $order) }}" class="hover:text-brand-accent-dark" dir="ltr">
-                        {{ $order->order_number }} — {{ $order->customer?->name }}
+                        {{ $order->order_number }} — {{ $order->customer_name ?? $order->customer?->name }}
                     </a>
                     <span class="text-xs text-neutral-400" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</span>
                 </li>

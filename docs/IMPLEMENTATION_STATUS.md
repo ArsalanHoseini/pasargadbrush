@@ -164,6 +164,17 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - 15 new tests (`BlogFeaturesTest`, `BlogCommentTest`, `Admin/CommentModerationTest`). Full suite 118/118 passing. Verified for real: dev server smoke-check of `/blog`, `/blog/feed.xml` (real RSS content type + real post titles), and `npm run build` confirms Quill lands in its own lazy chunk, not the main bundle.
 - Full reasoning and scope judgment calls in `docs/DECISIONS.md`.
 
+**Persian validation messages + order notifications (completed, 2026-10-31)**
+- Found in a full gap review: no `lang/fa` existed, so every form error displayed raw keys like `validation.required`. Added `lang/fa/*` + `lang/fa.json` with Persian labels for all validated fields.
+- New-order notifications: email + SMS to the business, and email (if given) + SMS to the customer — `NotifyOrderPlaced`, `NewOrderReceived`, `OrderPlacedConfirmation`. Each channel fails independently without affecting the saved order.
+- SMS is a placeholder: `SmsSender` interface + `LogSmsSender` (`SMS_DRIVER=log`) until the owner picks a provider.
+- 6 new tests (`OrderNotificationTest`, Persian-message check in `CheckoutTest`). Full suite 125/125 passing.
+
+**Mobile normalization + no customer overwrite at checkout (completed, 2026-10-31)**
+- `App\Support\IranianMobile` normalizes every common spelling of a mobile number to `09XXXXXXXXX`; checkout requires a valid Iranian mobile.
+- Existing customers are matched by phone and never modified by checkout; the entered name/phone/email is snapshotted onto the order (migration `add_contact_snapshot_to_orders_table`, run locally). Admin order page warns on a name mismatch.
+- 20 new tests (`Unit/IranianMobileTest` data sets, `CheckoutTest`, `OrderNotificationTest`, `Admin/OrderManagementTest`). Full suite 145/145 passing.
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

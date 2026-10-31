@@ -4,6 +4,38 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-31 — One canonical mobile format; checkout never overwrites an existing customer
+
+**Problem (found in the gap review, owner-approved fix):** checkout matched customers by the raw phone string and then `updateOrCreate`d them. With no phone verification (no OTP — no SMS provider yet), anyone typing someone else's number silently rewrote that customer's name/email and had their order filed (and texted) under them. And the same person typing `09121234567`, `۰۹۱۲۱۲۳۴۵۶۷`, or `+98 912 123 4567` became three different customers.
+
+**Decisions:**
+- `App\Support\IranianMobile::normalize()` reduces Persian/Arabic digits, spaces/dashes/parentheses/zero-width chars, and `+98`/`0098`/`98`/missing-leading-zero to the one stored form `09XXXXXXXXX`. Applied in `StoreCheckoutRequest::prepareForValidation()`, then validated against `IranianMobile::PATTERN` — checkout now requires a valid Iranian mobile (SMS needs one anyway). Landlines are rejected there.
+- `PlaceOrder` uses `firstOrCreate`: an existing customer is matched by phone, never updated.
+- What was actually typed is snapshotted onto the order itself (new nullable `orders.customer_name/customer_phone/customer_email`), the same way prices are snapshotted onto `order_items`. Admin order screens, order emails, and the customer confirmation email/SMS all read the snapshot (with fallback to the customer record for any order without one).
+- The admin order page shows a warning when the snapshot name differs from the customer record for that phone, so staff can confirm by phone before shipping.
+
+**Deliberately not changed:** the quote-request form's phone field — B2B leads often give a landline, so requiring a mobile there would lose real leads. Real ownership verification (OTP) waits for the SMS provider.
+
+---
+
+## 2026-10-31 — Persian validation messages; order notifications by email + SMS (SMS provider still open)
+
+**Bug found during a full-project gap review:** the app had no `lang/fa` files at all. Since both `APP_LOCALE` and `APP_FALLBACK_LOCALE` are `fa`, every validation error on every public and admin form rendered as its raw key (e.g. `validation.required`). Fixed by adding `lang/fa/{validation,auth,pagination,passwords}.php` + `lang/fa.json` (pagination view strings), with Persian labels for every field name the app validates. Hand-written rather than adding a translation package (no dependency change without approval).
+
+**Order notifications (owner-confirmed 2026-10-31: email + SMS):** `App\Services\Checkout\NotifyOrderPlaced`, called right after `PlaceOrder` commits. Sends:
+- email to the business (`setting('contact_email')`) — `NewOrderReceived`, with a link to the admin order page;
+- SMS to the business (`setting('contact_mobile')`);
+- email to the customer, only if they entered one — `OrderPlacedConfirmation`;
+- SMS to the customer's phone.
+
+Each channel has its own try/catch + `Log::warning` (same resilience rule as quote-request emails): a broken mail transport or SMS provider must never lose an order that is already saved. Sent synchronously, not queued — matches the existing quote-request mail and avoids a hard dependency on a queue worker on the target hosting.
+
+**SMS provider deliberately left open:** owner hasn't chosen/purchased one yet. All SMS goes through the `App\Services\Sms\SmsSender` interface; the only implementation today is `LogSmsSender` (writes to the log, sends nothing), selected by `SMS_DRIVER=log` (`config/services.php` → `services.sms.driver`, bound in `AppServiceProvider`). Adding the real provider = one new `SmsSender` class + one `match` arm in the binding + its credentials in `.env`. Nothing else changes.
+
+**Still not built (separate decisions):** notifications on order *status* changes (e.g. "shipped"), and real SMTP credentials for production (`MAIL_MAILER=log` locally).
+
+---
+
 ## 2026-10-24 — Homepage products are now an owner-curated list, not "latest 8"
 
 **Decision:** Owner gave a specific ordered list of 18 product names to show on the homepage. Rather than hardcoding a list of IDs in the view/controller, used the `is_featured` + `sort_order` columns that already existed on `products` (migrated in Phase 2, model-fillable, even already half-wired into the admin form's `is_featured` checkbox) but were never actually used anywhere — `HomeController` used to just show the 8 most-recently-published active products. Now it queries `is_active && is_featured`, ordered by `sort_order`, capped at 24 as a sane safety limit (today: exactly 16).

@@ -34,6 +34,27 @@ class OrderManagementTest extends TestCase
         ]);
     }
 
+    public function test_order_page_shows_the_contact_details_entered_on_the_order_and_flags_a_name_mismatch(): void
+    {
+        $order = $this->order();
+        $order->update(['customer_name' => 'شخص دیگر', 'customer_phone' => $order->customer->phone]);
+
+        $this->actingAs($this->staff())->get(route('admin.orders.edit', $order))
+            ->assertOk()
+            ->assertSee('شخص دیگر')
+            ->assertSee('یکی نیست');
+    }
+
+    public function test_order_page_shows_no_mismatch_warning_when_names_match(): void
+    {
+        $order = $this->order();
+        $order->update(['customer_name' => $order->customer->name]);
+
+        $this->actingAs($this->staff())->get(route('admin.orders.edit', $order))
+            ->assertOk()
+            ->assertDontSee('یکی نیست');
+    }
+
     public function test_guest_cannot_view_orders(): void
     {
         $this->get(route('admin.orders.index'))->assertRedirect(route('admin.login'));

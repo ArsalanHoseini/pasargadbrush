@@ -40,7 +40,7 @@ $statusLabels = ['pending' => 'در انتظار', 'confirmed' => 'تأییدش�
                 @foreach ($orders as $order)
                     <tr>
                         <td class="px-4 py-3" dir="ltr">{{ $order->order_number }}</td>
-                        <td class="px-4 py-3">{{ $order->customer?->name ?? '—' }}</td>
+                        <td class="px-4 py-3">{{ ($order->customer_name ?? $order->customer?->name) ?? '—' }}</td>
                         <td class="px-4 py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
                         <td class="px-4 py-3">{{ $statusLabels[$order->status] }}</td>
                         <td class="px-4 py-3">

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCheckoutRequest;
 use App\Models\Order;
 use App\Services\Cart\CartManager;
 use App\Services\Cart\CartResolver;
+use App\Services\Checkout\NotifyOrderPlaced;
 use App\Services\Checkout\PlaceOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function store(StoreCheckoutRequest $request, PlaceOrder $placeOrder): RedirectResponse
+    public function store(StoreCheckoutRequest $request, PlaceOrder $placeOrder, NotifyOrderPlaced $notifyOrderPlaced): RedirectResponse
     {
         $cart = $this->resolver->resolveForDisplay($request);
 
@@ -41,6 +42,7 @@ class CheckoutController extends Controller
         }
 
         $order = $placeOrder->handle($cart, $request->validated());
+        $notifyOrderPlaced->handle($order);
 
         $request->session()->put('last_order_id', $order->id);
 

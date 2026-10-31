@@ -36,7 +36,7 @@
         <div class="grid gap-3 sm:grid-cols-2">
             <input name="name" placeholder="نام و نام خانوادگی *" value="{{ old('name') }}" required
                    class="rounded border border-neutral-300 px-3 py-2 text-sm">
-            <input name="phone" placeholder="شماره تماس *" value="{{ old('phone') }}" required dir="ltr"
+            <input name="phone" type="tel" inputmode="tel" placeholder="شماره موبایل * (مثال: ۰۹۱۲۱۲۳۴۵۶۷)" value="{{ old('phone') }}" required dir="ltr"
                    class="rounded border border-neutral-300 px-3 py-2 text-sm">
         </div>
         <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email') }}" dir="ltr"

@@ -32,7 +32,11 @@ class PlaceOrder
         }
 
         return DB::transaction(function () use ($cart, $details) {
-            $customer = Customer::query()->updateOrCreate(
+            // Phone isn't verified (no OTP yet), so whoever types a number must
+            // never be able to rewrite the existing customer's name/email — an
+            // existing customer is only matched, never updated. What was
+            // actually entered lives on the order's own contact snapshot.
+            $customer = Customer::query()->firstOrCreate(
                 ['phone' => $details['phone']],
                 ['name' => $details['name'], 'email' => $details['email'] ?? null],
             );
@@ -69,6 +73,9 @@ class PlaceOrder
 
             $order = $customer->orders()->create([
                 'order_number' => $this->generateOrderNumber(),
+                'customer_name' => $details['name'],
+                'customer_phone' => $details['phone'],
+                'customer_email' => $details['email'] ?? null,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'shipping_address_id' => $address->id,

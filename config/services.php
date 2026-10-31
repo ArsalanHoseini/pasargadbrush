@@ -28,6 +28,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | No SMS provider has been chosen yet — "log" only writes each message to
+    | the application log. See App\Services\Sms\SmsSender.
+    */
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
