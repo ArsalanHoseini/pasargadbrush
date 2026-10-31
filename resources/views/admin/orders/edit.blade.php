@@ -72,16 +72,25 @@
             <div>
                 <label class="mb-1 block text-sm font-medium">وضعیت سفارش</label>
                 <select name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                    @foreach (['pending' => 'در انتظار', 'confirmed' => 'تأییدشده', 'processing' => 'در حال پردازش', 'shipped' => 'ارسال‌شده', 'completed' => 'تکمیل‌شده', 'cancelled' => 'لغوشده'] as $value => $label)
+                    @foreach (\App\Models\Order::STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div>
+                <label class="mb-1 block text-sm font-medium">کد رهگیری مرسوله</label>
+                <input name="shipment_tracking_code" value="{{ old('shipment_tracking_code', $order->shipment_tracking_code) }}" dir="ltr"
+                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <p class="mt-1 text-xs text-neutral-500">
+                    کد رهگیری پست یا باربری — در صفحه‌ی پیگیری سفارش به مشتری نمایش داده می‌شود.
+                </p>
+            </div>
+
+            <div>
                 <label class="mb-1 block text-sm font-medium">وضعیت پرداخت</label>
                 <select name="payment_status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                    @foreach (['unpaid' => 'پرداخت‌نشده', 'paid' => 'پرداخت‌شده', 'failed' => 'ناموفق', 'refunded' => 'بازگشت‌شده'] as $value => $label)
+                    @foreach (\App\Models\Order::PAYMENT_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->payment_status === $value)>{{ $label }}</option>
                     @endforeach
                 </select>

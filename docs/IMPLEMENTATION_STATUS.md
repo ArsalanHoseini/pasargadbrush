@@ -181,6 +181,13 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Product page shows «ناموجود» for unavailable variants; cart marks affected lines in red and blocks checkout until fixed; admin order page now displays errors.
 - 18 new tests (`ProductAvailabilityTest`, `Admin/OrderManagementTest`, `Admin/ProductManagementTest`). Full suite 163/163 passing.
 
+**Order tracking page (completed, 2026-10-31)**
+- `/order-tracking`: lookup by order number + mobile (normalized, throttled, session-gated result page). Shows progress steps, Shamsi date, payment status, parcel tracking code, items, total, address; a cancelled order shows a cancellation notice instead.
+- Admin order page: new «کد رهگیری مرسوله» field (migration `add_shipment_tracking_code_to_orders_table`, run locally).
+- Linked from the footer, the checkout confirmation page and the customer confirmation email.
+- New helpers: `PersianDate` (intl, no package), `PersianDigits` (now shared by `IranianMobile`).
+- 13 new tests (`OrderTrackingTest`, `Unit/PersianDateTest`, admin tracking-code). Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

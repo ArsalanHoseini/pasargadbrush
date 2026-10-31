@@ -5,6 +5,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
@@ -42,3 +43,9 @@ Route::post('/checkout', [CheckoutController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('checkout.store');
 Route::get('/checkout/confirmation', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
+Route::get('/order-tracking', [OrderTrackingController::class, 'create'])->name('orders.track.create');
+Route::post('/order-tracking', [OrderTrackingController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('orders.track.store');
+Route::get('/order-tracking/status', [OrderTrackingController::class, 'show'])->name('orders.track.show');

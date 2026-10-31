@@ -4,10 +4,6 @@ namespace App\Support;
 
 class IranianMobile
 {
-    private const PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-
-    private const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
     /**
      * The one canonical shape every mobile number is stored in: 09XXXXXXXXX.
      */
@@ -23,8 +19,7 @@ class IranianMobile
      */
     public static function normalize(string $input): string
     {
-        $number = str_replace(self::PERSIAN_DIGITS, range(0, 9), $input);
-        $number = str_replace(self::ARABIC_DIGITS, range(0, 9), $number);
+        $number = PersianDigits::toLatin($input);
         $number = preg_replace('/[\s\-\(\)\.\x{200C}\x{200F}\x{200E}]+/u', '', $number) ?? $number;
 
         if (str_starts_with($number, '+98')) {

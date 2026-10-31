@@ -32,6 +32,12 @@
         </div>
     </div>
 
+    <p class="mx-auto mt-6 max-w-md text-xs text-neutral-500">
+        شماره سفارش را نگه دارید — هر زمان می‌توانید با آن و شماره موبایل خود وضعیت سفارش را در صفحه‌ی
+        <a href="{{ route('orders.track.create') }}" class="text-brand-accent-dark hover:underline">پیگیری سفارش</a>
+        ببینید.
+    </p>
+
     <a href="{{ route('home') }}" class="mt-8 inline-block text-sm text-brand-accent-dark hover:underline">
         بازگشت به صفحه اصلی
     </a>

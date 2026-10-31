@@ -218,6 +218,8 @@ return [
         'payment_status' => 'وضعیت پرداخت',
         'stock_status' => 'وضعیت موجودی',
         'notes' => 'یادداشت',
+        'shipment_tracking_code' => 'کد رهگیری مرسوله',
+        'order_number' => 'شماره سفارش',
         'admin_notes' => 'یادداشت داخلی',
         'description' => 'توضیحات',
         'short_description' => 'توضیح کوتاه',

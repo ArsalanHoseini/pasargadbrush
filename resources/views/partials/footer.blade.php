@@ -15,6 +15,7 @@
                     <li><a href="{{ route('blog.index') }}" class="hover:text-white">مقالات</a></li>
                     <li><a href="{{ route('pages.show', 'about-us') }}" class="hover:text-white">درباره ما</a></li>
                     <li><a href="{{ route('pages.show', 'contact-us') }}" class="hover:text-white">تماس با ما</a></li>
+                    <li><a href="{{ route('orders.track.create') }}" class="hover:text-white">پیگیری سفارش</a></li>
                     @foreach ($navCategories ?? [] as $category)
                         <li><a href="{{ route('categories.show', $category['slug']) }}" class="hover:text-white">{{ $category['name'] }}</a></li>
                     @endforeach

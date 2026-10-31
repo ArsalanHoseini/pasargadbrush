@@ -4,6 +4,18 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-31 — Guest order tracking by order number + mobile; Persian (Shamsi) dates via intl
+
+**Decision:** customers have no accounts (guest checkout), so tracking is a lookup at `/order-tracking`: order number + the mobile the order was placed with, both must match. Inputs are normalized (Persian digits, lowercase, spaces; any mobile spelling via `IranianMobile`). The lookup is throttled (`throttle:10,1`) and a miss gives one generic message that doesn't reveal which field was wrong, so order numbers can't be enumerated. The found order id goes into the session and the status page (`/order-tracking/status`) reads it from there — same pattern as the checkout confirmation page — so order details never sit in a URL.
+
+**Alternatives considered:** customer accounts / OTP login — needs the SMS provider (not chosen yet) and is much more scope; a secret per-order link — would put a bearer token in SMS/email/browser history. Either can be added later on top of this.
+
+**Also added:** `orders.shipment_tracking_code` (staff enter the carrier's parcel code in the admin order page; shown to the customer once set). Order status/payment labels moved to `Order::STATUS_LABELS` / `PAYMENT_STATUS_LABELS` (they were duplicated across admin views).
+
+**Persian dates:** `App\Support\PersianDate` formats via PHP's built-in `intl` (`fa_IR@calendar=persian`, Asia/Tehran) — no package added. Used on the tracking page only so far; the rest of the site still shows Gregorian `Y-m-d` and can be switched over separately. **Production hosting must have the `intl` PHP extension enabled** (standard on cPanel PHP builds, but verify).
+
+---
+
 ## 2026-10-31 — Products are re-checked at the moment of ordering; stock is actually enforced
 
 **Problem:** availability was only checked when adding to the cart. A product deactivated or switched to quote-only afterwards was still ordered; `stock_quantity` and the product-level `stock_status` existed but nothing ever read them; a priced variant could be saved at price 0; repeated "add to cart" could push a line past the 1000 cap.

@@ -8,6 +8,28 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
+    public const STATUS_LABELS = [
+        'pending' => 'در انتظار',
+        'confirmed' => 'تأییدشده',
+        'processing' => 'در حال پردازش',
+        'shipped' => 'ارسال‌شده',
+        'completed' => 'تکمیل‌شده',
+        'cancelled' => 'لغوشده',
+    ];
+
+    public const PAYMENT_STATUS_LABELS = [
+        'unpaid' => 'پرداخت‌نشده',
+        'paid' => 'پرداخت‌شده',
+        'failed' => 'ناموفق',
+        'refunded' => 'بازگشت‌شده',
+    ];
+
+    /**
+     * The customer-facing progress steps, in order; "cancelled" is shown
+     * separately rather than as a step.
+     */
+    public const PROGRESS_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'completed'];
+
     protected $fillable = [
         'order_number',
         'customer_id',
@@ -15,6 +37,7 @@ class Order extends Model
         'customer_phone',
         'customer_email',
         'status',
+        'shipment_tracking_code',
         'payment_status',
         'shipping_address_id',
         'subtotal_rial',

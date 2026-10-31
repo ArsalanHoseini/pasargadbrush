@@ -38,8 +38,9 @@ class OrderController extends Controller
     public function update(Request $request, Order $order, OrderStock $orderStock): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', Rule::in(['pending', 'confirmed', 'processing', 'shipped', 'completed', 'cancelled'])],
-            'payment_status' => ['required', Rule::in(['unpaid', 'paid', 'failed', 'refunded'])],
+            'status' => ['required', Rule::in(array_keys(Order::STATUS_LABELS))],
+            'shipment_tracking_code' => ['nullable', 'string', 'max:100'],
+            'payment_status' => ['required', Rule::in(array_keys(Order::PAYMENT_STATUS_LABELS))],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 

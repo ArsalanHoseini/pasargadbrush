@@ -126,6 +126,17 @@ class OrderManagementTest extends TestCase
         return [$order, $variant];
     }
 
+    public function test_staff_can_record_a_parcel_tracking_code(): void
+    {
+        $order = $this->order();
+
+        $this->actingAs($this->staff())->put(route('admin.orders.update', $order), [
+            'status' => 'shipped', 'payment_status' => 'paid', 'shipment_tracking_code' => '123456789012345678',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('123456789012345678', $order->refresh()->shipment_tracking_code);
+    }
+
     public function test_cancelling_an_order_returns_its_stock(): void
     {
         [$order, $variant] = $this->orderWithTrackedStock(orderedQuantity: 3, remainingStock: 2);

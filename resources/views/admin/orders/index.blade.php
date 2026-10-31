@@ -3,7 +3,7 @@
 @section('title', 'سفارش‌ها')
 
 @php
-$statusLabels = ['pending' => 'در انتظار', 'confirmed' => 'تأییدشده', 'processing' => 'در حال پردازش', 'shipped' => 'ارسال‌شده', 'completed' => 'تکمیل‌شده', 'cancelled' => 'لغوشده'];
+$statusLabels = \App\Models\Order::STATUS_LABELS;
 @endphp
 
 @section('content')
