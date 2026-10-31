@@ -5,6 +5,8 @@ namespace Tests\Feature\Admin;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -104,5 +106,69 @@ class OrderManagementTest extends TestCase
         ]);
 
         $this->assertSame(0, AuditLog::count());
+    }
+
+    private function orderWithTrackedStock(int $orderedQuantity, int $remainingStock, string $status = 'pending'): array
+    {
+        $product = Product::create(['sku' => 'P1', 'slug' => 'p1', 'name' => 'محصول', 'type' => 'priced', 'is_active' => true]);
+        $variant = ProductVariant::create([
+            'product_id' => $product->id, 'sku' => 'V1', 'label' => 'استاندارد',
+            'price_rial' => 1000, 'stock_quantity' => $remainingStock,
+        ]);
+
+        $order = $this->order($status);
+        $order->items()->create([
+            'product_id' => $product->id, 'product_variant_id' => $variant->id,
+            'name_snapshot' => 'محصول — استاندارد', 'sku_snapshot' => 'V1',
+            'unit_price_rial' => 1000, 'quantity' => $orderedQuantity, 'line_total_rial' => 1000 * $orderedQuantity,
+        ]);
+
+        return [$order, $variant];
+    }
+
+    public function test_cancelling_an_order_returns_its_stock(): void
+    {
+        [$order, $variant] = $this->orderWithTrackedStock(orderedQuantity: 3, remainingStock: 2);
+
+        $this->actingAs($this->staff())->put(route('admin.orders.update', $order), [
+            'status' => 'cancelled', 'payment_status' => 'unpaid',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame(5, $variant->refresh()->stock_quantity);
+    }
+
+    public function test_reactivating_a_cancelled_order_takes_the_stock_again(): void
+    {
+        [$order, $variant] = $this->orderWithTrackedStock(orderedQuantity: 3, remainingStock: 5, status: 'cancelled');
+
+        $this->actingAs($this->staff())->put(route('admin.orders.update', $order), [
+            'status' => 'confirmed', 'payment_status' => 'unpaid',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame(2, $variant->refresh()->stock_quantity);
+        $this->assertSame('confirmed', $order->refresh()->status);
+    }
+
+    public function test_a_cancelled_order_cannot_be_reactivated_without_enough_stock(): void
+    {
+        [$order, $variant] = $this->orderWithTrackedStock(orderedQuantity: 3, remainingStock: 1, status: 'cancelled');
+
+        $this->actingAs($this->staff())->put(route('admin.orders.update', $order), [
+            'status' => 'confirmed', 'payment_status' => 'unpaid',
+        ])->assertSessionHasErrors('status');
+
+        $this->assertSame(1, $variant->refresh()->stock_quantity);
+        $this->assertSame('cancelled', $order->refresh()->status);
+    }
+
+    public function test_changing_status_between_active_states_does_not_touch_stock(): void
+    {
+        [$order, $variant] = $this->orderWithTrackedStock(orderedQuantity: 3, remainingStock: 2);
+
+        $this->actingAs($this->staff())->put(route('admin.orders.update', $order), [
+            'status' => 'shipped', 'payment_status' => 'paid',
+        ]);
+
+        $this->assertSame(2, $variant->refresh()->stock_quantity);
     }
 }

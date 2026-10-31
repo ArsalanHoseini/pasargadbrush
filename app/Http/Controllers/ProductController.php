@@ -19,8 +19,11 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
+        $product->load(['images', 'primaryCategory', 'variants']);
+        $product->variants->each->setRelation('product', $product);
+
         return view('products.show', [
-            'product' => $product->load(['images', 'primaryCategory', 'variants']),
+            'product' => $product,
             'related' => $related,
         ]);
     }

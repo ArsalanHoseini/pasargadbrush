@@ -12,6 +12,14 @@
         </div>
     @endif
 
+    @if ($errors->any())
+        <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            @foreach ($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
     @if (! $cart || $cart->items->isEmpty())
         <p class="text-sm text-neutral-500">
             سبد خرید شما خالی است. <a href="{{ route('home') }}" class="text-brand-accent-dark hover:underline">مشاهده محصولات</a>
@@ -19,11 +27,18 @@
     @else
         <div class="space-y-3">
             @foreach ($cart->items as $item)
-                <div class="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4">
+                <div @class([
+                    'flex items-center justify-between gap-4 rounded-lg border bg-white p-4',
+                    'border-red-300' => isset($problems[$item->id]),
+                    'border-neutral-200' => ! isset($problems[$item->id]),
+                ])>
                     <div>
                         <p class="font-medium text-neutral-900">{{ $item->variant->product->name }}</p>
                         <p class="text-xs text-neutral-500">{{ $item->variant->label }}</p>
                         <p class="mt-1 text-sm" dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial) }}</p>
+                        @isset($problems[$item->id])
+                            <p class="mt-1 text-xs font-medium text-red-600">{{ $problems[$item->id] }}</p>
+                        @endisset
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -51,10 +66,16 @@
             <span class="text-lg font-bold" dir="ltr">{{ \App\Support\Money::toman($total) }}</span>
         </div>
 
-        <a href="{{ route('checkout.create') }}"
-           class="mt-6 block w-full rounded-full bg-brand-accent px-6 py-3 text-center text-sm font-semibold text-white hover:bg-brand-accent-dark">
-            ادامه و تکمیل سفارش
-        </a>
+        @if ($problems === [])
+            <a href="{{ route('checkout.create') }}"
+               class="mt-6 block w-full rounded-full bg-brand-accent px-6 py-3 text-center text-sm font-semibold text-white hover:bg-brand-accent-dark">
+                ادامه و تکمیل سفارش
+            </a>
+        @else
+            <p class="mt-6 rounded-full bg-neutral-200 px-6 py-3 text-center text-sm font-semibold text-neutral-500">
+                برای ادامه، ابتدا موارد مشخص‌شده با رنگ قرمز را اصلاح یا حذف کنید.
+            </p>
+        @endif
     @endif
 </div>
 @endsection

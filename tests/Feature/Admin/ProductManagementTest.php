@@ -131,4 +131,22 @@ class ProductManagementTest extends TestCase
             'name' => 'محصول دو', 'sku' => 'DUPLICATE', 'type' => 'quote',
         ])->assertSessionHasErrors('sku');
     }
+
+    public function test_a_priced_product_cannot_have_a_zero_price_variant(): void
+    {
+        $this->actingAs($this->staff())->post(route('admin.products.store'), [
+            'name' => 'محصول', 'sku' => 'SKU-ZERO', 'type' => 'priced',
+            'variants' => [['label' => 'استاندارد', 'price_toman' => 0]],
+        ])->assertSessionHasErrors('variants.0.price_toman');
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_a_quote_product_may_carry_a_zero_price_variant(): void
+    {
+        $this->actingAs($this->staff())->post(route('admin.products.store'), [
+            'name' => 'محصول', 'sku' => 'SKU-QUOTE', 'type' => 'quote',
+            'variants' => [['label' => 'استاندارد', 'price_toman' => 0]],
+        ])->assertSessionHasNoErrors();
+    }
 }

@@ -45,7 +45,9 @@ class StoreProductRequest extends FormRequest
             'variants' => ['array'],
             'variants.*.id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'variants.*.label' => ['required_with:variants', 'string', 'max:255'],
-            'variants.*.price_toman' => ['required_with:variants', 'integer', 'min:0'],
+            // A priced variant at 0 would be orderable for free; quote products
+            // never show variant prices, so 0 stays allowed there.
+            'variants.*.price_toman' => ['required_with:variants', 'integer', $this->input('type') === 'priced' ? 'min:1' : 'min:0'],
             'variants.*.stock_quantity' => ['nullable', 'integer', 'min:0'],
             'variants.*.is_default' => ['boolean'],
         ];

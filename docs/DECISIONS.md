@@ -4,6 +4,19 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-10-31 — Products are re-checked at the moment of ordering; stock is actually enforced
+
+**Problem:** availability was only checked when adding to the cart. A product deactivated or switched to quote-only afterwards was still ordered; `stock_quantity` and the product-level `stock_status` existed but nothing ever read them; a priced variant could be saved at price 0; repeated "add to cart" could push a line past the 1000 cap.
+
+**Decisions:**
+- One rule, `ProductVariant::unavailableReason(int $quantity)`, returns a Persian customer-facing reason (inactive / not `priced` / `stock_status=out_of_stock` / stock 0 / price ≤ 0 / quantity > stock) or null. The product page, cart, checkout page and `PlaceOrder` all call it, so they can't disagree. `stock_quantity = null` still means "stock not tracked" — all 10 current variants are null, so nothing changes for them until the owner enters stock.
+- `PlaceOrder` re-reads the cart's variants with `lockForUpdate()` inside the order transaction and re-checks them before writing anything; two customers buying the last units simultaneously can't both succeed. On failure it throws `CartNotOrderable` (nothing written, cart kept) and the customer is sent back to the cart, where each affected line shows its reason and the checkout button is replaced by an instruction until they fix it. Tracked stock is deducted in the same transaction.
+- **Cart keeps unavailable lines rather than silently deleting them** — the customer sees what changed. Lowering/removing a line is always allowed; only increases are checked.
+- **Admin status changes:** cancelling an order returns its tracked stock; un-cancelling takes it again and is refused (with the item names) if the stock is no longer there (`OrderStock`). Moves between non-cancelled statuses don't touch stock.
+- Admin product form: a `priced` product's variant price must be ≥ 1 Toman; `quote` products may still carry 0 (their variant prices are never shown).
+
+---
+
 ## 2026-10-31 — One canonical mobile format; checkout never overwrites an existing customer
 
 **Problem (found in the gap review, owner-approved fix):** checkout matched customers by the raw phone string and then `updateOrCreate`d them. With no phone verification (no OTP — no SMS provider yet), anyone typing someone else's number silently rewrote that customer's name/email and had their order filed (and texted) under them. And the same person typing `09121234567`, `۰۹۱۲۱۲۳۴۵۶۷`, or `+98 912 123 4567` became three different customers.

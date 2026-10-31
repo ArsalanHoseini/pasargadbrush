@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCheckoutRequest;
 use App\Models\Order;
 use App\Services\Cart\CartManager;
 use App\Services\Cart\CartResolver;
+use App\Services\Checkout\CartNotOrderable;
 use App\Services\Checkout\NotifyOrderPlaced;
 use App\Services\Checkout\PlaceOrder;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,10 @@ class CheckoutController extends Controller
             return redirect()->route('cart.show')->with('status', 'سبد خرید شما خالی است.');
         }
 
+        if ($this->manager->problems($cart) !== []) {
+            return $this->backToCartWithProblems();
+        }
+
         return view('checkout.create', [
             'cart' => $cart,
             'total' => $this->manager->totalRial($cart),
@@ -41,12 +46,27 @@ class CheckoutController extends Controller
             return redirect()->route('cart.show')->with('status', 'سبد خرید شما خالی است.');
         }
 
-        $order = $placeOrder->handle($cart, $request->validated());
+        try {
+            $order = $placeOrder->handle($cart, $request->validated());
+        } catch (CartNotOrderable) {
+            return $this->backToCartWithProblems();
+        }
+
         $notifyOrderPlaced->handle($order);
 
         $request->session()->put('last_order_id', $order->id);
 
         return redirect()->route('checkout.confirmation');
+    }
+
+    /**
+     * The cart page itself lists the reason next to each affected line.
+     */
+    private function backToCartWithProblems(): RedirectResponse
+    {
+        return redirect()->route('cart.show')->withErrors([
+            'cart' => 'موجودی یا وضعیت برخی از محصولات سبد خرید شما تغییر کرده است. لطفاً موارد مشخص‌شده را اصلاح کنید و دوباره ادامه دهید.',
+        ]);
     }
 
     public function confirmation(Request $request): View|RedirectResponse

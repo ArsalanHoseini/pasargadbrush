@@ -5,6 +5,14 @@
 @section('content')
 <h1 class="mb-6 text-lg font-semibold" dir="ltr">{{ $order->order_number }}</h1>
 
+@if ($errors->any())
+    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        @foreach ($errors->all() as $error)
+            <p>{{ $error }}</p>
+        @endforeach
+    </div>
+@endif
+
 <div class="grid gap-6 lg:grid-cols-2">
     <div class="space-y-6">
         <div class="rounded-lg border border-neutral-200 bg-white p-6">

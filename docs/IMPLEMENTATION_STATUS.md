@@ -175,6 +175,12 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Existing customers are matched by phone and never modified by checkout; the entered name/phone/email is snapshotted onto the order (migration `add_contact_snapshot_to_orders_table`, run locally). Admin order page warns on a name mismatch.
 - 20 new tests (`Unit/IranianMobileTest` data sets, `CheckoutTest`, `OrderNotificationTest`, `Admin/OrderManagementTest`). Full suite 145/145 passing.
 
+**Product availability re-checked at order time + real stock enforcement (completed, 2026-10-31)**
+- `ProductVariant::unavailableReason()` is the single availability rule (active, priced, `stock_status`, stock, price > 0); used by product page, cart, checkout and — under a row lock — `PlaceOrder`, which now throws `CartNotOrderable` instead of ordering an unavailable item.
+- Tracked stock is deducted on order, returned on admin cancel, re-taken (or refused) on un-cancel (`OrderStock`). Cart line quantity capped at `CartManager::MAX_QUANTITY` (1000) across repeated adds. Priced variants can't be saved at price 0.
+- Product page shows «ناموجود» for unavailable variants; cart marks affected lines in red and blocks checkout until fixed; admin order page now displays errors.
+- 18 new tests (`ProductAvailabilityTest`, `Admin/OrderManagementTest`, `Admin/ProductManagementTest`). Full suite 163/163 passing.
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

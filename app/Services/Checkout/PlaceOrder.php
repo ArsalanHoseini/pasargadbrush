@@ -5,6 +5,8 @@ namespace App\Services\Checkout;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\ProductVariant;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -32,6 +34,8 @@ class PlaceOrder
         }
 
         return DB::transaction(function () use ($cart, $details) {
+            $variants = $this->lockAndVerifyVariants($cart);
+
             // Phone isn't verified (no OTP yet), so whoever types a number must
             // never be able to rewrite the existing customer's name/email — an
             // existing customer is only matched, never updated. What was
@@ -54,7 +58,7 @@ class PlaceOrder
             $lineItems = [];
 
             foreach ($cart->items as $item) {
-                $variant = $item->variant;
+                $variant = $variants->get($item->product_variant_id);
                 $lineTotal = $variant->price_rial * $item->quantity;
                 $subtotal += $lineTotal;
 
@@ -87,10 +91,57 @@ class PlaceOrder
 
             $order->items()->createMany($lineItems);
 
+            foreach ($cart->items as $item) {
+                $variant = $variants->get($item->product_variant_id);
+
+                if ($variant->stock_quantity !== null) {
+                    $variant->decrement('stock_quantity', $item->quantity);
+                }
+            }
+
             $cart->items()->delete();
 
             return $order;
         });
+    }
+
+    /**
+     * Re-reads every variant in the cart with a row lock, then re-checks it
+     * with the same rule the product page and cart use. The lock means two
+     * customers checking out the last units at the same moment can't both
+     * succeed. Throws before anything is written if any line fails.
+     *
+     * @return Collection<int, ProductVariant>
+     *
+     * @throws CartNotOrderable
+     */
+    private function lockAndVerifyVariants(Cart $cart): Collection
+    {
+        $variants = ProductVariant::query()
+            ->with('product')
+            ->whereIn('id', $cart->items->pluck('product_variant_id'))
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $problems = [];
+
+        foreach ($cart->items as $item) {
+            $variant = $variants->get($item->product_variant_id);
+            $reason = $variant
+                ? $variant->unavailableReason($item->quantity)
+                : 'این محصول دیگر به‌صورت آنلاین قابل خرید نیست.';
+
+            if ($reason !== null) {
+                $problems[$item->id] = $reason;
+            }
+        }
+
+        if ($problems !== []) {
+            throw new CartNotOrderable($problems);
+        }
+
+        return $variants;
     }
 
     private function generateOrderNumber(): string

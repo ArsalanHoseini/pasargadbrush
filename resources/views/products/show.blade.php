@@ -73,6 +73,10 @@
                     </div>
                 @endif
 
+                @error('quantity')
+                    <div class="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ $message }}</div>
+                @enderror
+
                 <div class="mb-6 space-y-2">
                     @foreach ($product->variants as $variant)
                         <form method="POST" action="{{ route('cart.items.store') }}"
@@ -82,11 +86,16 @@
                             <span class="text-sm">{{ $variant->label }}</span>
                             <div class="flex items-center gap-3">
                                 <span class="font-medium" dir="ltr">{{ \App\Support\Money::toman($variant->price_rial) }}</span>
-                                <input type="number" name="quantity" value="1" min="1" max="1000"
-                                       class="w-16 rounded border border-neutral-300 px-2 py-1 text-sm" dir="ltr">
-                                <button type="submit" class="rounded-full bg-brand-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-accent-dark">
-                                    افزودن به سبد
-                                </button>
+                                @if ($variant->unavailableReason() === null)
+                                    <input type="number" name="quantity" value="1" min="1"
+                                           max="{{ min($variant->stock_quantity ?? \App\Services\Cart\CartManager::MAX_QUANTITY, \App\Services\Cart\CartManager::MAX_QUANTITY) }}"
+                                           class="w-16 rounded border border-neutral-300 px-2 py-1 text-sm" dir="ltr">
+                                    <button type="submit" class="rounded-full bg-brand-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-accent-dark">
+                                        افزودن به سبد
+                                    </button>
+                                @else
+                                    <span class="rounded-full bg-neutral-100 px-4 py-1.5 text-xs font-semibold text-neutral-500">ناموجود</span>
+                                @endif
                             </div>
                         </form>
                     @endforeach

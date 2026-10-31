@@ -8,20 +8,36 @@ use App\Models\ProductVariant;
 
 class CartManager
 {
+    /**
+     * Upper bound on one cart line, however many times "add to cart" is
+     * pressed — larger B2B quantities go through the quote-request flow.
+     */
+    public const MAX_QUANTITY = 1000;
+
     public function addItem(Cart $cart, ProductVariant $variant, int $quantity): CartItem
     {
         $item = $cart->items()->where('product_variant_id', $variant->id)->first();
 
         if ($item) {
-            $item->update(['quantity' => $item->quantity + $quantity]);
+            $item->update(['quantity' => min($item->quantity + $quantity, self::MAX_QUANTITY)]);
 
             return $item;
         }
 
         return $cart->items()->create([
             'product_variant_id' => $variant->id,
-            'quantity' => $quantity,
+            'quantity' => min($quantity, self::MAX_QUANTITY),
         ]);
+    }
+
+    /**
+     * The quantity a line would have after adding $quantity more.
+     */
+    public function quantityAfterAdding(Cart $cart, ProductVariant $variant, int $quantity): int
+    {
+        $existing = (int) $cart->items()->where('product_variant_id', $variant->id)->value('quantity');
+
+        return min($existing + $quantity, self::MAX_QUANTITY);
     }
 
     public function updateQuantity(CartItem $item, int $quantity): void
@@ -32,7 +48,29 @@ class CartManager
             return;
         }
 
-        $item->update(['quantity' => $quantity]);
+        $item->update(['quantity' => min($quantity, self::MAX_QUANTITY)]);
+    }
+
+    /**
+     * Every line that can't currently be ordered, keyed by cart item id —
+     * e.g. the product was deactivated, switched to quote-only, or ran out
+     * of stock after it was added. Empty when the whole cart is orderable.
+     *
+     * @return array<int, string>
+     */
+    public function problems(Cart $cart): array
+    {
+        $problems = [];
+
+        foreach ($cart->items as $item) {
+            $reason = $item->variant->unavailableReason($item->quantity);
+
+            if ($reason !== null) {
+                $problems[$item->id] = $reason;
+            }
+        }
+
+        return $problems;
     }
 
     /**

@@ -24,6 +24,7 @@ class CartController extends Controller
         return view('cart.show', [
             'cart' => $cart,
             'total' => $cart ? $this->manager->totalRial($cart) : 0,
+            'problems' => $cart ? $this->manager->problems($cart) : [],
         ]);
     }
 
@@ -31,6 +32,17 @@ class CartController extends Controller
     {
         $variant = ProductVariant::with('product')->findOrFail($request->integer('product_variant_id'));
         abort_unless($variant->product->is_active && $variant->product->type === 'priced', 404);
+
+        $existingCart = $this->resolver->resolveForDisplay($request);
+        $quantityAfterAdding = $existingCart
+            ? $this->manager->quantityAfterAdding($existingCart, $variant, $request->integer('quantity'))
+            : min($request->integer('quantity'), CartManager::MAX_QUANTITY);
+
+        $reason = $variant->unavailableReason($quantityAfterAdding);
+
+        if ($reason !== null) {
+            return back()->withErrors(['quantity' => $reason])->withInput();
+        }
 
         $cart = $this->resolver->resolveForWrite($request);
         $this->manager->addItem($cart, $variant, $request->integer('quantity'));
@@ -42,8 +54,20 @@ class CartController extends Controller
     {
         $this->authorizeCartItem($request, $cartItem);
 
-        $request->validate(['quantity' => ['required', 'integer', 'min:0', 'max:1000']]);
-        $this->manager->updateQuantity($cartItem, $request->integer('quantity'));
+        $request->validate(['quantity' => ['required', 'integer', 'min:0', 'max:'.CartManager::MAX_QUANTITY]]);
+        $quantity = $request->integer('quantity');
+
+        // Lowering a quantity or removing a line is always allowed, even for
+        // an item that has since become unavailable — only increases are checked.
+        if ($quantity > $cartItem->quantity) {
+            $reason = $cartItem->variant->unavailableReason($quantity);
+
+            if ($reason !== null) {
+                return back()->withErrors(['quantity' => $reason]);
+            }
+        }
+
+        $this->manager->updateQuantity($cartItem, $quantity);
 
         return back()->with('status', 'سبد خرید به‌روزرسانی شد.');
     }
