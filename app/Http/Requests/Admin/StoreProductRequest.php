@@ -54,14 +54,20 @@ class StoreProductRequest extends FormRequest
             'variants.*.is_default' => ['boolean'],
 
             // SVG excluded for the same XSS reason as the media library upload.
-            'schematic' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'remove_schematic' => ['boolean'],
+            'schematics' => ['nullable', 'array', 'max:6'],
+            'schematics.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_schematic_ids' => ['nullable', 'array'],
+            'remove_schematic_ids.*' => ['integer'],
 
             'dimension_fields' => ['array'],
             'dimension_fields.*.id' => ['nullable', 'integer'],
-            'dimension_fields.*.code' => ['required', 'string', 'max:20', 'distinct'],
+            // Missing type = a numeric dimension (the only kind before choices existed).
+            'dimension_fields.*.type' => ['nullable', Rule::in([ProductDimensionField::TYPE_NUMBER, ProductDimensionField::TYPE_CHOICE])],
+            // A dimension needs its letter on the drawing; a choice (e.g. fiber material) usually has none.
+            'dimension_fields.*.code' => ['required_unless:dimension_fields.*.type,'.ProductDimensionField::TYPE_CHOICE, 'nullable', 'string', 'max:20'],
+            'dimension_fields.*.options' => ['required_if:dimension_fields.*.type,'.ProductDimensionField::TYPE_CHOICE, 'nullable', 'string', 'max:1000'],
             'dimension_fields.*.label' => ['required', 'string', 'max:255'],
-            'dimension_fields.*.unit' => ['required', Rule::in(array_keys(ProductDimensionField::UNITS))],
+            'dimension_fields.*.unit' => ['nullable', Rule::in(array_keys(ProductDimensionField::UNITS))],
             'dimension_fields.*.is_required' => ['boolean'],
             'dimension_fields.*.min_value' => ['nullable', 'numeric', 'min:0'],
             'dimension_fields.*.max_value' => ['nullable', 'numeric', 'min:0'],
@@ -75,6 +81,12 @@ class StoreProductRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                $codes = collect($this->input('dimension_fields', []))->pluck('code')->filter(fn ($code) => filled($code))->map(fn ($code) => trim((string) $code));
+
+                foreach ($codes->duplicates() as $index => $code) {
+                    $validator->errors()->add("dimension_fields.{$index}.code", "حرف «{$code}» برای دو بُعد تکرار شده است.");
+                }
+
                 foreach ($this->input('dimension_fields', []) as $index => $field) {
                     $min = $field['min_value'] ?? null;
                     $max = $field['max_value'] ?? null;
@@ -96,7 +108,10 @@ class StoreProductRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'schematic' => 'تصویر شماتیک',
+            'schematics' => 'تصاویر شماتیک',
+            'schematics.*' => 'تصویر شماتیک',
+            'dimension_fields.*.type' => 'نوع فیلد',
+            'dimension_fields.*.options' => 'گزینه‌ها',
             'dimension_fields.*.code' => 'حرف روی شکل',
             'dimension_fields.*.label' => 'عنوان بُعد',
             'dimension_fields.*.unit' => 'واحد',

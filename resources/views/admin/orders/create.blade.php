@@ -9,7 +9,7 @@
 
     $catalog = $products->mapWithKeys(fn ($product) => [$product->id => [
         'name' => $product->name,
-        'schematic' => $product->schematic?->url(),
+        'schematic' => $product->schematics->first()?->url(),
         'variants' => $product->variants->map(fn ($variant) => [
             'id' => $variant->id,
             'label' => $variant->label,
@@ -17,6 +17,8 @@
         ])->values(),
         'fields' => $product->dimensionFields->map(fn ($field) => [
             'id' => $field->id,
+            'type' => $field->type,
+            'options' => $field->options ?? [],
             'code' => $field->code,
             'label' => $field->label,
             'unit' => $field->unitLabel(),
@@ -172,9 +174,20 @@
                                             <span x-show="field.required" class="text-red-600">*</span>
                                         </label>
                                         <div class="flex overflow-hidden rounded border border-neutral-300 bg-white">
-                                            <input :name="`items[${index}][dimensions][${field.id}]`" x-model="item.dimensions[field.id]"
-                                                   :required="field.required" inputmode="decimal" dir="ltr"
-                                                   class="w-full min-w-0 px-2 py-1.5 text-sm outline-none">
+                                            <template x-if="field.type === 'choice'">
+                                                <select :name="`items[${index}][dimensions][${field.id}]`" x-model="item.dimensions[field.id]" :required="field.required"
+                                                        class="w-full min-w-0 px-2 py-1.5 text-sm outline-none">
+                                                    <option value="">— انتخاب —</option>
+                                                    <template x-for="option in field.options" :key="option">
+                                                        <option :value="option" x-text="option" :selected="item.dimensions[field.id] === option"></option>
+                                                    </template>
+                                                </select>
+                                            </template>
+                                            <template x-if="field.type !== 'choice'">
+                                                <input :name="`items[${index}][dimensions][${field.id}]`" x-model="item.dimensions[field.id]"
+                                                       :required="field.required" inputmode="decimal" dir="ltr"
+                                                       class="w-full min-w-0 px-2 py-1.5 text-sm outline-none">
+                                            </template>
                                             <span class="flex items-center bg-neutral-50 px-2 text-xs text-neutral-500" x-text="field.unit"></span>
                                         </div>
                                     </div>

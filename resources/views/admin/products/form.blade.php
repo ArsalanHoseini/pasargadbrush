@@ -29,6 +29,8 @@
           specifications: {{ json_encode(old('specifications', $specificationRows)) }},
           dimensionFields: {{ json_encode(old('dimension_fields', $dimensionFields->map(fn ($f) => [
               'id' => $f->id,
+              'type' => $f->type,
+              'options' => implode("\n", $f->options ?? []),
               'code' => $f->code,
               'label' => $f->label,
               'unit' => $f->unit,
@@ -212,58 +214,77 @@
     </div>
 
     <div class="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 class="mb-1 text-sm font-medium">سفارشی‌سازی — شماتیک و ابعاد</h2>
+        <h2 class="mb-1 text-sm font-medium">سفارشی‌سازی — شماتیک‌ها و فرم سفارش</h2>
         <p class="mb-4 text-xs text-neutral-500">
-            اگر برای این محصول بُعدی تعریف کنید، مشتری هنگام خرید (یا در فرم استعلام قیمت) باید شماتیک را ببیند و هر بُعد را وارد کند.
-            حرف هر بُعد را مطابق حرفی بنویسید که روی تصویر شماتیک آمده است. بدون هیچ بُعدی، محصول مثل قبل و بدون فرم ابعاد فروخته می‌شود.
+            فیلدهای این بخش در کارت «مشخصات و سفارش» صفحه‌ی محصول نمایش داده می‌شوند و مشتری هنگام سفارش (یا استعلام قیمت) باید آن‌ها را پر کند.
+            برای هر بُعد، حرفی را بنویسید که روی تصویر شماتیک آمده است. بدون هیچ فیلدی، محصول فرم سفارشی ندارد.
         </p>
 
         <div class="mb-5 rounded border border-neutral-100 p-3">
-            <label class="mb-2 block text-sm font-medium">تصویر شماتیک</label>
-            @if ($product->schematic)
-                <div class="mb-3 flex items-start gap-4">
-                    <img src="{{ $product->schematic->url() }}" alt="شماتیک فعلی"
-                         class="h-32 w-auto rounded border border-neutral-200 bg-white object-contain p-1">
-                    <label class="flex items-center gap-2 text-xs text-red-700">
-                        <input type="checkbox" name="remove_schematic" value="1">
-                        حذف شماتیک فعلی
-                    </label>
+            <label class="mb-2 block text-sm font-medium">تصاویر شماتیک (کنار تصویر محصول نمایش داده می‌شوند)</label>
+            @if ($product->exists && $product->schematics->isNotEmpty())
+                <div class="mb-3 flex flex-wrap gap-4">
+                    @foreach ($product->schematics as $schematic)
+                        <div class="space-y-1">
+                            <img src="{{ $schematic->url() }}" alt="شماتیک {{ $loop->iteration }}"
+                                 class="h-28 w-auto rounded border border-neutral-200 bg-white object-contain p-1">
+                            <label class="flex items-center gap-1 text-xs text-red-700">
+                                <input type="checkbox" name="remove_schematic_ids[]" value="{{ $schematic->id }}">
+                                حذف
+                            </label>
+                        </div>
+                    @endforeach
                 </div>
             @endif
-            <input type="file" name="schematic" accept="image/jpeg,image/png,image/webp"
+            <input type="file" name="schematics[]" multiple accept="image/jpeg,image/png,image/webp"
                    class="block w-full text-sm file:me-3 file:rounded file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:text-white">
             <p class="mt-1 text-xs text-neutral-500">
-                JPG، PNG یا WEBP، حداکثر ۵ مگابایت.{{ $product->schematic ? ' انتخاب فایل جدید، شماتیک فعلی را جایگزین می‌کند.' : '' }}
+                JPG، PNG یا WEBP، هر کدام حداکثر ۵ مگابایت. می‌توانید چند تصویر (مثلاً نمای جلو و برش) با هم انتخاب کنید؛ به تصاویر قبلی اضافه می‌شوند.
             </p>
         </div>
 
-        <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-medium">ابعادی که مشتری وارد می‌کند</h3>
-            <button type="button"
-                    @click="dimensionFields.push({id: null, code: '', label: '', unit: 'mm', is_required: true, min_value: null, max_value: null})"
-                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
-                + افزودن بُعد
-            </button>
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-medium">فیلدهایی که مشتری پر می‌کند</h3>
+            <div class="flex gap-2">
+                <button type="button"
+                        @click="dimensionFields.push({id: null, type: 'number', options: '', code: '', label: '', unit: 'mm', is_required: true, min_value: null, max_value: null})"
+                        class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                    + بُعد (عدد)
+                </button>
+                <button type="button"
+                        @click="dimensionFields.push({id: null, type: 'choice', options: '', code: '', label: '', unit: 'mm', is_required: true, min_value: null, max_value: null})"
+                        class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                    + گزینه‌ی انتخابی (مثلاً جنس الیاف)
+                </button>
+            </div>
         </div>
 
         <template x-if="dimensionFields.length === 0">
-            <p class="text-sm text-neutral-500">بُعدی تعریف نشده — این محصول فرم ابعاد ندارد.</p>
+            <p class="text-sm text-neutral-500">فیلدی تعریف نشده — این محصول فرم سفارشی ندارد.</p>
         </template>
 
         <template x-for="(field, index) in dimensionFields" :key="index">
             <div class="mb-3 flex flex-wrap items-end gap-3 rounded border border-neutral-100 p-3">
                 <input type="hidden" :name="`dimension_fields[${index}][id]`" x-model="field.id">
+                <input type="hidden" :name="`dimension_fields[${index}][type]`" :value="field.type || 'number'">
+                <span class="w-full text-xs font-medium text-neutral-500" x-text="field.type === 'choice' ? 'گزینه‌ی انتخابی' : 'بُعد (عدد)'"></span>
                 <div class="w-20">
-                    <label class="mb-1 block text-xs text-neutral-500">حرف روی شکل</label>
-                    <input :name="`dimension_fields[${index}][code]`" x-model="field.code" required dir="ltr" placeholder="A"
+                    <label class="mb-1 block text-xs text-neutral-500" x-text="field.type === 'choice' ? 'حرف (اختیاری)' : 'حرف روی شکل'"></label>
+                    <input :name="`dimension_fields[${index}][code]`" x-model="field.code" :required="field.type !== 'choice'" dir="ltr" placeholder="A"
                            class="w-full rounded border border-neutral-300 px-2 py-1.5 text-center text-sm font-bold">
                 </div>
                 <div class="min-w-40 flex-1">
-                    <label class="mb-1 block text-xs text-neutral-500">عنوان (مثلاً قطر خارجی)</label>
+                    <label class="mb-1 block text-xs text-neutral-500" x-text="field.type === 'choice' ? 'عنوان (مثلاً جنس الیاف)' : 'عنوان (مثلاً قطر خارجی)'"></label>
                     <input :name="`dimension_fields[${index}][label]`" x-model="field.label" required
                            class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
                 </div>
-                <div class="w-28">
+                <div class="w-full" x-show="field.type === 'choice'">
+                    <label class="mb-1 block text-xs text-neutral-500">گزینه‌ها (هر گزینه در یک خط، یا جدا با کاما)</label>
+                    <textarea :name="`dimension_fields[${index}][options]`" x-model="field.options" rows="3" :required="field.type === 'choice'"
+                              placeholder="نایلون (PA)&#10;PET&#10;PP&#10;سایر"
+                              class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"></textarea>
+                </div>
+                <div class="w-28" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">واحد</label>
                     <select :name="`dimension_fields[${index}][unit]`" x-model="field.unit"
                             class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
@@ -272,12 +293,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="w-24">
+                <div class="w-24" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">حداقل</label>
                     <input type="number" step="any" min="0" :name="`dimension_fields[${index}][min_value]`" x-model="field.min_value" dir="ltr"
                            class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
                 </div>
-                <div class="w-24">
+                <div class="w-24" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">حداکثر</label>
                     <input type="number" step="any" min="0" :name="`dimension_fields[${index}][max_value]`" x-model="field.max_value" dir="ltr"
                            class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">

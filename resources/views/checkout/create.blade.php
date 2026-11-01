@@ -20,10 +20,16 @@
             @foreach ($cart->items as $item)
                 <li class="flex justify-between py-2">
                     <div>
-                        <span>{{ $item->variant->product->name }} — {{ $item->variant->label }} × {{ $item->quantity }}</span>
+                        <span>{{ $item->title() }} × {{ $item->quantity }}</span>
                         @include('orders.partials.customization', ['customization' => $item->customization])
                     </div>
-                    <span dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial * $item->quantity) }}</span>
+                    <span class="shrink-0">
+                        @if ($item->lineTotalRial() !== null)
+                            <span dir="ltr">{{ \App\Support\Money::toman($item->lineTotalRial()) }}</span>
+                        @else
+                            <span class="text-xs text-neutral-500">پس از بررسی کارشناس</span>
+                        @endif
+                    </span>
                 </li>
             @endforeach
         </ul>

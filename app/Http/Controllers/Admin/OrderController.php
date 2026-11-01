@@ -54,7 +54,7 @@ class OrderController extends Controller
         }
 
         $products = Product::query()
-            ->with(['variants' => fn ($query) => $query->orderBy('sort_order'), 'dimensionFields', 'schematic'])
+            ->with(['variants' => fn ($query) => $query->orderBy('sort_order'), 'dimensionFields', 'schematics'])
             ->orderBy('name')
             ->get();
 

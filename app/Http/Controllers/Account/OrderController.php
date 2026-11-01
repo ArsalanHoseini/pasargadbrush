@@ -33,10 +33,11 @@ class OrderController extends Controller
 
         $result = $reorder->handle($order, $resolver->resolveForWrite($request));
 
-        return redirect()->route('cart.show')
+        $redirect = redirect()->route('cart.show')
             ->with('status', $result['added'] > 0
                 ? $result['added'].' قلم از سفارش '.$order->order_number.' با قیمت‌های امروز به سبد خرید اضافه شد.'
-                : 'هیچ قلمی از این سفارش به سبد اضافه نشد.')
-            ->with('reorder_skipped', $result['skipped']);
+                : 'هیچ قلمی از این سفارش به سبد اضافه نشد.');
+
+        return $result['skipped'] === [] ? $redirect : $redirect->with('reorder_skipped', $result['skipped']);
     }
 }

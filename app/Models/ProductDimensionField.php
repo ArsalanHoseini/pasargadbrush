@@ -17,6 +17,11 @@ class ProductDimensionField extends Model
     /** @use HasFactory<ProductDimensionFieldFactory> */
     use HasFactory;
 
+    public const TYPE_NUMBER = 'number';
+
+    /** A choice from a fixed list of options, e.g. «جنس الیاف»: PA / PET / PP. */
+    public const TYPE_CHOICE = 'choice';
+
     public const UNITS = [
         'mm' => 'میلی‌متر',
         'cm' => 'سانتی‌متر',
@@ -26,9 +31,11 @@ class ProductDimensionField extends Model
 
     protected $fillable = [
         'product_id',
+        'type',
         'code',
         'label',
         'unit',
+        'options',
         'is_required',
         'min_value',
         'max_value',
@@ -36,6 +43,7 @@ class ProductDimensionField extends Model
     ];
 
     protected $casts = [
+        'options' => 'array',
         'is_required' => 'boolean',
         'min_value' => 'float',
         'max_value' => 'float',
@@ -46,8 +54,13 @@ class ProductDimensionField extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function isChoice(): bool
+    {
+        return $this->type === self::TYPE_CHOICE;
+    }
+
     public function unitLabel(): string
     {
-        return self::UNITS[$this->unit] ?? $this->unit;
+        return $this->isChoice() ? '' : (self::UNITS[$this->unit] ?? $this->unit);
     }
 }

@@ -1,65 +1,76 @@
 @props(['product', 'withNotes' => true])
 
 {{--
-    The product's schematic drawing followed by one input per dimension the
-    staff defined for it (see App\Services\Customization\DimensionForm for the
-    matching validation). Each input is labeled with the letter that marks
-    that dimension on the drawing.
+    A product's order form fields, as rows: numeric dimensions (title, the
+    letter that marks it on the schematic drawings, input, unit) and choices
+    from a fixed list shown as selectable chips (e.g. «جنس الیاف»). Validation:
+    App\Services\Customization\DimensionForm.
 --}}
-<div class="space-y-4">
-    @if ($product->schematic)
-        <figure class="overflow-hidden rounded-lg border border-neutral-200 bg-white p-3">
-            <img src="{{ $product->schematic->url() }}" alt="شماتیک ابعاد {{ $product->name }}"
-                 class="mx-auto max-h-80 w-auto object-contain">
-            <figcaption class="mt-2 text-center text-xs text-neutral-500">
-                حروف روی شکل را با فیلدهای زیر تطبیق دهید و اندازه‌ی هر بخش را دقیق وارد کنید.
-            </figcaption>
-        </figure>
-    @endif
+<div class="space-y-3">
+    @foreach ($product->dimensionFields as $field)
+        @php
+            $inputId = 'dimension-'.$field->id;
+            $errorKey = 'dimensions.'.$field->id;
+        @endphp
 
-    <div class="grid gap-3 sm:grid-cols-2">
-        @foreach ($product->dimensionFields as $field)
-            @php $inputId = 'dimension-'.$field->id; @endphp
+        @if ($field->isChoice())
+            <fieldset class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-neutral-100 pt-3">
+                <legend class="sr-only">{{ $field->label }}</legend>
+                <span aria-hidden="true" class="w-32 shrink-0 text-sm font-medium text-neutral-800">
+                    @if ($field->is_required)<span class="text-red-600">*</span>@endif
+                    {{ $field->label }}
+                </span>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($field->options ?? [] as $option)
+                        <label class="cursor-pointer">
+                            <input type="radio" name="dimensions[{{ $field->id }}]" value="{{ $option }}" class="peer sr-only"
+                                   @checked(old('dimensions.'.$field->id) === $option) @required($field->is_required)>
+                            <span class="block rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition peer-checked:border-brand-charcoal peer-checked:bg-brand-charcoal peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-brand-accent hover:border-neutral-500">
+                                {{ $option }}
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                @error($errorKey)
+                    <p class="w-full text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </fieldset>
+        @else
             <div>
-                <label for="{{ $inputId }}" class="mb-1 flex items-center gap-2 text-sm font-medium text-neutral-800">
-                    <span class="inline-flex min-w-7 items-center justify-center rounded bg-neutral-900 px-1.5 py-0.5 text-xs font-bold text-white" dir="ltr">{{ $field->code }}</span>
-                    <span>{{ $field->label }}</span>
-                    @if ($field->is_required)
-                        <span class="text-red-600" aria-hidden="true">*</span>
-                    @else
-                        <span class="text-xs font-normal text-neutral-400">(اختیاری)</span>
-                    @endif
-                </label>
-                <div class="flex items-stretch overflow-hidden rounded border border-neutral-300 focus-within:border-neutral-900 @error('dimensions.'.$field->id) border-red-400 @enderror">
+                <div class="flex items-center gap-3">
+                    <label for="{{ $inputId }}" class="flex w-32 shrink-0 items-center gap-1 text-sm font-medium text-neutral-800 sm:w-40">
+                        @if ($field->is_required)<span class="text-red-600" aria-hidden="true">*</span>@endif
+                        <span>{{ $field->label }}</span>
+                        @unless ($field->is_required)<span class="text-xs font-normal text-neutral-400">(اختیاری)</span>@endunless
+                    </label>
+                    <span class="w-10 shrink-0 text-center text-base font-bold text-neutral-900" dir="ltr" aria-hidden="true">{{ $field->code }}</span>
                     <input id="{{ $inputId }}" name="dimensions[{{ $field->id }}]" inputmode="decimal" dir="ltr"
                            value="{{ old('dimensions.'.$field->id) }}" @required($field->is_required)
-                           class="w-full min-w-0 px-3 py-2 text-sm outline-none">
-                    <span class="flex shrink-0 items-center bg-neutral-50 px-3 text-xs text-neutral-500">{{ $field->unitLabel() }}</span>
+                           @if ($field->min_value !== null || $field->max_value !== null)
+                               placeholder="{{ $field->min_value !== null ? $field->min_value + 0 : '' }}{{ $field->min_value !== null && $field->max_value !== null ? ' تا ' : '' }}{{ $field->max_value !== null ? $field->max_value + 0 : '' }}"
+                           @endif
+                           aria-describedby="{{ $inputId }}-unit"
+                           @class([
+                               'min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:border-brand-charcoal',
+                               'border-red-400' => $errors->has($errorKey),
+                               'border-neutral-300' => ! $errors->has($errorKey),
+                           ])>
+                    <span id="{{ $inputId }}-unit" class="w-16 shrink-0 text-xs text-neutral-500">{{ $field->unitLabel() }}</span>
                 </div>
-                @if ($field->min_value !== null || $field->max_value !== null)
-                    <p class="mt-1 text-xs text-neutral-500">
-                        @if ($field->min_value !== null && $field->max_value !== null)
-                            بین {{ $field->min_value + 0 }} تا {{ $field->max_value + 0 }} {{ $field->unitLabel() }}
-                        @elseif ($field->min_value !== null)
-                            حداقل {{ $field->min_value + 0 }} {{ $field->unitLabel() }}
-                        @else
-                            حداکثر {{ $field->max_value + 0 }} {{ $field->unitLabel() }}
-                        @endif
-                    </p>
-                @endif
-                @error('dimensions.'.$field->id)
+                @error($errorKey)
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-        @endforeach
-    </div>
+        @endif
+    @endforeach
 
     @if ($withNotes)
-    <div>
-        <label for="customization_notes" class="mb-1 block text-sm font-medium text-neutral-800">توضیحات تکمیلی (اختیاری)</label>
-        <textarea id="customization_notes" name="customization_notes" rows="3"
-                  placeholder="مثلاً جنس یا رنگ موی برس، نوع کاربرد، یا هر نکته‌ی دیگری درباره‌ی ساخت"
-                  class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('customization_notes') }}</textarea>
-    </div>
+        <details class="border-t border-neutral-100 pt-3" @if (old('customization_notes')) open @endif>
+            <summary class="cursor-pointer text-sm text-neutral-600">توضیحات تکمیلی (اختیاری)</summary>
+            <label for="customization_notes" class="sr-only">توضیحات تکمیلی</label>
+            <textarea id="customization_notes" name="customization_notes" rows="3"
+                      placeholder="مثلاً رنگ الیاف، نوع کاربرد، یا هر نکته‌ی دیگری درباره‌ی ساخت"
+                      class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm">{{ old('customization_notes') }}</textarea>
+        </details>
     @endif
 </div>

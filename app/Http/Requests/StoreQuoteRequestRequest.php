@@ -31,6 +31,11 @@ class StoreQuoteRequestRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // The product page's order card sends its quantity field as "quantity".
+        if (! $this->filled('requested_quantity') && $this->filled('quantity')) {
+            $this->merge(['requested_quantity' => (string) $this->input('quantity')]);
+        }
+
         // Landlines stay as typed (B2B leads often give one); a mobile number
         // is stored in the canonical form so it matches the customer's account.
         if (is_string($this->input('phone'))) {
@@ -41,7 +46,7 @@ class StoreQuoteRequestRequest extends FormRequest
             }
         }
 
-        app(DimensionForm::class)->normalize($this);
+        app(DimensionForm::class)->normalize($this, '', $this->product());
     }
 
     /**

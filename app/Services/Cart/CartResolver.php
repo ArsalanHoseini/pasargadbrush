@@ -42,6 +42,6 @@ class CartResolver
             return null;
         }
 
-        return Cart::query()->where('session_token', $token)->with('items.variant.product')->first();
+        return Cart::query()->where('session_token', $token)->with('items.product', 'items.variant.product')->first();
     }
 }

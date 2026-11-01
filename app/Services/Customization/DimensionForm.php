@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductDimensionField;
 use App\Support\PersianDigits;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * The customer-facing dimensions form of a product (defined per product by
@@ -28,8 +29,10 @@ class DimensionForm
 
     /**
      * Persian keyboards type Persian digits and «٫» as the decimal separator.
+     * Only numeric fields are touched — a choice is matched against its
+     * options exactly.
      */
-    public function normalize(Request $request, string $prefix = ''): void
+    public function normalize(Request $request, string $prefix = '', ?Product $product = null): void
     {
         $key = $prefix.'dimensions';
         $dimensions = $request->input($key);
@@ -38,12 +41,14 @@ class DimensionForm
             return;
         }
 
-        $normalized = array_map(
-            fn ($value) => is_string($value)
+        $choiceFieldIds = $product?->dimensionFields->filter->isChoice()->pluck('id')->all() ?? [];
+
+        $normalized = [];
+        foreach ($dimensions as $fieldId => $value) {
+            $normalized[$fieldId] = is_string($value) && ! in_array((int) $fieldId, $choiceFieldIds, true)
                 ? trim(str_replace(['٫', ','], '.', PersianDigits::toLatin($value)))
-                : $value,
-            $dimensions,
-        );
+                : $value;
+        }
 
         $input = $request->all();
         data_set($input, $key, $normalized);
@@ -51,7 +56,7 @@ class DimensionForm
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(Product $product, string $prefix = ''): array
     {
@@ -61,6 +66,12 @@ class DimensionForm
         ];
 
         foreach ($product->dimensionFields as $field) {
+            if ($field->isChoice()) {
+                $rules[$prefix.'dimensions.'.$field->id] = [$field->is_required ? 'required' : 'nullable', 'string', Rule::in($field->options ?? [])];
+
+                continue;
+            }
+
             $fieldRules = [$field->is_required ? 'required' : 'nullable', 'numeric', 'gt:0'];
 
             if ($field->min_value !== null) {
@@ -111,8 +122,8 @@ class DimensionForm
             ->map(fn (ProductDimensionField $field) => [
                 'code' => $field->code,
                 'label' => $field->label,
-                'unit' => $field->unit,
-                'value' => (string) ($values[$field->id] + 0),
+                'unit' => $field->isChoice() ? '' : $field->unit,
+                'value' => $field->isChoice() ? (string) $values[$field->id] : (string) ($values[$field->id] + 0),
             ])
             ->values()
             ->all();

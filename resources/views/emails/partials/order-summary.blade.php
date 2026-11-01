@@ -19,7 +19,7 @@
                     @endif
                 </td>
                 <td style="text-align: center; border-bottom: 1px solid #eee;">{{ $item->quantity }}</td>
-                <td style="text-align: left; border-bottom: 1px solid #eee;" dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</td>
+                <td style="text-align: left; border-bottom: 1px solid #eee;" >@if ($item->isAwaitingPrice($order))در انتظار تعیین قیمت@else<span dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>@endif</td>
             </tr>
         @endforeach
     </tbody>
@@ -45,6 +45,6 @@
 
 @if ($order->requires_price_confirmation)
     <p style="color: #92400e; background: #fffbeb; padding: 8px;">
-        قیمت اقلام با ابعاد سفارشی، قیمت پایه است و قیمت نهایی پس از بررسی ابعاد توسط کارشناس تأیید می‌شود.
+        قیمت نهایی اقلامی که مشخصات سفارشی دارند یا هنوز قیمت ندارند، پس از بررسی کارشناس تأیید و به شما اعلام می‌شود.
     </p>
 @endif

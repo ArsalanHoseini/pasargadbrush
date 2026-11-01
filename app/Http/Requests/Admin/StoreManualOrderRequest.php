@@ -39,8 +39,8 @@ class StoreManualOrderRequest extends FormRequest
 
         $dimensionForm = app(DimensionForm::class);
 
-        foreach (array_keys($this->lines()) as $index) {
-            $dimensionForm->normalize($this, "items.{$index}.");
+        foreach ($this->lines() as $index => $line) {
+            $dimensionForm->normalize($this, "items.{$index}.", $this->products()->get($line['product_id'] ?? null));
         }
     }
 

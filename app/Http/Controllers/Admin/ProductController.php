@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductDimensionField;
 use App\Models\ProductVariant;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,7 @@ class ProductController extends Controller
             $this->syncImages($product, $request->input('image_ids', []));
             $this->syncVariants($product, $request->input('variants', []));
             $this->syncDimensionFields($product, $request->input('dimension_fields', []));
-            $this->syncSchematic($product, $request);
+            $this->syncSchematics($product, $request);
 
             return $product;
         });
@@ -73,7 +74,7 @@ class ProductController extends Controller
             $this->syncImages($product, $request->input('image_ids', []));
             $this->syncVariants($product, $request->input('variants', []));
             $this->syncDimensionFields($product, $request->input('dimension_fields', []));
-            $this->syncSchematic($product, $request);
+            $this->syncSchematics($product, $request);
         });
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول به‌روزرسانی شد.');
@@ -111,7 +112,7 @@ class ProductController extends Controller
      */
     private function prepared(StoreProductRequest $request): array
     {
-        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications', 'schematic', 'remove_schematic', 'dimension_fields']);
+        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications', 'schematics', 'remove_schematic_ids', 'dimension_fields']);
         $data['slug'] = ($data['slug'] ?? null) ?: PersianSlug::make($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active'] = $request->boolean('is_active');
@@ -189,10 +190,18 @@ class ProductController extends Controller
         $keptIds = [];
 
         foreach (array_values($fields) as $position => $field) {
+            $isChoice = ($field['type'] ?? null) === ProductDimensionField::TYPE_CHOICE;
+
             $attributes = [
-                'code' => trim($field['code']),
+                'type' => $isChoice ? ProductDimensionField::TYPE_CHOICE : ProductDimensionField::TYPE_NUMBER,
+                'code' => trim((string) ($field['code'] ?? '')),
                 'label' => trim($field['label']),
-                'unit' => $field['unit'],
+                'unit' => $field['unit'] ?? 'mm',
+                // Entered one per line or separated by commas («،» too).
+                'options' => $isChoice
+                    ? array_values(array_unique(array_filter(array_map('trim', preg_split('/[
+,،]+/u', (string) ($field['options'] ?? '')) ?: []))))
+                    : null,
                 'is_required' => ! empty($field['is_required']),
                 'min_value' => filled($field['min_value'] ?? null) ? $field['min_value'] : null,
                 'max_value' => filled($field['max_value'] ?? null) ? $field['max_value'] : null,
@@ -217,25 +226,23 @@ class ProductController extends Controller
     }
 
     /**
-     * The schematic is uploaded straight from the product form into the media
-     * library. Replacing or removing it only unlinks the old image; the file
-     * stays in the library.
+     * Schematics are uploaded straight from the product form into the media
+     * library and appended after the existing ones. Removing one only
+     * unlinks it; the file stays in the library.
      */
-    private function syncSchematic(Product $product, StoreProductRequest $request): void
+    private function syncSchematics(Product $product, StoreProductRequest $request): void
     {
-        if ($request->hasFile('schematic')) {
-            $media = $this->mediaUploader->handle(
-                $request->file('schematic'),
-                $request->user()?->id,
-                'شماتیک ابعاد '.$product->name,
-            );
-            $product->update(['schematic_media_id' => $media->id]);
+        $removeIds = array_map('intval', $request->input('remove_schematic_ids', []));
 
-            return;
+        if ($removeIds !== []) {
+            $product->schematics()->detach($removeIds);
         }
 
-        if ($request->boolean('remove_schematic')) {
-            $product->update(['schematic_media_id' => null]);
+        $position = (int) $product->schematics()->max('mediables.sort_order') + 1;
+
+        foreach ($request->file('schematics', []) as $file) {
+            $media = $this->mediaUploader->handle($file, $request->user()?->id, 'شماتیک '.$product->name);
+            $product->schematics()->attach($media->id, ['role' => 'schematic', 'sort_order' => $position++]);
         }
     }
 }

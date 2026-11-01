@@ -4,6 +4,18 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Product page redesign: inline order card, several schematics, choice fields, quote products orderable (stage 1)
+
+**Owner's request (with two mockups):** the order form («مشخصات و سفارش») on the product page itself, schematics shown beside the product image. Owner's answers: quote-only products **can** be added to the cart and ordered, priced afterwards by an expert; build choice fields (e.g. «جنس الیاف»), key-feature callouts, applications with icons, and tabs + customer reviews (the last three = stage 2); **don't** change the site header.
+
+**Design (stage 1):**
+- Product page: order column (title, short description, order card with variant chips / dimension rows «label · letter · input · unit» / choice chips / quantity / price or «قیمت پس از بررسی کارشناس اعلام می‌شود») and a media column (gallery + «نمای شماتیک (بدون مقیاس)» grid). One form, two buttons: «افزودن به سبد و ثبت سفارش» posts to the cart; «مشاوره و استعلام قیمت» reveals contact fields in the same card and posts the same dimensions/choices to `quote-requests.store` via `formaction` (the card's quantity becomes the requested quantity). The separate `/products/{slug}/customize` step is gone — the route now just redirects to the product page, so old links keep working.
+- **Quote-only products are orderable:** `cart_items.product_id` added (always set) and `product_variant_id` made nullable. A variant-less line has no price; `PlaceOrder` stores it at 0 and flags the order `requires_price_confirmation`; it shows as «در انتظار تعیین قیمت» (`OrderItem::isAwaitingPrice()`) until staff set the price in the existing price-confirmation form. Availability for such lines = `Product::quoteOrderUnavailableReason()` (active, still quote-only, not out of stock). Reorder re-adds them (without the old agreed price).
+- **Choice fields:** `product_dimension_fields.type` (`number`|`choice`) + `options` (json). Validated with `Rule::in(options)`; never digit-normalized; stored in the same snapshot (unit empty). Admin enters options one per line or comma-separated; the letter is optional for choices.
+- **Several schematics:** moved from `products.schematic_media_id` to the `mediables` pivot with role `schematic` (existing data migrated, column dropped); admin uploads several at once (appended) and removes individually.
+
+---
+
 ## 2026-11-01 — Reorder (stage C of the customer portal)
 
 **Decision:** «سفارش مجدد» on a customer's order page puts its lines back in the cart **at today's prices** (the cart never stores prices, so this is automatic) through the same checks as a normal add-to-cart (`App\Services\Cart\Reorder`): the variant must still be orderable online and in stock (per-variant totals), and a custom-dimension line's old dimensions are mapped by letter onto the product's *current* form and re-validated with `DimensionForm` — if the form changed so they no longer fit, the line is skipped and the customer is asked to re-enter them on the product page. Lines without a variant (quote-only products from staff-entered orders), deactivated or out-of-stock products are skipped too; every skipped line is listed with its reason on the cart page. Plain lines merge with what's already in the cart; customized lines stay separate.

@@ -113,16 +113,29 @@ class ReorderTest extends TestCase
         $this->assertSame(0, CartItem::count());
     }
 
+    public function test_a_quote_only_line_is_re_added_without_a_price(): void
+    {
+        $quoteOnly = Product::create(['sku' => 'Q1', 'slug' => 'q1', 'name' => 'برس دیسکی', 'type' => 'quote', 'is_active' => true]);
+        $order = $this->order([['product_id' => $quoteOnly->id, 'product_variant_id' => null, 'name_snapshot' => 'برس دیسکی', 'unit_price_rial' => 5_000_000]]);
+
+        $this->reorder($order)->assertSessionMissing('reorder_skipped');
+
+        $item = CartItem::firstOrFail();
+        $this->assertSame($quoteOnly->id, $item->product_id);
+        $this->assertNull($item->product_variant_id);
+        $this->assertNull($item->unitPriceRial(), 'Re-priced by staff, not the old agreed price.');
+    }
+
     public function test_lines_that_cannot_be_ordered_online_are_skipped_with_a_reason(): void
     {
-        $quoteOnly = Product::create(['sku' => 'Q1', 'slug' => 'q1', 'name' => 'برس دیسکی', 'type' => 'quote']);
+        $inactiveQuoteOnly = Product::create(['sku' => 'Q1', 'slug' => 'q1', 'name' => 'برس دیسکی', 'type' => 'quote', 'is_active' => false]);
         $order = $this->order([
             [],
-            ['product_id' => $quoteOnly->id, 'product_variant_id' => null, 'name_snapshot' => 'برس دیسکی'],
+            ['product_id' => $inactiveQuoteOnly->id, 'product_variant_id' => null, 'name_snapshot' => 'برس دیسکی'],
         ]);
 
         $this->reorder($order)->assertSessionHas('reorder_skipped', [
-            ['name' => 'برس دیسکی', 'reason' => 'این قلم به‌صورت آنلاین قابل سفارش نیست — برای آن استعلام قیمت بفرستید یا به کارشناس پیام دهید.'],
+            ['name' => 'برس دیسکی', 'reason' => 'این محصول دیگر به‌صورت آنلاین قابل سفارش نیست.'],
         ]);
         $this->assertSame(1, CartItem::count());
 

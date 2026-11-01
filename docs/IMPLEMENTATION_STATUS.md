@@ -219,7 +219,14 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 
 **Reorder — stage C (completed, 2026-11-01)**
 - «سفارش مجدد» on `/account/orders/{order}` → `Reorder` service → cart at today's prices; skipped lines listed with reasons in the cart.
-- 7 new tests (`ReorderTest`). Full suite 278/278 passing. Not separately checked in a browser (server-rendered button + redirect, covered end to end by the feature tests). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- 7 new tests (`ReorderTest`). Full suite 278/278 passing. Not separately checked in a browser (server-rendered button + redirect, covered end to end by the feature tests).
+
+**Product page redesign — stage 1 (completed, 2026-11-01)**
+- Inline order card + schematics beside the gallery; quote-only products orderable (priced by staff); choice fields; several schematics per product. See `docs/DECISIONS.md`.
+- 3 migrations (choice fields, schematics → mediables, variant-less cart lines) — **not yet run locally**: MySQL was down; run `php artisan migrate`.
+- Real bug caught by the new tests: a `?? 'message'` turned "no problem" (null) into a refusal for quote-only lines at checkout — fixed.
+- 7 new tests (`ProductPageOrderingTest`) + updated customization/reorder/admin tests. Full suite 286/286 passing. **Not yet checked in a browser** (local MySQL down).
+- **Next (stage 2):** key-feature callouts beside the image, applications with icons, tabs + moderated customer reviews. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

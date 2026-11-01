@@ -39,7 +39,7 @@ class CheckoutController extends Controller
             'cart' => $cart,
             'total' => $total,
             'shipping' => $shipping->quote($total),
-            'priceNeedsConfirmation' => $this->manager->hasCustomizedItems($cart),
+            'priceNeedsConfirmation' => $this->manager->priceNeedsConfirmation($cart),
             'customer' => $request->user('customer'),
             'savedAddresses' => $request->user('customer')?->savedAddresses ?? collect(),
         ]);

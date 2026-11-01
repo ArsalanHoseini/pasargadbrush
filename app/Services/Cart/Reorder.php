@@ -28,7 +28,7 @@ class Reorder
      */
     public function handle(Order $order, Cart $cart): array
     {
-        $order->loadMissing('items.variant.product.dimensionFields');
+        $order->loadMissing('items.product.dimensionFields', 'items.variant.product.dimensionFields');
 
         $added = 0;
         $skipped = [];
@@ -52,19 +52,22 @@ class Reorder
     private function addLine(OrderItem $item, Cart $cart): ?string
     {
         $variant = $item->variant;
+        $product = $variant?->product ?? $item->product;
 
-        if (! $variant instanceof ProductVariant) {
-            return 'این قلم به‌صورت آنلاین قابل سفارش نیست — برای آن استعلام قیمت بفرستید یا به کارشناس پیام دهید.';
+        if (! $product) {
+            return 'این محصول دیگر در سایت وجود ندارد.';
         }
 
-        $reason = $variant->unavailableReason($this->manager->quantityAfterAdding($cart, $variant, $item->quantity));
+        // A line without a variant is a quote-only product, re-ordered without a price.
+        $reason = $variant instanceof ProductVariant
+            ? $variant->unavailableReason($this->manager->quantityAfterAdding($cart, $variant, $item->quantity))
+            : $product->quoteOrderUnavailableReason();
 
         if ($reason !== null) {
             return $reason;
         }
 
         $customization = null;
-        $product = $variant->product;
 
         if ($product->requiresDimensions()) {
             $values = [
@@ -79,7 +82,7 @@ class Reorder
             $customization = $this->dimensionForm->snapshot($product, $values);
         }
 
-        $this->manager->addItem($cart, $variant, $item->quantity, $customization);
+        $this->manager->addItem($cart, $product, $variant, $item->quantity, $customization);
         $cart->unsetRelation('items');
 
         return null;

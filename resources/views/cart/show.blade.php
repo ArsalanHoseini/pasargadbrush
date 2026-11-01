@@ -44,10 +44,18 @@
                     'border-neutral-200' => ! isset($problems[$item->id]),
                 ])>
                     <div>
-                        <p class="font-medium text-neutral-900">{{ $item->variant->product->name }}</p>
-                        <p class="text-xs text-neutral-500">{{ $item->variant->label }}</p>
+                        <p class="font-medium text-neutral-900">{{ $item->product->name }}</p>
+                        @if ($item->variant)
+                            <p class="text-xs text-neutral-500">{{ $item->variant->label }}</p>
+                        @endif
                         @include('orders.partials.customization', ['customization' => $item->customization])
-                        <p class="mt-1 text-sm" dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial) }}</p>
+                        <p class="mt-1 text-sm">
+                            @if ($item->unitPriceRial() !== null)
+                                <span dir="ltr">{{ \App\Support\Money::toman($item->unitPriceRial()) }}</span>
+                            @else
+                                <span class="text-xs text-neutral-500">قیمت پس از بررسی کارشناس</span>
+                            @endif
+                        </p>
                         @isset($problems[$item->id])
                             <p class="mt-1 text-xs font-medium text-red-600">{{ $problems[$item->id] }}</p>
                         @endisset
@@ -61,7 +69,7 @@
                                    class="w-16 rounded border border-neutral-300 px-2 py-1 text-sm" dir="ltr">
                         </form>
                         <p class="w-28 text-left text-sm font-medium" dir="ltr">
-                            {{ \App\Support\Money::toman($item->variant->price_rial * $item->quantity) }}
+                            {{ $item->lineTotalRial() !== null ? \App\Support\Money::toman($item->lineTotalRial()) : '—' }}
                         </p>
                         <form method="POST" action="{{ route('cart.items.destroy', $item) }}"
                               onsubmit="return confirm('حذف شود؟');">

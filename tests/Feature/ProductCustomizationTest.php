@@ -37,8 +37,9 @@ class ProductCustomizationTest extends TestCase
 
         $this->product = Product::create([
             'sku' => 'P1', 'slug' => 'roller-brush', 'name' => 'برس غلتکی', 'type' => 'priced',
-            'is_active' => true, 'schematic_media_id' => $schematic->id,
+            'is_active' => true,
         ]);
+        $this->product->schematics()->attach($schematic->id, ['role' => 'schematic', 'sort_order' => 0]);
         $this->variant = ProductVariant::create([
             'product_id' => $this->product->id, 'sku' => 'V1', 'label' => 'موی نایلونی', 'price_rial' => 1_000_000,
         ]);
@@ -59,7 +60,7 @@ class ProductCustomizationTest extends TestCase
         $request = $token ? $this->withUnencryptedCookie('cart_token', $token) : $this;
 
         return $request
-            ->from(route('products.customize', ['product' => $this->product, 'variant' => $this->variant->id]))
+            ->from(route('products.show', $this->product))
             ->post(route('cart.items.store'), [
                 'product_variant_id' => $this->variant->id,
                 'quantity' => $quantity,
@@ -73,39 +74,35 @@ class ProductCustomizationTest extends TestCase
         return collect($response->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'cart_token')->getValue();
     }
 
-    public function test_product_page_sends_add_to_cart_through_the_dimensions_step(): void
+    public function test_product_page_has_the_order_form_inline_with_the_schematics_beside_it(): void
     {
         $this->get(route('products.show', $this->product))
             ->assertOk()
-            ->assertSee(route('products.customize', $this->product), false)
-            ->assertSee('فرم ابعاد نمایش داده می‌شود');
-    }
-
-    public function test_dimensions_page_shows_the_schematic_and_every_field_with_its_letter_and_unit(): void
-    {
-        $this->get(route('products.customize', ['product' => $this->product, 'variant' => $this->variant->id, 'quantity' => 3]))
-            ->assertOk()
+            ->assertSee('مشخصات و سفارش')
+            ->assertSee('action="'.route('cart.items.store').'"', false)
+            ->assertSee('name="product_id" value="'.$this->product->id.'"', false)
+            ->assertSeeInOrder(['قطر خارجی', 'D', 'میلی‌متر', 'طول', 'C', 'سانتی‌متر'])
+            ->assertSee('placeholder="50 تا 400"', false)
+            ->assertSee('نمای شماتیک (بدون مقیاس)')
             ->assertSee('media/schematic.png')
-            ->assertSeeInOrder(['D', 'قطر خارجی', 'میلی‌متر', 'بین 50 تا 400', 'C', 'طول', 'سانتی‌متر'])
-            ->assertSee('value="3"', false)
-            ->assertSee('قیمت نهایی پس از بررسی ابعاد توسط کارشناس');
+            ->assertSee('قیمت نهایی پس از بررسی مشخصات واردشده توسط کارشناس')
+            ->assertSee('افزودن به سبد و ثبت سفارش')
+            ->assertSee('مشاوره و استعلام قیمت');
     }
 
-    public function test_dimensions_page_redirects_for_a_variant_of_another_product(): void
+    public function test_the_old_separate_customize_step_redirects_to_the_product_page(): void
     {
-        $this->get(route('products.customize', ['product' => $this->product, 'variant' => 999]))
+        $this->get(route('products.customize', ['product' => $this->product, 'variant' => $this->variant->id]))
             ->assertRedirect(route('products.show', $this->product));
     }
 
-    public function test_a_product_without_dimensions_skips_the_dimensions_step(): void
+    public function test_a_product_without_an_order_form_adds_a_plain_line(): void
     {
         $this->product->dimensionFields()->delete();
 
-        $this->get(route('products.customize', ['product' => $this->product, 'variant' => $this->variant->id]))
-            ->assertRedirect(route('products.show', $this->product));
-
         $this->post(route('cart.items.store'), ['product_variant_id' => $this->variant->id, 'quantity' => 1])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('cart.show'));
         $this->assertNull(CartItem::firstOrFail()->customization);
     }
 
@@ -153,7 +150,7 @@ class ProductCustomizationTest extends TestCase
         $this->withUnencryptedCookie('cart_token', $token)->get(route('cart.show'))
             ->assertSee('120')
             ->assertSee('200')
-            ->assertSee('قیمت نهایی پس از بررسی ابعاد توسط کارشناس');
+            ->assertSee('پس از بررسی کارشناس تأیید');
     }
 
     public function test_stock_is_checked_across_all_lines_of_the_variant(): void
@@ -183,7 +180,7 @@ class ProductCustomizationTest extends TestCase
 
         $this->get(route('checkout.confirmation'))
             ->assertSee('قطر خارجی')
-            ->assertSee('قیمت نهایی پس از بررسی ابعاد توسط کارشناس');
+            ->assertSee('پس از بررسی کارشناس تأیید');
     }
 
     public function test_editing_the_product_form_later_does_not_change_a_placed_line(): void
@@ -213,7 +210,7 @@ class ProductCustomizationTest extends TestCase
         $this->product->update(['type' => 'quote']);
 
         $this->get(route('products.show', $this->product))
-            ->assertSee('ابعاد مورد نیاز')
+            ->assertSee('مشاوره و استعلام قیمت')
             ->assertSee('name="dimensions['.$this->outerDiameter->id.']"', false);
 
         $this->post(route('quote-requests.store'), [

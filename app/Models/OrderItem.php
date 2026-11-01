@@ -21,7 +21,18 @@ class OrderItem extends Model
 
     protected $casts = [
         'customization' => 'array',
+        'unit_price_rial' => 'integer',
+        'line_total_rial' => 'integer',
     ];
+
+    /**
+     * A quote-only line placed from the cart: no price until staff set one
+     * while confirming the order's prices.
+     */
+    public function isAwaitingPrice(Order $order): bool
+    {
+        return $order->requires_price_confirmation && $this->product_variant_id === null && $this->unit_price_rial === 0;
+    }
 
     public function order(): BelongsTo
     {

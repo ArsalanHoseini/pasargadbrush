@@ -26,7 +26,6 @@ class Product extends Model
         'meta_description',
         'canonical_url',
         'og_image_media_id',
-        'schematic_media_id',
         'sort_order',
         'published_at',
     ];
@@ -63,18 +62,43 @@ class Product extends Model
         return $this->hasMany(ProductDimensionField::class)->orderBy('sort_order');
     }
 
-    public function schematic(): BelongsTo
+    /**
+     * Technical drawings shown beside the order form, each dimension marked
+     * by its letter. Same pivot as the gallery, role "schematic".
+     */
+    public function schematics(): MorphToMany
     {
-        return $this->belongsTo(Media::class, 'schematic_media_id');
+        return $this->morphToMany(Media::class, 'mediable', 'mediables')
+            ->wherePivot('role', 'schematic')
+            ->orderByPivot('sort_order');
     }
 
     /**
-     * A product with a dimensions form can only be ordered (or quoted) with
-     * the customer's dimensions attached.
+     * A product with an order form (dimensions and/or choices) can only be
+     * ordered (or quoted) with the customer's answers attached.
      */
     public function requiresDimensions(): bool
     {
         return $this->dimensionFields->isNotEmpty();
+    }
+
+    /**
+     * Why this quote-only product can't be ordered online right now (it's
+     * then ordered without a price, which staff set afterwards), or null.
+     * Priced products are checked per variant instead
+     * (ProductVariant::unavailableReason()).
+     */
+    public function quoteOrderUnavailableReason(): ?string
+    {
+        if (! $this->is_active || $this->type !== 'quote') {
+            return 'این محصول دیگر به‌صورت آنلاین قابل سفارش نیست.';
+        }
+
+        if ($this->stock_status === 'out_of_stock') {
+            return 'این محصول در حال حاضر ناموجود است.';
+        }
+
+        return null;
     }
 
     public function attributeValues(): BelongsToMany

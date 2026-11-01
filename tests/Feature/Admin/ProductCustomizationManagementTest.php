@@ -33,26 +33,39 @@ class ProductCustomizationManagementTest extends TestCase
         ], $overrides);
     }
 
-    public function test_staff_define_dimensions_and_upload_a_schematic_for_a_product(): void
+    public function test_staff_define_dimensions_a_choice_and_several_schematics_for_a_product(): void
     {
         Storage::fake('public');
 
         $this->actingAs($this->staff())->post(route('admin.products.store'), $this->productPayload([
-            'schematic' => UploadedFile::fake()->image('schematic.png', 600, 400),
+            'schematics' => [
+                UploadedFile::fake()->image('front.png', 600, 400),
+                UploadedFile::fake()->image('section.png', 600, 400),
+            ],
             'dimension_fields' => [
                 ['code' => 'E', 'label' => 'قطر خارجی', 'unit' => 'mm', 'is_required' => '1', 'min_value' => '50', 'max_value' => '600'],
                 ['code' => 'B', 'label' => 'قطر سوراخ', 'unit' => 'mm', 'is_required' => '0'],
+                ['type' => 'choice', 'code' => '', 'label' => 'جنس الیاف', 'options' => "نایلون (PA)\nPET، PP\n\nسایر", 'is_required' => '1'],
             ],
         ]))->assertSessionHasNoErrors();
 
-        $product = Product::with('dimensionFields', 'schematic')->firstOrFail();
+        $product = Product::with('dimensionFields', 'schematics')->firstOrFail();
 
-        $this->assertNotNull($product->schematic);
-        Storage::disk('public')->assertExists($product->schematic->path);
-        $this->assertSame(['E', 'B'], $product->dimensionFields->pluck('code')->all());
+        $this->assertCount(2, $product->schematics);
+        Storage::disk('public')->assertExists($product->schematics[0]->path);
+        $this->assertSame(['E', 'B', ''], $product->dimensionFields->pluck('code')->all());
         $this->assertTrue($product->dimensionFields[0]->is_required);
         $this->assertFalse($product->dimensionFields[1]->is_required);
         $this->assertSame(600.0, $product->dimensionFields[0]->max_value);
+        $this->assertTrue($product->dimensionFields[2]->isChoice());
+        $this->assertSame(['نایلون (PA)', 'PET', 'PP', 'سایر'], $product->dimensionFields[2]->options);
+    }
+
+    public function test_a_choice_needs_options(): void
+    {
+        $this->actingAs($this->staff())->post(route('admin.products.store'), $this->productPayload([
+            'dimension_fields' => [['type' => 'choice', 'label' => 'جنس الیاف', 'options' => '']],
+        ]))->assertSessionHasErrors('dimension_fields.0.options');
     }
 
     public function test_edit_page_lists_the_existing_dimensions(): void
@@ -62,7 +75,7 @@ class ProductCustomizationManagementTest extends TestCase
 
         $this->actingAs($this->staff())->get(route('admin.products.edit', $product))
             ->assertOk()
-            ->assertSee('سفارشی‌سازی — شماتیک و ابعاد')
+            ->assertSee('سفارشی‌سازی — شماتیک‌ها و فرم سفارش')
             ->assertSee('enctype="multipart/form-data"', false)
             ->assertSee('O.H.')
             // Rendered into the Alpine x-data JSON, where json_encode() escapes non-ASCII.
@@ -101,24 +114,28 @@ class ProductCustomizationManagementTest extends TestCase
                 ['code' => 'A', 'label' => 'طول', 'unit' => 'mm'],
                 ['code' => 'A', 'label' => 'عرض', 'unit' => 'mm'],
             ],
-        ]))->assertSessionHasErrors('dimension_fields.0.code');
+        ]))->assertSessionHasErrors('dimension_fields.1.code');
     }
 
-    public function test_staff_can_remove_the_schematic(): void
+    public function test_staff_can_add_more_schematics_and_remove_one(): void
     {
         Storage::fake('public');
         $staff = $this->staff();
 
         $this->actingAs($staff)->post(route('admin.products.store'), $this->productPayload([
-            'schematic' => UploadedFile::fake()->image('schematic.png'),
+            'schematics' => [UploadedFile::fake()->image('a.png'), UploadedFile::fake()->image('b.png')],
         ]));
         $product = Product::firstOrFail();
+        [$first, $second] = $product->schematics->all();
 
         $this->actingAs($staff)->put(route('admin.products.update', $product), $this->productPayload([
-            'remove_schematic' => '1',
-        ]));
+            'remove_schematic_ids' => [$first->id],
+            'schematics' => [UploadedFile::fake()->image('c.png')],
+        ]))->assertSessionHasNoErrors();
 
-        $this->assertNull($product->refresh()->schematic_media_id);
+        $remaining = $product->schematics()->get();
+        $this->assertCount(2, $remaining);
+        $this->assertTrue($remaining[0]->is($second), 'New schematics are appended after the existing ones.');
     }
 
     private function orderAwaitingPriceConfirmation(): Order

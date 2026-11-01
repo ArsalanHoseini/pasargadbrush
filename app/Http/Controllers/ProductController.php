@@ -19,12 +19,14 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
-        $product->load(['images', 'primaryCategory', 'variants', 'dimensionFields', 'schematic']);
+        $product->load(['images', 'schematics', 'primaryCategory', 'variants' => fn ($query) => $query->orderBy('sort_order'), 'dimensionFields']);
         $product->variants->each->setRelation('product', $product);
 
         return view('products.show', [
             'product' => $product,
             'related' => $related,
+            'orderableVariants' => $product->variants->filter(fn ($variant) => $variant->unavailableReason() === null)->values(),
+            'quoteOrderUnavailableReason' => $product->type === 'quote' ? $product->quoteOrderUnavailableReason() : null,
         ]);
     }
 }

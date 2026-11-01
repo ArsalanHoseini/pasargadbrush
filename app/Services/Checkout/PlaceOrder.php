@@ -28,7 +28,7 @@ class PlaceOrder
      */
     public function handle(Cart $cart, array $details): Order
     {
-        $cart->loadMissing('items.variant.product');
+        $cart->loadMissing('items.product', 'items.variant.product');
 
         if ($cart->items->isEmpty()) {
             throw new RuntimeException('Cannot place an order from an empty cart.');
@@ -69,16 +69,18 @@ class PlaceOrder
             $lineItems = [];
 
             foreach ($cart->items as $item) {
-                $variant = $variants->get($item->product_variant_id);
-                $lineTotal = $variant->price_rial * $item->quantity;
+                // A quote-only line has no variant and no price yet (0 until staff price it).
+                $variant = $item->product_variant_id ? $variants->get($item->product_variant_id) : null;
+                $unitPrice = $variant?->price_rial ?? 0;
+                $lineTotal = $unitPrice * $item->quantity;
                 $subtotal += $lineTotal;
 
                 $lineItems[] = [
-                    'product_id' => $variant->product_id,
-                    'product_variant_id' => $variant->id,
-                    'name_snapshot' => $variant->product->name.' — '.$variant->label,
-                    'sku_snapshot' => $variant->sku,
-                    'unit_price_rial' => $variant->price_rial,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $variant?->id,
+                    'name_snapshot' => $item->title(),
+                    'sku_snapshot' => $variant?->sku ?? $item->product->sku,
+                    'unit_price_rial' => $unitPrice,
                     'quantity' => $item->quantity,
                     'customization' => $item->customization,
                     'line_total_rial' => $lineTotal,
@@ -101,18 +103,18 @@ class PlaceOrder
                 'subtotal_rial' => $subtotal,
                 'shipping_cost_rial' => $shippingCost,
                 'total_rial' => $subtotal + $shippingCost,
-                // Custom dimensions are priced at the variant's base price for now;
-                // staff review the dimensions and confirm the final price.
-                'requires_price_confirmation' => $cart->items->contains(fn ($item) => $item->customization !== null),
+                // Custom dimensions are priced at the variant's base price for now and
+                // quote-only lines not at all; staff review and confirm the final price.
+                'requires_price_confirmation' => $cart->items->contains(fn ($item) => $item->customization !== null || $item->product_variant_id === null),
                 'placed_at' => now(),
             ]);
 
             $order->items()->createMany($lineItems);
 
             foreach ($cart->items as $item) {
-                $variant = $variants->get($item->product_variant_id);
+                $variant = $item->product_variant_id ? $variants->get($item->product_variant_id) : null;
 
-                if ($variant->stock_quantity !== null) {
+                if ($variant !== null && $variant->stock_quantity !== null) {
                     $variant->decrement('stock_quantity', $item->quantity);
                 }
             }
@@ -137,21 +139,30 @@ class PlaceOrder
     {
         $variants = ProductVariant::query()
             ->with('product')
-            ->whereIn('id', $cart->items->pluck('product_variant_id'))
+            ->whereIn('id', $cart->items->pluck('product_variant_id')->filter())
             ->lockForUpdate()
             ->get()
             ->keyBy('id');
 
         $problems = [];
         $quantitiesByVariant = $cart->items
+            ->whereNotNull('product_variant_id')
             ->groupBy('product_variant_id')
             ->map(fn ($items) => (int) $items->sum('quantity'));
 
         foreach ($cart->items as $item) {
-            $variant = $variants->get($item->product_variant_id);
-            $reason = $variant
-                ? $variant->unavailableReason($quantitiesByVariant[$item->product_variant_id])
-                : 'این محصول دیگر به‌صورت آنلاین قابل خرید نیست.';
+            if ($item->product_variant_id === null) {
+                // Re-read: the product may have been deactivated or repriced since it was added.
+                $product = $item->product->fresh();
+                $reason = $product
+                    ? $product->quoteOrderUnavailableReason()
+                    : 'این محصول دیگر به‌صورت آنلاین قابل سفارش نیست.';
+            } else {
+                $variant = $variants->get($item->product_variant_id);
+                $reason = $variant
+                    ? $variant->unavailableReason($quantitiesByVariant[$item->product_variant_id])
+                    : 'این محصول دیگر به‌صورت آنلاین قابل خرید نیست.';
+            }
 
             if ($reason !== null) {
                 $problems[$item->id] = $reason;

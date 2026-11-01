@@ -25,7 +25,7 @@
                         <span>{{ $item->name_snapshot }} × {{ $item->quantity }}</span>
                         @include('orders.partials.customization', ['customization' => $item->customization])
                     </div>
-                    <span dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>
+                    <span class="shrink-0">@if ($item->isAwaitingPrice($order))<span class="text-xs text-neutral-500">در انتظار تعیین قیمت</span>@else<span dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>@endif</span>
                 </li>
             @endforeach
         </ul>

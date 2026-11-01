@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AddCartItemRequest;
 use App\Models\CartItem;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\Cart\CartManager;
 use App\Services\Cart\CartResolver;
@@ -28,46 +29,65 @@ class CartController extends Controller
             'cart' => $cart,
             'total' => $total,
             'shipping' => $shipping->quote($total),
-            'priceNeedsConfirmation' => $cart && $this->manager->hasCustomizedItems($cart),
+            'priceNeedsConfirmation' => $cart && $this->manager->priceNeedsConfirmation($cart),
             'problems' => $cart ? $this->manager->problems($cart) : [],
         ]);
     }
 
+    /**
+     * Adds a priced product's variant, or a quote-only product (no variant —
+     * staff price it after the order), with the product's order form
+     * (dimensions/choices) validated when it has one.
+     */
     public function store(AddCartItemRequest $request, DimensionForm $dimensionForm)
     {
-        $variant = ProductVariant::with('product.dimensionFields')->findOrFail($request->integer('product_variant_id'));
-        abort_unless($variant->product->is_active && $variant->product->type === 'priced', 404);
+        $variant = $request->filled('product_variant_id')
+            ? ProductVariant::findOrFail($request->integer('product_variant_id'))
+            : null;
+        $product = Product::with('dimensionFields')->findOrFail($variant?->product_id ?? $request->integer('product_id'));
+
+        abort_unless($product->is_active, 404);
+        // A variant only ever belongs to a priced product; a priced product needs one.
+        abort_if($variant !== null && $product->type !== 'priced', 404);
+
+        if ($product->type === 'priced' && $variant === null) {
+            return back()->withErrors(['product_variant_id' => 'لطفاً یکی از گزینه‌های محصول را انتخاب کنید.'])->withInput();
+        }
 
         $customization = null;
 
-        if ($variant->product->requiresDimensions()) {
-            $dimensionForm->normalize($request);
+        if ($product->requiresDimensions()) {
+            $dimensionForm->normalize($request, '', $product);
             $validated = $request->validate(
-                $dimensionForm->rules($variant->product),
-                attributes: $dimensionForm->attributes($variant->product),
+                $dimensionForm->rules($product),
+                attributes: $dimensionForm->attributes($product),
             );
-            $customization = $dimensionForm->snapshot($variant->product, $validated);
+            $customization = $dimensionForm->snapshot($product, $validated);
         }
 
-        $existingCart = $this->resolver->resolveForDisplay($request);
-        $quantityAfterAdding = $existingCart
-            ? $this->manager->quantityAfterAdding($existingCart, $variant, $request->integer('quantity'))
-            : min($request->integer('quantity'), CartManager::MAX_QUANTITY);
-
-        $reason = $variant->unavailableReason($quantityAfterAdding);
+        $reason = $variant
+            ? $variant->unavailableReason($this->quantityAfterAdding($request, $variant))
+            : $product->quoteOrderUnavailableReason();
 
         if ($reason !== null) {
             return back()->withErrors(['quantity' => $reason])->withInput();
         }
 
         $cart = $this->resolver->resolveForWrite($request);
-        $this->manager->addItem($cart, $variant, $request->integer('quantity'), $customization);
+        $this->manager->addItem($cart, $product, $variant, $request->integer('quantity'), $customization);
 
-        if ($customization !== null) {
-            return redirect()->route('cart.show')->with('status', 'محصول با ابعاد واردشده به سبد خرید اضافه شد.');
-        }
+        return redirect()->route('cart.show')->with('status', $customization !== null
+            ? 'محصول با مشخصات واردشده به سبد خرید اضافه شد.'
+            : 'به سبد خرید اضافه شد.');
+    }
 
-        return back()->with('status', 'به سبد خرید اضافه شد.');
+    private function quantityAfterAdding(Request $request, ProductVariant $variant): int
+    {
+        $existingCart = $this->resolver->resolveForDisplay($request);
+
+        return $existingCart
+            ? $this->manager->quantityAfterAdding($existingCart, $variant, $request->integer('quantity'))
+            : min($request->integer('quantity'), CartManager::MAX_QUANTITY);
     }
 
     public function update(Request $request, CartItem $cartItem)
@@ -80,8 +100,10 @@ class CartController extends Controller
         // Lowering a quantity or removing a line is always allowed, even for
         // an item that has since become unavailable — only increases are checked.
         if ($quantity > $cartItem->quantity) {
-            $variantTotal = $this->manager->quantitiesByVariant($cartItem->cart)[$cartItem->product_variant_id];
-            $reason = $cartItem->variant->unavailableReason($variantTotal - $cartItem->quantity + $quantity);
+            $quantityToCheck = $cartItem->product_variant_id
+                ? $this->manager->quantitiesByVariant($cartItem->cart)[$cartItem->product_variant_id] - $cartItem->quantity + $quantity
+                : $quantity;
+            $reason = $cartItem->unavailableReason($quantityToCheck);
 
             if ($reason !== null) {
                 return back()->withErrors(['quantity' => $reason]);
