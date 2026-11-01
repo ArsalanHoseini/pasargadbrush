@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -51,3 +52,32 @@ Route::post('/order-tracking', [OrderTrackingController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('orders.track.store');
 Route::get('/order-tracking/status', [OrderTrackingController::class, 'show'])->name('orders.track.show');
+
+/*
+| Customer accounts — login by SMS code or password (see Account\LoginController).
+*/
+Route::middleware('guest:customer')->group(function () {
+    Route::get('/login', [Account\LoginController::class, 'create'])->name('account.login');
+    Route::post('/login/code', [Account\LoginController::class, 'sendCode'])
+        ->middleware('throttle:10,1')
+        ->name('account.login.code');
+    Route::get('/login/verify', [Account\LoginController::class, 'showVerify'])->name('account.login.verify');
+    Route::post('/login/verify', [Account\LoginController::class, 'verify'])
+        ->middleware('throttle:10,1')
+        ->name('account.login.verify.store');
+    Route::post('/login/password', [Account\LoginController::class, 'passwordLogin'])
+        ->middleware('throttle:10,1')
+        ->name('account.login.password');
+});
+
+Route::middleware('auth:customer')->prefix('account')->name('account.')->group(function () {
+    Route::post('/logout', [Account\LoginController::class, 'destroy'])->name('logout');
+    Route::get('/', [Account\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders', [Account\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [Account\OrderController::class, 'show'])->name('orders.show');
+    Route::get('/quote-requests', [Account\QuoteRequestController::class, 'index'])->name('quote-requests.index');
+    Route::get('/profile', [Account\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [Account\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [Account\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::resource('addresses', Account\AddressController::class)->except('show');
+});

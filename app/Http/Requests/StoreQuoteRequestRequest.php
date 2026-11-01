@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Product;
 use App\Services\Customization\DimensionForm;
+use App\Support\IranianMobile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreQuoteRequestRequest extends FormRequest
@@ -30,6 +31,16 @@ class StoreQuoteRequestRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Landlines stay as typed (B2B leads often give one); a mobile number
+        // is stored in the canonical form so it matches the customer's account.
+        if (is_string($this->input('phone'))) {
+            $mobile = IranianMobile::normalize($this->input('phone'));
+
+            if (preg_match(IranianMobile::PATTERN, $mobile)) {
+                $this->merge(['phone' => $mobile]);
+            }
+        }
+
         app(DimensionForm::class)->normalize($this);
     }
 

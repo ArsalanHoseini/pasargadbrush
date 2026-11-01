@@ -13,9 +13,12 @@ class Customer extends Authenticatable
 
     protected $fillable = [
         'name',
+        'company_name',
         'phone',
+        'phone_verified_at',
         'email',
         'password',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -25,12 +28,32 @@ class Customer extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'last_login_at' => 'datetime',
         'password' => 'hashed',
     ];
 
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
+    }
+
+    /**
+     * The customer's address book (not the frozen copies orders point at).
+     */
+    public function savedAddresses(): HasMany
+    {
+        return $this->hasMany(Address::class)->where('is_saved', true)->orderByDesc('is_default')->latest();
+    }
+
+    public function quoteRequests(): HasMany
+    {
+        return $this->hasMany(QuoteRequest::class);
+    }
+
+    public function hasPassword(): bool
+    {
+        return $this->password !== null;
     }
 
     public function orders(): HasMany

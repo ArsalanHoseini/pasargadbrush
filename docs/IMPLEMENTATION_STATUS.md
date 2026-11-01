@@ -204,7 +204,13 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 **Manual order entry by staff, incl. from a quote request — customization stage 2 (completed, 2026-11-01)**
 - `/admin/orders/create` (+ «ثبت سفارش از این درخواست» on quote requests, pre-filled). Dynamic lines (Alpine `manualOrderForm` in `resources/js/app.js`) with per-product variants and dimension fields; staff-set prices; shipping/status/payment; optional customer notification.
 - Migration `add_manual_entry_to_orders_and_quote_requests` (orders.source, orders.created_by_user_id, quote_requests.order_id) — run locally.
-- 12 new tests (`Admin/ManualOrderTest`). Full suite 229/229 passing. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- 12 new tests (`Admin/ManualOrderTest`). Full suite 229/229 passing.
+
+**Customer accounts & dashboard — stage A (completed, 2026-11-01)**
+- `/login` (SMS code or password), `/account` dashboard: orders (+ detail), quote requests, profile + optional password, address book. Header shows «ورود» / «حساب من». Checkout and the quote form use the account when logged in.
+- 4 migrations (customer account fields, `customer_login_codes`, address-book fields, `quote_requests.customer_id`) — run locally.
+- 26 new tests (`CustomerLoginTest`, `CustomerAccountTest`). Full suite 255/255 passing. Verified in a real browser against MySQL: SMS code request → code read from the log (log SMS driver) → login → profile completion → every dashboard page 200; test customer/codes deleted afterwards.
+- **Next:** stage B (staff↔customer messaging with attachments), stage C (reorder). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

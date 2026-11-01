@@ -34,6 +34,15 @@
                    class="w-full rounded-full border border-neutral-300 px-4 py-1.5 text-sm">
         </form>
 
+        <a href="{{ auth('customer')->check() ? route('account.dashboard') : route('account.login') }}"
+           class="flex shrink-0 items-center gap-1 text-sm text-neutral-700 hover:text-neutral-950"
+           aria-label="{{ auth('customer')->check() ? 'حساب کاربری' : 'ورود / ثبت‌نام' }}">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="hidden lg:inline">{{ auth('customer')->check() ? 'حساب من' : 'ورود' }}</span>
+        </a>
+
         <a href="{{ route('cart.show') }}" class="relative shrink-0 text-neutral-700 hover:text-neutral-950" aria-label="سبد خرید">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <path d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-1.5 7h11.5M9 20a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" stroke-linecap="round" stroke-linejoin="round"/>

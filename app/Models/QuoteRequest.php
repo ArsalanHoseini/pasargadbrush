@@ -9,6 +9,7 @@ class QuoteRequest extends Model
 {
     protected $fillable = [
         'product_id',
+        'customer_id',
         'name',
         'phone',
         'email',
@@ -31,6 +32,11 @@ class QuoteRequest extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function product(): BelongsTo

@@ -24,7 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.staff' => EnsureUserIsAdminStaff::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        // Staff and customers have separate logins ("web" and "customer" guards).
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*')
+            ? route('admin.login')
+            : route('account.login'));
+        $middleware->redirectUsersTo(fn (Request $request) => $request->is('admin', 'admin/*')
+            ? route('admin.dashboard')
+            : route('account.dashboard'));
 
         // Not sensitive (a random cart identifier, no PII) — skipping encryption
         // avoids pointless crypto overhead on every request.

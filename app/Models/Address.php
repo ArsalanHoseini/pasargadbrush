@@ -9,6 +9,8 @@ class Address extends Model
 {
     protected $fillable = [
         'customer_id',
+        'is_saved',
+        'label',
         'province',
         'city',
         'address_line',
@@ -20,6 +22,7 @@ class Address extends Model
 
     protected $casts = [
         'is_default' => 'boolean',
+        'is_saved' => 'boolean',
     ];
 
     public function customer(): BelongsTo

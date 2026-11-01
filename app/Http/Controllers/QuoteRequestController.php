@@ -16,6 +16,7 @@ class QuoteRequestController extends Controller
     {
         $quoteRequest = QuoteRequest::create([
             ...$request->safe()->except(['website', 'dimensions', DimensionForm::NOTES_INPUT]),
+            'customer_id' => $request->user('customer')?->id,
             'customization' => $request->product()
                 ? $dimensionForm->snapshot($request->product(), $request->validated())
                 : null,

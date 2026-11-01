@@ -35,25 +35,68 @@
     <form method="POST" action="{{ route('checkout.store') }}" class="space-y-4 rounded-lg border border-neutral-200 bg-white p-6">
         @csrf
 
-        <div class="grid gap-3 sm:grid-cols-2">
-            <input name="name" placeholder="نام و نام خانوادگی *" value="{{ old('name') }}" required
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
-            <input name="phone" type="tel" inputmode="tel" placeholder="شماره موبایل * (مثال: ۰۹۱۲۱۲۳۴۵۶۷)" value="{{ old('phone') }}" required dir="ltr"
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
-        </div>
-        <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email') }}" dir="ltr"
-               class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+        @if ($customer)
+            <p class="rounded bg-neutral-50 p-3 text-xs text-neutral-600">
+                با حساب <span dir="ltr" class="font-medium">{{ $customer->phone }}</span> سفارش می‌دهید — این سفارش در «سفارش‌های من» نمایش داده می‌شود.
+            </p>
+        @else
+            <p class="rounded bg-neutral-50 p-3 text-xs text-neutral-600">
+                <a href="{{ route('account.login') }}" class="font-medium text-brand-accent-dark hover:underline">وارد شوید</a>
+                تا اطلاعات و آدرس‌هایتان خودکار پر شود و سفارش‌هایتان را در حساب کاربری ببینید (اختیاری).
+            </p>
+        @endif
 
         <div class="grid gap-3 sm:grid-cols-2">
-            <input name="province" placeholder="استان *" value="{{ old('province') }}" required
+            <input name="name" placeholder="نام و نام خانوادگی *" value="{{ old('name', $customer?->name) }}" required aria-label="نام و نام خانوادگی"
                    class="rounded border border-neutral-300 px-3 py-2 text-sm">
-            <input name="city" placeholder="شهر *" value="{{ old('city') }}" required
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
+            @unless ($customer)
+                <input name="phone" type="tel" inputmode="tel" placeholder="شماره موبایل * (مثال: ۰۹۱۲۱۲۳۴۵۶۷)" value="{{ old('phone') }}" required dir="ltr" aria-label="شماره موبایل"
+                       class="rounded border border-neutral-300 px-3 py-2 text-sm">
+            @endunless
         </div>
-        <textarea name="address_line" placeholder="آدرس کامل *" rows="3" required
-                  class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('address_line') }}</textarea>
-        <input name="postal_code" placeholder="کد پستی (اختیاری)" value="{{ old('postal_code') }}" dir="ltr"
+        <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email', $customer?->email) }}" dir="ltr" aria-label="ایمیل"
                class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+
+        <div class="space-y-3" x-data="{ addressId: @js((string) old('saved_address_id', $savedAddresses->first()?->id ?? '')) }">
+            @if ($savedAddresses->isNotEmpty())
+                <fieldset class="space-y-2">
+                    <legend class="mb-1 text-sm font-medium">آدرس ارسال</legend>
+                    @foreach ($savedAddresses as $savedAddress)
+                        <label class="flex cursor-pointer gap-3 rounded border p-3 text-sm" :class="addressId === '{{ $savedAddress->id }}' ? 'border-neutral-900' : 'border-neutral-200'">
+                            <input type="radio" name="saved_address_id" value="{{ $savedAddress->id }}" x-model="addressId" class="mt-1">
+                            <span>
+                                <span class="block font-medium">{{ $savedAddress->label ?: $savedAddress->city }}</span>
+                                <span class="block text-xs text-neutral-600">{{ $savedAddress->province }}، {{ $savedAddress->city }}، {{ $savedAddress->address_line }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                    <label class="flex cursor-pointer gap-3 rounded border p-3 text-sm" :class="addressId === '' ? 'border-neutral-900' : 'border-neutral-200'">
+                        <input type="radio" name="saved_address_id" value="" x-model="addressId">
+                        آدرس جدید
+                    </label>
+                </fieldset>
+            @endif
+
+            <div class="space-y-3" x-show="addressId === ''">
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <input name="province" placeholder="استان *" value="{{ old('province') }}" :required="addressId === ''" aria-label="استان"
+                           class="rounded border border-neutral-300 px-3 py-2 text-sm">
+                    <input name="city" placeholder="شهر *" value="{{ old('city') }}" :required="addressId === ''" aria-label="شهر"
+                           class="rounded border border-neutral-300 px-3 py-2 text-sm">
+                </div>
+                <textarea name="address_line" placeholder="آدرس کامل *" rows="3" :required="addressId === ''" aria-label="آدرس کامل"
+                          class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('address_line') }}</textarea>
+                <input name="postal_code" placeholder="کد پستی (اختیاری)" value="{{ old('postal_code') }}" dir="ltr" aria-label="کد پستی"
+                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                @if ($customer)
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="hidden" name="save_address" value="0">
+                        <input type="checkbox" name="save_address" value="1" @checked(old('save_address', '1') === '1')>
+                        این آدرس در دفترچه آدرس من ذخیره شود
+                    </label>
+                @endif
+            </div>
+        </div>
 
         <p class="text-xs text-neutral-500">
             پرداخت در این سفارش به‌صورت آنلاین نیست — همکاران ما پس از ثبت سفارش برای هماهنگی پرداخت و ارسال با شما تماس می‌گیرند.

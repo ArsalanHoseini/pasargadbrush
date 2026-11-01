@@ -55,6 +55,16 @@ class PlaceOrder
                 'recipient_phone' => $details['phone'],
             ]);
 
+            // The order keeps its own frozen copy above; a newly typed address
+            // also goes into the address book when a logged-in customer asks.
+            if (! empty($details['save_address']) && empty($details['saved_address_id'])) {
+                $customer->addresses()->create([
+                    ...$address->only(['province', 'city', 'address_line', 'postal_code', 'recipient_name', 'recipient_phone']),
+                    'is_saved' => true,
+                    'is_default' => ! $customer->savedAddresses()->exists(),
+                ]);
+            }
+
             $subtotal = 0;
             $lineItems = [];
 

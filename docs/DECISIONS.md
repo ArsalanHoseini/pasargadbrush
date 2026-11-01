@@ -4,6 +4,22 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Customer accounts & dashboard (stage A of the customer-portal work)
+
+**Owner's answers (2026-11-01):** login with **both** SMS code and (optional) password; staff↔customer communication as **per-order/quote conversations + general tickets** (stage B, not built yet); dashboard sections: orders, quote requests, profile & addresses, **file attachments in messages** (stage B), **reorder** (stage C).
+
+**Design (stage A):**
+- Separate `customer` auth guard (session, `customers` provider); staff keep the `web` guard. Customer logout only logs out that guard, so staff signed in in the same browser stay signed in. Guests are redirected to `account.login` (or `admin.login` under `/admin`).
+- Identity = the mobile number, exactly as checkout already uses. SMS-code login (`LoginCodeManager`) creates the account on first use and sets `phone_verified_at`; because guest orders were always attached to the customer with that phone, **past guest orders appear in the account automatically**, and earlier guest quote requests with the same (now canonicalized) mobile are listed too. The code is 5 digits, stored hashed, valid 2 min, 5 guesses, only the newest code valid, resend ≥60 s apart, ≤5 codes/hour per number (SMS costs money and can be used to harass a stranger's phone), plus route throttles.
+- Password is optional, set from the dashboard without asking for the old one — the SMS login *is* the reset path, so no email/SMTP dependency. Until an SMS provider is bought, SMS login only works locally (the code is written to the log); password login works everywhere but needs a first SMS login to set the password.
+- Address book vs order addresses: `addresses.is_saved` — orders always point at their own frozen copy (`is_saved = false`), address-book rows are freely editable/deletable. Checkout for a logged-in customer forces the account's phone (so the order lands in their account), offers saved addresses, and can save a newly typed address to the book.
+- Logged-in quote requests are attached (`quote_requests.customer_id`) and pre-filled; guest quote phones that are valid mobiles are now stored canonically.
+- The order-details block was extracted from the tracking page into `orders/partials/details` and is reused by the dashboard's order page.
+
+**Not yet:** changing the account's mobile number (needs an SMS code to the new number); stage B (messaging) and C (reorder).
+
+---
+
 ## 2026-11-01 — Staff-entered (manual) orders, incl. from a quote request — customization stage 2
 
 **Why:** owner's flow for quote-only products — the customer sends a quote request (with dimensions); an expert agrees the price, then registers the order on the site by hand. Also covers phone orders.

@@ -1,5 +1,7 @@
 @props(['product' => null])
 
+@php $accountCustomer = auth('customer')->user(); @endphp
+
 <div id="quote-form" class="rounded-lg border border-neutral-200 bg-white p-6">
     @if (session('quote_request_sent'))
         <div class="mb-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
@@ -29,13 +31,13 @@
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
-                <input name="name" placeholder="نام و نام خانوادگی *" value="{{ old('name') }}" required
+                <input name="name" placeholder="نام و نام خانوادگی *" value="{{ old('name', $accountCustomer?->name) }}" required
                        class="rounded border border-neutral-300 px-3 py-2 text-sm">
-                <input name="phone" placeholder="شماره تماس *" value="{{ old('phone') }}" required dir="ltr"
+                <input name="phone" placeholder="شماره تماس *" value="{{ old('phone', $accountCustomer?->phone) }}" required dir="ltr"
                        class="rounded border border-neutral-300 px-3 py-2 text-sm">
             </div>
             <div class="grid gap-3 sm:grid-cols-2">
-                <input name="company" placeholder="نام شرکت (اختیاری)" value="{{ old('company') }}"
+                <input name="company" placeholder="نام شرکت (اختیاری)" value="{{ old('company', $accountCustomer?->company_name) }}"
                        class="rounded border border-neutral-300 px-3 py-2 text-sm">
                 <input name="requested_quantity" placeholder="تیراژ/تعداد درخواستی (اختیاری)" value="{{ old('requested_quantity') }}"
                        class="rounded border border-neutral-300 px-3 py-2 text-sm">
@@ -46,7 +48,7 @@
                     <x-dimension-fields :product="$product" :with-notes="false" />
                 </div>
             @endif
-            <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email') }}" dir="ltr"
+            <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email', $accountCustomer?->email) }}" dir="ltr"
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
             <textarea name="message" rows="4" placeholder="توضیح نیاز شما (ابعاد، مشخصات، کاربرد) *" required
                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('message') }}</textarea>
