@@ -19,7 +19,7 @@
                 @foreach ($orders as $order)
                     <tr>
                         <td class="py-3" dir="ltr">{{ $order->order_number }}</td>
-                        <td class="py-3">{{ \App\Support\PersianDate::format($order->placed_at, 'd MMMM y') }}</td>
+                        <td class="py-3">{{ persian_date($order->placed_at, \App\Support\PersianDate::DATE) }}</td>
                         <td class="py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
                         <td class="py-3">
                             {{ \App\Models\Order::STATUS_LABELS[$order->status] ?? $order->status }}

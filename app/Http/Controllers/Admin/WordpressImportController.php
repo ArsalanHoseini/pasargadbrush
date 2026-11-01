@@ -8,6 +8,7 @@ use App\Services\WordPressImport\BlogImporter;
 use App\Services\WordPressImport\ImportResult;
 use App\Services\WordPressImport\ProductCategoryImporter;
 use App\Services\WordPressImport\ProductImporter;
+use App\Support\PersianDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -47,7 +48,7 @@ class WordpressImportController extends Controller
             'skipped' => $result->skipped,
             'failed' => $result->failed,
             'messages' => $result->messages,
-            'ran_at' => now()->format('Y-m-d H:i:s'),
+            'ran_at' => persian_date(now(), PersianDate::COMPACT),
         ];
 
         return redirect()->route('admin.import.index')

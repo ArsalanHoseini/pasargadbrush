@@ -22,7 +22,7 @@
                             {{ $viewer === 'staff' ? 'مشتری — '.$conversation->customer->name : 'شما' }}
                         @endif
                     </span>
-                    <time datetime="{{ $message->created_at->toIso8601String() }}">{{ \App\Support\PersianDate::format($message->created_at) }}</time>
+                    <time datetime="{{ $message->created_at->toIso8601String() }}">{{ persian_date($message->created_at) }}</time>
                 </p>
                 <p class="whitespace-pre-line text-neutral-900">{{ $message->body }}</p>
 

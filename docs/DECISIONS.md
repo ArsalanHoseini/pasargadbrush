@@ -4,6 +4,14 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Persian (Shamsi) dates site-wide; app timezone Asia/Tehran
+
+- Every human-facing date (blog list/article/comments, all admin tables, the quote/order/review/conversation pages, footer year) now goes through one helper, `persian_date($date, PersianDate::DATE|DATETIME|COMPACT|COMPACT_DATE)`, built on intl's Persian calendar. Machine-facing dates stay Gregorian/ISO on purpose: RSS `pubDate`, sitemap `lastmod`, `<time datetime>` attributes, order numbers.
+- **Timezone bug found and fixed:** `config/app.timezone` was UTC, but WordPress's imported `post_date` values (blog posts, products) are Tehran local time, and staff type the scheduled-publish time in local time — so once dates were shown in Tehran time, those would have read 3½ h late (and sometimes on the wrong day). The app now runs on `APP_TIMEZONE=Asia/Tehran` (default; env-overridable). Safe to switch now because production starts from fresh data; only local dev rows created earlier shift by 3½ h, which is harmless.
+- The article form's publish-time picker is the browser's (Gregorian, can't be changed); a live «به تاریخ شمسی» line under it shows the same wall-clock time in the Persian calendar.
+
+---
+
 ## 2026-11-01 — Customer notifications on order status change and final-price confirmation
 
 - `NotifyOrderUpdated`, called from the admin order save: announces a status the customer cares about (confirmed / processing / shipped — with the parcel tracking code — / completed / cancelled; never "pending") and/or the final price being confirmed (grand total, or the items subtotal + "shipping announced separately" while shipping is unknown). Both in one save → **one** combined SMS (+ one email if the order has an address), linking to the tracking page. Uses the order's contact snapshot.

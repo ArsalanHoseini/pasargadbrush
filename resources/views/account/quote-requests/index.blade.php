@@ -15,7 +15,7 @@
                     درخواست عمومی
                 @endif
             </h2>
-            <span class="text-xs text-neutral-500">{{ \App\Support\PersianDate::format($quoteRequest->created_at, 'd MMMM y') }}</span>
+            <span class="text-xs text-neutral-500">{{ persian_date($quoteRequest->created_at, \App\Support\PersianDate::DATE) }}</span>
         </div>
 
         <p class="mb-2">

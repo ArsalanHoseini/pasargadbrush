@@ -61,7 +61,7 @@
                     <a href="{{ route('admin.quote-requests.edit', $quoteRequest) }}" class="hover:text-brand-accent-dark">
                         {{ $quoteRequest->name }} — {{ $quoteRequest->product?->name ?? 'عمومی' }}
                     </a>
-                    <span class="text-xs text-neutral-400">{{ $quoteRequest->created_at->format('Y-m-d H:i') }}</span>
+                    <span class="text-xs text-neutral-400">{{ persian_date($quoteRequest->created_at, \App\Support\PersianDate::COMPACT) }}</span>
                 </li>
             @endforeach
         </ul>

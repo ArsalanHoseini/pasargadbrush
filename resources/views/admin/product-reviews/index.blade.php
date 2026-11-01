@@ -42,7 +42,7 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
                             — <span aria-label="{{ $review->rating }} از ۵">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
                         @endif
                     </span>
-                    <span>{{ $review->created_at->format('Y-m-d H:i') }} — {{ $statusLabels[$review->status] }}</span>
+                    <span>{{ persian_date($review->created_at, \App\Support\PersianDate::COMPACT) }} — {{ $statusLabels[$review->status] }}</span>
                 </div>
 
                 <p class="mb-3 whitespace-pre-line text-sm text-neutral-700">{{ $review->body }}</p>

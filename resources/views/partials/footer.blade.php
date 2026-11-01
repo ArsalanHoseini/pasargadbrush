@@ -58,7 +58,7 @@
         </div>
 
         <div class="mt-10 border-t border-neutral-700 pt-6 text-xs text-neutral-500">
-            © {{ now()->format('Y') }} {{ setting('company_legal_name') }}. تمامی حقوق محفوظ است.
+            © {{ persian_date(now(), 'y') }} {{ setting('company_legal_name') }}. تمامی حقوق محفوظ است.
         </div>
     </div>
 </footer>

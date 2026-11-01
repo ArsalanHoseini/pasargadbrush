@@ -28,7 +28,7 @@
 
     <h1 class="mb-3 text-2xl font-bold text-neutral-900">{{ $post->title }}</h1>
     <p class="mb-8 text-xs text-neutral-500">
-        {{ $post->published_at?->format('Y-m-d') }} · {{ $post->reading_time }} دقیقه مطالعه · {{ $post->view_count }} بازدید
+        <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ persian_date($post->published_at, \App\Support\PersianDate::DATE) }}</time> · {{ $post->reading_time }} دقیقه مطالعه · {{ $post->view_count }} بازدید
     </p>
 
     @if ($post->featuredImage->isNotEmpty())
@@ -71,7 +71,7 @@
                 @foreach ($post->approvedComments as $comment)
                     <li class="rounded-lg border border-neutral-200 bg-white p-4">
                         <p class="mb-1 text-xs font-medium text-neutral-800">{{ $comment->author_name }}</p>
-                        <p class="mb-2 text-xs text-neutral-400">{{ $comment->created_at->format('Y-m-d') }}</p>
+                        <p class="mb-2 text-xs text-neutral-400"><time datetime="{{ $comment->created_at->toIso8601String() }}">{{ persian_date($comment->created_at, \App\Support\PersianDate::DATE) }}</time></p>
                         <p class="text-sm text-neutral-700">{{ $comment->body }}</p>
                     </li>
                 @endforeach

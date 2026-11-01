@@ -65,7 +65,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Tehran, not UTC: staff type dates (e.g. scheduled publishing) in local
+    // time, and WordPress's imported post_date values are Tehran local time.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Tehran'),
 
     /*
     |--------------------------------------------------------------------------

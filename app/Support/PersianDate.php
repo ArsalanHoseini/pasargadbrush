@@ -7,6 +7,18 @@ use IntlDateFormatter;
 
 class PersianDate
 {
+    /** «۹ آبان ۱۴۰۵، ۱۷:۳۵» — customer-facing date and time. */
+    public const DATETIME = 'd MMMM y، HH:mm';
+
+    /** «۹ آبان ۱۴۰۵» — article and review dates. */
+    public const DATE = 'd MMMM y';
+
+    /** «۱۴۰۵/۰۸/۰۹ ۱۷:۳۵» — compact, sortable-looking, for admin tables. */
+    public const COMPACT = 'yyyy/MM/dd HH:mm';
+
+    /** «۱۴۰۵/۰۸/۰۹» */
+    public const COMPACT_DATE = 'yyyy/MM/dd';
+
     /**
      * Formats a date in the Persian (Solar Hijri) calendar, Tehran time, with
      * Persian digits — e.g. «۹ آبان ۱۴۰۵، ۱۷:۳۵». Uses PHP's built-in intl

@@ -242,7 +242,10 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - **Content gap to resolve with the owner:** 5 live products + ~14 newer categories not on the new site.
 
 **Customer notifications on order updates (completed, 2026-11-01)**
-- Status change (with tracking code when shipped) and final-price confirmation → one SMS + email per save, opt-out checkbox on the admin order page. 8 new tests (`Admin/OrderUpdateNotificationTest`). Full suite 327/327 passing. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- Status change (with tracking code when shipped) and final-price confirmation → one SMS + email per save, opt-out checkbox on the admin order page. 8 new tests (`Admin/OrderUpdateNotificationTest`). Full suite 327/327 passing.
+
+**Persian dates everywhere + Tehran timezone (completed, 2026-11-01)**
+- `persian_date()` helper used for every human-facing date; app timezone switched to `Asia/Tehran` (fixes imported WordPress times reading 3½ h late). 6 new tests (`PersianDatesTest`). Full suite 333/333 passing. Verified on the real blog page (imported posts show e.g. «۳۰ تیر ۱۴۰۳» with `+03:30` ISO in `datetime`). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

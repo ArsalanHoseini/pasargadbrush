@@ -36,7 +36,7 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
                             مقاله حذف‌شده
                         @endif
                     </span>
-                    <span>{{ $comment->created_at->format('Y-m-d H:i') }} — {{ $statusLabels[$comment->status] }}</span>
+                    <span>{{ persian_date($comment->created_at, \App\Support\PersianDate::COMPACT) }} — {{ $statusLabels[$comment->status] }}</span>
                 </div>
 
                 <p class="mb-3 text-sm text-neutral-700">{{ $comment->body }}</p>

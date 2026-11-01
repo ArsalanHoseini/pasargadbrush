@@ -61,7 +61,7 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
                                 <span class="rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">پرداخت‌نشده</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-neutral-500">{{ $order->placed_at?->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 text-neutral-500">{{ persian_date($order->placed_at, \App\Support\PersianDate::COMPACT) }}</td>
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.orders.edit', $order) }}" class="text-neutral-600 hover:text-neutral-900">مشاهده</a>
                         </td>

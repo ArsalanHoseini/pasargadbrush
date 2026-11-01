@@ -39,7 +39,7 @@
                 </div>
             @endif
             <div><dt class="text-neutral-500">پیام</dt><dd class="whitespace-pre-line">{{ $quoteRequest->message }}</dd></div>
-            <div><dt class="text-neutral-500">تاریخ ثبت</dt><dd>{{ $quoteRequest->created_at->format('Y-m-d H:i') }}</dd></div>
+            <div><dt class="text-neutral-500">تاریخ ثبت</dt><dd>{{ persian_date($quoteRequest->created_at) }}</dd></div>
         </dl>
     </div>
 

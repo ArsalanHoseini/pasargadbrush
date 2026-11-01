@@ -49,7 +49,7 @@
                         <p class="mb-1 text-xs text-brand-accent-dark">{{ $post->category->name }}</p>
                     @endif
                     <h2 class="mb-1 text-sm font-medium text-neutral-900 group-hover:text-brand-accent-dark">{{ $post->title }}</h2>
-                    <p class="mb-2 text-xs text-neutral-500">{{ $post->published_at?->format('Y-m-d') }} · {{ $post->reading_time }} دقیقه مطالعه</p>
+                    <p class="mb-2 text-xs text-neutral-500"><time datetime="{{ $post->published_at?->toIso8601String() }}">{{ persian_date($post->published_at, \App\Support\PersianDate::DATE) }}</time> · {{ $post->reading_time }} دقیقه مطالعه</p>
                     @if ($post->tags->isNotEmpty())
                         <p class="text-xs text-neutral-400">
                             @foreach ($post->tags->take(3) as $postTag)

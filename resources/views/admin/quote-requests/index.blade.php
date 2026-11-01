@@ -42,7 +42,7 @@ $statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد',
                         <td class="px-4 py-3 text-neutral-500">{{ $quoteRequest->product?->name ?? 'عمومی' }}</td>
                         <td class="px-4 py-3 text-neutral-500" dir="ltr">{{ $quoteRequest->phone }}</td>
                         <td class="px-4 py-3">{{ $statusLabels[$quoteRequest->status] }}</td>
-                        <td class="px-4 py-3 text-neutral-500">{{ $quoteRequest->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 text-neutral-500">{{ persian_date($quoteRequest->created_at, \App\Support\PersianDate::COMPACT) }}</td>
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.quote-requests.edit', $quoteRequest) }}" class="text-neutral-600 hover:text-neutral-900">مشاهده</a>
                         </td>

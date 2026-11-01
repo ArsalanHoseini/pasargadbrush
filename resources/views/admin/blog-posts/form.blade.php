@@ -53,11 +53,21 @@
     </div>
 
     <div class="flex gap-4">
-        <div class="flex-1">
-            <label class="mb-1 block text-sm font-medium">تاریخ انتشار (خالی = هم‌اکنون؛ تاریخ آینده = زمان‌بندی‌شده)</label>
-            <input type="datetime-local" name="published_at" dir="ltr"
+        {{-- The browser's date picker is Gregorian (it can't be changed); show the Persian date live beside it. --}}
+        <div class="flex-1" x-data="{
+                 value: @js(old('published_at', $post->published_at?->format('Y-m-d\TH:i'))),
+                 get persian() {
+                     if (! this.value) return 'هم‌اکنون';
+                     // Same wall-clock time as typed (Tehran, like the app), only converted to the Persian calendar.
+                     const date = new Date(this.value + ':00Z');
+                     return isNaN(date) ? '' : new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' }).format(date);
+                 },
+             }">
+            <label for="published_at" class="mb-1 block text-sm font-medium">تاریخ انتشار (خالی = هم‌اکنون؛ تاریخ آینده = زمان‌بندی‌شده)</label>
+            <input id="published_at" type="datetime-local" name="published_at" dir="ltr" x-model="value"
                    value="{{ old('published_at', $post->published_at?->format('Y-m-d\TH:i')) }}"
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+            <p class="mt-1 text-xs text-neutral-600">به تاریخ شمسی: <span class="font-medium" x-text="persian">{{ $post->published_at ? persian_date($post->published_at) : 'هم‌اکنون' }}</span></p>
         </div>
         <div class="flex items-center gap-2 pt-6">
             <input type="checkbox" name="featured" id="featured" value="1" @checked(old('featured', $post->featured))>

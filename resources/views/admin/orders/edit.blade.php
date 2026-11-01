@@ -10,7 +10,7 @@
     @else
         ثبت‌شده توسط مشتری در سایت
     @endif
-    — {{ \App\Support\PersianDate::format($order->placed_at) }}
+    — {{ persian_date($order->placed_at) }}
 </p>
 
 @if ($order->customer)

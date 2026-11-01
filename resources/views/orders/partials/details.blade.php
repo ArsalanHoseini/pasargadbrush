@@ -24,7 +24,7 @@
         </div>
         <div>
             <dt class="text-neutral-500">تاریخ ثبت</dt>
-            <dd class="font-medium">{{ \App\Support\PersianDate::format($order->placed_at) }}</dd>
+            <dd class="font-medium">{{ persian_date($order->placed_at) }}</dd>
         </div>
         <div>
             <dt class="text-neutral-500">وضعیت پرداخت</dt>

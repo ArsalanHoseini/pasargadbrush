@@ -369,7 +369,7 @@
                                     @if ($review->rating)
                                         <span class="text-amber-500" aria-label="{{ $review->rating }} از ۵ ستاره">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
                                     @endif
-                                    <span class="text-xs text-neutral-400">{{ \App\Support\PersianDate::format($review->created_at, 'd MMMM y') }}</span>
+                                    <span class="text-xs text-neutral-400">{{ persian_date($review->created_at, \App\Support\PersianDate::DATE) }}</span>
                                 </div>
                                 <p class="whitespace-pre-line text-sm leading-7 text-neutral-700">{{ $review->body }}</p>
                             </article>

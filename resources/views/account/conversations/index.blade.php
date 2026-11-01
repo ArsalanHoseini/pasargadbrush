@@ -18,7 +18,7 @@
                 @endif
                 {{ $conversation->subject }}
             </p>
-            <p class="text-xs text-neutral-500">{{ \App\Support\PersianDate::format($conversation->last_message_at) }}</p>
+            <p class="text-xs text-neutral-500">{{ persian_date($conversation->last_message_at) }}</p>
         </div>
         <span class="rounded bg-neutral-100 px-2 py-0.5 text-xs">{{ \App\Models\Conversation::CUSTOMER_STATUS_LABELS[$conversation->status] }}</span>
     </a>

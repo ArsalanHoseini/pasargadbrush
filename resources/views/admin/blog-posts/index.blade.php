@@ -36,7 +36,7 @@
                                 <span class="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">پیش‌نویس</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-neutral-500">{{ $post->published_at?->format('Y-m-d') ?? '—' }}</td>
+                        <td class="px-4 py-3 text-neutral-500">{{ $post->published_at ? persian_date($post->published_at, \App\Support\PersianDate::COMPACT_DATE) : '—' }}</td>
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.blog-posts.edit', $post) }}" class="text-neutral-600 hover:text-neutral-900">ویرایش</a>
                             <form method="POST" action="{{ route('admin.blog-posts.destroy', $post) }}" class="inline"

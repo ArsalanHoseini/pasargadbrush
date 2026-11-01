@@ -44,7 +44,7 @@
                                 تیکت عمومی
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-neutral-500">{{ $conversation->last_message_at?->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 text-neutral-500">{{ persian_date($conversation->last_message_at, \App\Support\PersianDate::COMPACT) }}</td>
                         <td class="px-4 py-3">{{ \App\Models\Conversation::STAFF_STATUS_LABELS[$conversation->status] }}</td>
                     </tr>
                 @endforeach
