@@ -101,6 +101,26 @@ class Product extends Model
         return null;
     }
 
+    public function highlights(): HasMany
+    {
+        return $this->hasMany(ProductHighlight::class)->orderBy('sort_order');
+    }
+
+    public function applications(): BelongsToMany
+    {
+        return $this->belongsToMany(Application::class)->orderBy('sort_order');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->where('status', 'approved')->latest();
+    }
+
     public function attributeValues(): BelongsToMany
     {
         return $this->belongsToMany(AttributeValue::class, 'attribute_value_product');

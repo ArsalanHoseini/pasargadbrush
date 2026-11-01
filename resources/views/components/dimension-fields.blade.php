@@ -37,13 +37,13 @@
             </fieldset>
         @else
             <div>
-                <div class="flex items-center gap-3">
-                    <label for="{{ $inputId }}" class="flex w-32 shrink-0 items-center gap-1 text-sm font-medium text-neutral-800 sm:w-40">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <label for="{{ $inputId }}" class="flex w-24 shrink-0 flex-wrap items-center gap-x-1 text-sm font-medium leading-5 text-neutral-800 sm:w-40">
                         @if ($field->is_required)<span class="text-red-600" aria-hidden="true">*</span>@endif
                         <span>{{ $field->label }}</span>
                         @unless ($field->is_required)<span class="text-xs font-normal text-neutral-400">(اختیاری)</span>@endunless
                     </label>
-                    <span class="w-10 shrink-0 text-center text-base font-bold text-neutral-900" dir="ltr" aria-hidden="true">{{ $field->code }}</span>
+                    <span class="w-8 shrink-0 text-center text-sm font-bold text-neutral-900 sm:w-10 sm:text-base" dir="ltr" aria-hidden="true">{{ $field->code }}</span>
                     <input id="{{ $inputId }}" name="dimensions[{{ $field->id }}]" inputmode="decimal" dir="ltr"
                            value="{{ old('dimensions.'.$field->id) }}" @required($field->is_required)
                            @if ($field->min_value !== null || $field->max_value !== null)
@@ -55,7 +55,7 @@
                                'border-red-400' => $errors->has($errorKey),
                                'border-neutral-300' => ! $errors->has($errorKey),
                            ])>
-                    <span id="{{ $inputId }}-unit" class="w-16 shrink-0 text-xs text-neutral-500">{{ $field->unitLabel() }}</span>
+                    <span id="{{ $inputId }}-unit" class="w-12 shrink-0 text-[11px] text-neutral-500 sm:w-16 sm:text-xs">{{ $field->unitLabel() }}</span>
                 </div>
                 @error($errorKey)
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>

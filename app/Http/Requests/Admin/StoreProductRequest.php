@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\ProductDimensionField;
+use App\Models\ProductHighlight;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -59,6 +60,15 @@ class StoreProductRequest extends FormRequest
             'remove_schematic_ids' => ['nullable', 'array'],
             'remove_schematic_ids.*' => ['integer'],
 
+            'highlights' => ['nullable', 'array', 'max:'.ProductHighlight::MAX_PER_PRODUCT],
+            'highlights.*.id' => ['nullable', 'integer'],
+            'highlights.*.title' => ['required', 'string', 'max:120'],
+            'highlights.*.image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'highlights.*.remove_image' => ['nullable', 'boolean'],
+
+            'application_ids' => ['nullable', 'array'],
+            'application_ids.*' => ['integer', 'exists:applications,id'],
+
             'dimension_fields' => ['array'],
             'dimension_fields.*.id' => ['nullable', 'integer'],
             // Missing type = a numeric dimension (the only kind before choices existed).
@@ -109,6 +119,10 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'schematics' => 'تصاویر شماتیک',
+            'highlights' => 'ویژگی‌های کلیدی',
+            'highlights.*.title' => 'عنوان ویژگی',
+            'highlights.*.image' => 'تصویر ویژگی',
+            'application_ids.*' => 'کاربرد',
             'schematics.*' => 'تصویر شماتیک',
             'dimension_fields.*.type' => 'نوع فیلد',
             'dimension_fields.*.options' => 'گزینه‌ها',

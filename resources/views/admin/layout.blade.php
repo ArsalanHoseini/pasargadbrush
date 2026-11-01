@@ -16,6 +16,14 @@
                     <a href="{{ route('admin.media.index') }}" class="text-neutral-600 hover:text-neutral-900">کتابخانه مدیا</a>
                     <a href="{{ route('admin.categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی‌ها</a>
                     <a href="{{ route('admin.products.index') }}" class="text-neutral-600 hover:text-neutral-900">محصولات</a>
+                    <a href="{{ route('admin.applications.index') }}" class="text-neutral-600 hover:text-neutral-900">کاربردها</a>
+                    <a href="{{ route('admin.product-reviews.index') }}" class="text-neutral-600 hover:text-neutral-900">
+                        نظرات محصولات
+                        @php($pendingReviewCount = \App\Models\ProductReview::where('status', 'pending')->count())
+                        @if ($pendingReviewCount > 0)
+                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $pendingReviewCount }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.blog-categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی بلاگ</a>
                     <a href="{{ route('admin.blog-posts.index') }}" class="text-neutral-600 hover:text-neutral-900">مقالات</a>
                     <a href="{{ route('admin.comments.index') }}" class="text-neutral-600 hover:text-neutral-900">

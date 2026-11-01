@@ -4,6 +4,16 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Product page redesign stage 2: key features, applications, tabs + reviews
+
+- **Key features** (`product_highlights`): up to 4 per product, title + optional image (uploaded in the product form, shown as circles beside the main image; below it on mobile).
+- **Applications** (`applications` + `application_product`): a shared, reusable list with icons managed at `/admin/applications` (icons: jpg/png/webp only — SVG refused, same XSS rule as the media library), picked per product. Chosen over per-product free text so «شستشوی فرش» etc. stay consistent across products.
+- **Tabs**: توضیحات / مشخصات فنی / نظرات مشتریان (n) — accessible tablist (Alpine), every panel stays in the HTML for SEO.
+- **Reviews** (`product_reviews`): optional 1–5 rating + text, honeypot + `throttle:5,1`, saved `pending` and shown only after approval at `/admin/product-reviews` (nav badge for pending) — same moderation flow as blog comments, but a separate table (different fields: rating, customer link). A review written while logged in links `customer_id`; if that customer has a non-cancelled order containing the product, it shows «خریدار این محصول» (computed in one query per page, not per review).
+- Real layout bug found and fixed while checking in a browser: on mobile the page grid had no column template, so its single column grew to its content (137px horizontal scroll) — fixed with `grid-cols-1`/`min-w-0`, and the field rows were tightened for small screens.
+
+---
+
 ## 2026-11-01 — Product page redesign: inline order card, several schematics, choice fields, quote products orderable (stage 1)
 
 **Owner's request (with two mockups):** the order form («مشخصات و سفارش») on the product page itself, schematics shown beside the product image. Owner's answers: quote-only products **can** be added to the cart and ordered, priced afterwards by an expert; build choice fields (e.g. «جنس الیاف»), key-feature callouts, applications with icons, and tabs + customer reviews (the last three = stage 2); **don't** change the site header.

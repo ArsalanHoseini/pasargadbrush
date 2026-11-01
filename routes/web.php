@@ -11,6 +11,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCustomizationController;
+use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,9 @@ Route::post('/quote-requests', [QuoteRequestController::class, 'store'])
 
 Route::get('/categories/{category:slug}', [ProductCategoryController::class, 'show'])->name('categories.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('products.reviews.store');
 Route::get('/products/{product:slug}/customize', [ProductCustomizationController::class, 'create'])->name('products.customize');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');

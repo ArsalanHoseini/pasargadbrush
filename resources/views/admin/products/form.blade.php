@@ -319,6 +319,75 @@
         </template>
     </div>
 
+    <div class="rounded-lg border border-neutral-200 bg-white p-6"
+         x-data="{ highlights: {{ json_encode(old('highlights') ? array_values(array_map(fn ($row) => ['id' => $row['id'] ?? null, 'title' => $row['title'] ?? '', 'image_url' => null], old('highlights'))) : $highlights->map(fn ($highlight) => [
+             'id' => $highlight->id,
+             'title' => $highlight->title,
+             'image_url' => $highlight->image?->url(),
+         ])->values()) }} }">
+        <div class="mb-1 flex items-center justify-between">
+            <h2 class="text-sm font-medium">ویژگی‌های کلیدی (کنار تصویر محصول)</h2>
+            <button type="button" x-show="highlights.length < {{ \App\Models\ProductHighlight::MAX_PER_PRODUCT }}"
+                    @click="highlights.push({ id: null, title: '', image_url: null })"
+                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">+ افزودن ویژگی</button>
+        </div>
+        <p class="mb-4 text-xs text-neutral-500">
+            حداکثر {{ \App\Models\ProductHighlight::MAX_PER_PRODUCT }} مورد — مثلاً «الیاف مقاوم با طول عمر بالا». تصویر هر ویژگی (مثلاً نمای نزدیک) به شکل دایره نمایش داده می‌شود.
+        </p>
+
+        <template x-if="highlights.length === 0">
+            <p class="text-sm text-neutral-500">ویژگی‌ای ثبت نشده است.</p>
+        </template>
+
+        <template x-for="(highlight, index) in highlights" :key="index">
+            <div class="mb-3 flex flex-wrap items-center gap-3 rounded border border-neutral-100 p-3">
+                <input type="hidden" :name="`highlights[${index}][id]`" :value="highlight.id ?? ''">
+                <template x-if="highlight.image_url">
+                    <img :src="highlight.image_url" alt="" class="h-14 w-14 rounded-full border border-neutral-200 object-cover">
+                </template>
+                <div class="min-w-48 flex-1">
+                    <label class="mb-1 block text-xs text-neutral-500">عنوان</label>
+                    <input :name="`highlights[${index}][title]`" x-model="highlight.title" required maxlength="120"
+                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs text-neutral-500" x-text="highlight.image_url ? 'تعویض تصویر' : 'تصویر (اختیاری)'"></label>
+                    <input type="file" :name="`highlights[${index}][image]`" accept="image/jpeg,image/png,image/webp" class="text-xs">
+                </div>
+                <label x-show="highlight.image_url" class="flex items-center gap-1 text-xs text-red-700">
+                    <input type="checkbox" :name="`highlights[${index}][remove_image]`" value="1"> حذف تصویر
+                </label>
+                <button type="button" @click="highlights.splice(index, 1)" class="text-xs text-red-600 hover:text-red-800">حذف</button>
+            </div>
+        </template>
+    </div>
+
+    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <h2 class="mb-1 text-sm font-medium">کاربردها</h2>
+        <p class="mb-4 text-xs text-neutral-500">
+            کاربردهای این محصول را انتخاب کنید. برای افزودن یا ویرایش کاربردها و آیکون‌هایشان به
+            <a href="{{ route('admin.applications.index') }}" class="underline" target="_blank">صفحه‌ی کاربردها</a> بروید.
+        </p>
+        @if ($applications->isEmpty())
+            <p class="text-sm text-neutral-500">هنوز کاربردی تعریف نشده است.</p>
+        @else
+            <div class="flex flex-wrap gap-2">
+                @foreach ($applications as $application)
+                    <label class="cursor-pointer">
+                        <input type="checkbox" name="application_ids[]" value="{{ $application->id }}" class="peer sr-only"
+                               @checked(in_array($application->id, old('application_ids', $selectedApplicationIds)))>
+                        <span class="flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-sm peer-checked:border-neutral-900 peer-checked:bg-neutral-900 peer-checked:text-white peer-focus-visible:ring-2">
+                            @if ($application->icon)
+                                <img src="{{ $application->icon->url() }}" alt="" class="h-5 w-5 object-contain">
+                            @endif
+                            {{ $application->name }}
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     <div class="rounded-lg border border-neutral-200 bg-white p-6">
         <h2 class="mb-3 text-sm font-medium">گالری تصاویر</h2>
         @if ($media->isEmpty())

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApplicationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\QuoteRequestController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ShippingSettingController;
@@ -41,6 +43,13 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::resource('blog-categories', BlogCategoryController::class)->except('show');
     Route::resource('blog-posts', BlogPostController::class)->except('show');
     Route::resource('products', ProductController::class)->except('show');
+
+    Route::resource('applications', ApplicationController::class)->except('show');
+
+    Route::get('/product-reviews', [ProductReviewController::class, 'index'])->name('product-reviews.index');
+    Route::post('/product-reviews/{productReview}/approve', [ProductReviewController::class, 'approve'])->name('product-reviews.approve');
+    Route::post('/product-reviews/{productReview}/spam', [ProductReviewController::class, 'spam'])->name('product-reviews.spam');
+    Route::delete('/product-reviews/{productReview}', [ProductReviewController::class, 'destroy'])->name('product-reviews.destroy');
 
     Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
     Route::post('/comments/{comment}/approve', [CommentController::class, 'approve'])->name('comments.approve');

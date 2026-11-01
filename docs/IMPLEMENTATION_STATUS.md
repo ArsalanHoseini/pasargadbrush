@@ -226,7 +226,13 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - 3 migrations (choice fields, schematics → mediables, variant-less cart lines) — **not yet run locally**: MySQL was down; run `php artisan migrate`.
 - Real bug caught by the new tests: a `?? 'message'` turned "no problem" (null) into a refusal for quote-only lines at checkout — fixed.
 - 7 new tests (`ProductPageOrderingTest`) + updated customization/reorder/admin tests. Full suite 286/286 passing. **Not yet checked in a browser** (local MySQL down).
-- **Next (stage 2):** key-feature callouts beside the image, applications with icons, tabs + moderated customer reviews. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- (Migrations were later run locally.)
+
+**Product page redesign — stage 2 (completed, 2026-11-01)**
+- Key features beside the image, applications bar with icons (`/admin/applications`), tabs (description / specs / reviews), moderated reviews with ratings and verified-buyer badge (`/admin/product-reviews`).
+- 4 migrations (product_highlights, applications, application_product, product_reviews) — run locally.
+- 12 new tests (`ProductPageContentTest`, `Admin/ProductContentManagementTest`). Full suite 298/298 passing.
+- Verified in a real browser against MySQL with temporary data on a real quote-only product (5 dimensions + fiber choice, 2 schematics, 3 features, 5 applications): desktop layout matches the owner's mockup; mobile horizontal-scroll bug found and fixed. All temporary data and files removed afterwards. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

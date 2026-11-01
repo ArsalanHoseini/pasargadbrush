@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\Media\StoreUploadedMedia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
+use App\Models\Application;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCategory;
@@ -46,6 +47,8 @@ class ProductController extends Controller
             $this->syncVariants($product, $request->input('variants', []));
             $this->syncDimensionFields($product, $request->input('dimension_fields', []));
             $this->syncSchematics($product, $request);
+            $this->syncHighlights($product, $request);
+            $product->applications()->sync($request->input('application_ids', []));
 
             return $product;
         });
@@ -75,6 +78,8 @@ class ProductController extends Controller
             $this->syncVariants($product, $request->input('variants', []));
             $this->syncDimensionFields($product, $request->input('dimension_fields', []));
             $this->syncSchematics($product, $request);
+            $this->syncHighlights($product, $request);
+            $product->applications()->sync($request->input('application_ids', []));
         });
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول به‌روزرسانی شد.');
@@ -101,6 +106,9 @@ class ProductController extends Controller
             'selectedImageIds' => $product->exists ? $product->images->pluck('id')->all() : [],
             'variants' => $product->exists ? $product->variants()->orderBy('sort_order')->get() : collect(),
             'dimensionFields' => $product->exists ? $product->dimensionFields : collect(),
+            'highlights' => $product->exists ? $product->highlights()->with('image')->get() : collect(),
+            'applications' => Application::query()->with('icon')->orderBy('sort_order')->orderBy('name')->get(),
+            'selectedApplicationIds' => $product->exists ? $product->applications()->pluck('applications.id')->all() : [],
             'specificationRows' => collect($product->specifications ?? [])
                 ->map(fn ($value, $key) => ['key' => $key, 'value' => $value])
                 ->values(),
@@ -112,7 +120,7 @@ class ProductController extends Controller
      */
     private function prepared(StoreProductRequest $request): array
     {
-        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications', 'schematics', 'remove_schematic_ids', 'dimension_fields']);
+        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications', 'schematics', 'remove_schematic_ids', 'dimension_fields', 'highlights', 'application_ids']);
         $data['slug'] = ($data['slug'] ?? null) ?: PersianSlug::make($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active'] = $request->boolean('is_active');
@@ -244,5 +252,39 @@ class ProductController extends Controller
             $media = $this->mediaUploader->handle($file, $request->user()?->id, 'شماتیک '.$product->name);
             $product->schematics()->attach($media->id, ['role' => 'schematic', 'sort_order' => $position++]);
         }
+    }
+
+    /**
+     * Key features beside the product image: same keep/update/delete pattern
+     * as variants. Each row may upload a new image (replacing the old one)
+     * or drop its current image.
+     */
+    private function syncHighlights(Product $product, StoreProductRequest $request): void
+    {
+        $keptIds = [];
+        $position = 0;
+
+        foreach ($request->input('highlights', []) as $index => $row) {
+            $highlight = ! empty($row['id']) ? $product->highlights()->whereKey($row['id'])->first() : null;
+            $attributes = ['title' => trim($row['title']), 'sort_order' => $position++];
+
+            if ($request->hasFile("highlights.{$index}.image")) {
+                $attributes['media_id'] = $this->mediaUploader
+                    ->handle($request->file("highlights.{$index}.image"), $request->user()?->id, $attributes['title'])
+                    ->id;
+            } elseif (! empty($row['remove_image'])) {
+                $attributes['media_id'] = null;
+            }
+
+            if ($highlight) {
+                $highlight->update($attributes);
+            } else {
+                $highlight = $product->highlights()->create($attributes);
+            }
+
+            $keptIds[] = $highlight->id;
+        }
+
+        $product->highlights()->whereNotIn('id', $keptIds)->delete();
     }
 }

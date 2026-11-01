@@ -36,6 +36,8 @@
         || session('quote_request_sent');
     $selectedVariantId = (string) old('product_variant_id', $orderableVariants->firstWhere('is_default', true)?->id ?? $orderableVariants->first()?->id ?? '');
     $variantPrices = $product->variants->mapWithKeys(fn ($variant) => [(string) $variant->id => \App\Support\Money::toman($variant->price_rial)]);
+    // Errors from the review form belong to the reviews tab, not the order card.
+    $orderCardHasErrors = collect($errors->keys())->diff(['author_name', 'body', 'rating'])->isNotEmpty();
     $canAddToCart = $isPriced ? $orderableVariants->isNotEmpty() : $quoteOrderUnavailableReason === null;
 @endphp
 
@@ -51,9 +53,9 @@
         <span class="text-neutral-700">{{ $product->name }}</span>
     </nav>
 
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         {{-- Order column (right in RTL) --}}
-        <div class="lg:order-none">
+        <div class="min-w-0">
             <h1 class="text-2xl font-bold text-neutral-900 sm:text-3xl">{{ $product->name }}</h1>
             <span class="mt-3 block h-1 w-16 rounded-full bg-brand-accent" aria-hidden="true"></span>
             @if ($product->short_description)
@@ -93,7 +95,7 @@
                             <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                                 {{ $errors->first('quantity') ?: ($errors->first('product_variant_id') ?: $errors->first('website')) }}
                             </div>
-                        @elseif ($errors->any())
+                        @elseif ($orderCardHasErrors)
                             <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">لطفاً موارد مشخص‌شده را اصلاح کنید.</div>
                         @endif
 
@@ -215,33 +217,52 @@
             </form>
         </div>
 
-        {{-- Media column (left in RTL): gallery, then the schematics --}}
-        <div class="space-y-6">
-            @if ($product->images->isNotEmpty())
-                <div x-data="{ active: 0 }">
-                    <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-neutral-50">
-                        @foreach ($product->images as $image)
-                            <img src="{{ $image->url() }}" alt="{{ $product->name }}" x-show="active === {{ $loop->index }}"
-                                 @if (! $loop->first) x-cloak loading="lazy" @endif
-                                 class="h-full w-full object-contain">
+        {{-- Media column (left in RTL): key features + gallery, schematics, applications, tabs --}}
+        <div class="min-w-0 space-y-6">
+            <div @class(['grid grid-cols-1 gap-4', 'lg:grid-cols-[170px_minmax(0,1fr)]' => $product->highlights->isNotEmpty()])>
+                @if ($product->highlights->isNotEmpty())
+                    <ul class="order-2 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:order-none lg:grid-cols-1 lg:content-center" aria-label="ویژگی‌های کلیدی">
+                        @foreach ($product->highlights as $highlight)
+                            <li class="flex items-center gap-3">
+                                <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-neutral-100 shadow ring-1 ring-neutral-200">
+                                    @if ($highlight->image)
+                                        <img src="{{ $highlight->image->url() }}" alt="" class="h-full w-full object-cover" loading="lazy">
+                                    @else
+                                        <svg class="h-6 w-6 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @endif
+                                </span>
+                                <span class="text-sm font-semibold leading-6 text-neutral-800">{{ $highlight->title }}</span>
+                            </li>
                         @endforeach
-                    </div>
-                    @if ($product->images->count() > 1)
-                        <div class="mt-3 flex gap-2 overflow-x-auto">
+                    </ul>
+                @endif
+
+                @if ($product->images->isNotEmpty())
+                    <div x-data="{ active: 0 }">
+                        <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-neutral-50">
                             @foreach ($product->images as $image)
-                                <button type="button" @click="active = {{ $loop->index }}"
-                                        :class="active === {{ $loop->index }} ? 'border-brand-accent' : 'border-transparent'"
-                                        class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-neutral-50"
-                                        aria-label="تصویر {{ $loop->iteration }}">
-                                    <img src="{{ $image->url() }}" alt="" class="h-full w-full object-cover" loading="lazy">
-                                </button>
+                                <img src="{{ $image->url() }}" alt="{{ $product->name }}" x-show="active === {{ $loop->index }}"
+                                     @if (! $loop->first) x-cloak loading="lazy" @endif
+                                     class="h-full w-full object-contain">
                             @endforeach
                         </div>
-                    @endif
-                </div>
-            @else
-                <div class="flex aspect-[4/3] items-center justify-center rounded-2xl bg-neutral-100 text-sm text-neutral-400">بدون تصویر</div>
-            @endif
+                        @if ($product->images->count() > 1)
+                            <div class="mt-3 flex gap-2 overflow-x-auto">
+                                @foreach ($product->images as $image)
+                                    <button type="button" @click="active = {{ $loop->index }}"
+                                            :class="active === {{ $loop->index }} ? 'border-brand-accent' : 'border-transparent'"
+                                            class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-neutral-50"
+                                            aria-label="تصویر {{ $loop->iteration }}">
+                                        <img src="{{ $image->url() }}" alt="" class="h-full w-full object-cover" loading="lazy">
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="flex aspect-[4/3] items-center justify-center rounded-2xl bg-neutral-100 text-sm text-neutral-400">بدون تصویر</div>
+                @endif
+            </div>
 
             @if ($product->schematics->isNotEmpty())
                 <section aria-labelledby="schematics-heading" class="rounded-2xl border border-neutral-200 bg-white p-4">
@@ -265,32 +286,145 @@
                     @endif
                 </section>
             @endif
+
+            @if ($product->applications->isNotEmpty())
+                <section aria-labelledby="applications-heading" class="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white sm:flex-row">
+                    <h2 id="applications-heading" class="flex shrink-0 items-center gap-2 bg-brand-charcoal px-5 py-3 text-sm font-bold text-white">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                            <path d="M10.3 4.3c.4-1.7 3-1.7 3.4 0a1.7 1.7 0 002.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 001 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 00-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 00-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 00-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 00-1.1-2.6c-1.7-.4-1.7-2.9 0-3.4a1.7 1.7 0 001.1-2.5c-.9-1.6.8-3.3 2.4-2.4a1.7 1.7 0 002.5-1.1z" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        کاربردها
+                    </h2>
+                    <ul class="grid flex-1 grid-cols-2 divide-neutral-100 sm:grid-cols-3 lg:flex lg:divide-x lg:divide-x-reverse">
+                        @foreach ($product->applications as $application)
+                            <li class="flex flex-1 flex-col items-center justify-center gap-2 px-3 py-4 text-center">
+                                @if ($application->icon)
+                                    <img src="{{ $application->icon->url() }}" alt="" class="h-9 w-9 object-contain" loading="lazy">
+                                @endif
+                                <span class="text-xs font-medium leading-5 text-neutral-700">{{ $application->name }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
+            @php
+                $openReviewsTab = session('review_sent') || $errors->hasAny(['author_name', 'body', 'rating']);
+                $tabs = array_filter([
+                    'description' => $product->description ? 'توضیحات' : null,
+                    'specifications' => ! empty($product->specifications) ? 'مشخصات فنی' : null,
+                    'reviews' => 'نظرات مشتریان ('.$reviews->count().')',
+                ]);
+            @endphp
+            <section id="reviews-and-details" class="scroll-mt-24"
+                     x-data="{ tab: @js($openReviewsTab ? 'reviews' : array_key_first($tabs)) }">
+                <div class="grid gap-2" style="grid-template-columns: repeat({{ count($tabs) }}, minmax(0, 1fr))" role="tablist" aria-label="اطلاعات محصول">
+                    @foreach ($tabs as $key => $label)
+                        <button type="button" role="tab" id="tab-{{ $key }}" aria-controls="panel-{{ $key }}"
+                                :aria-selected="tab === '{{ $key }}'" :tabindex="tab === '{{ $key }}' ? 0 : -1"
+                                @click="tab = '{{ $key }}'"
+                                :class="tab === '{{ $key }}' ? 'bg-brand-charcoal text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+                                class="rounded-t-xl px-3 py-3 text-sm font-semibold">{{ $label }}</button>
+                    @endforeach
+                </div>
+
+                <div class="rounded-b-2xl border border-t-0 border-neutral-200 bg-white p-5">
+                    @if ($product->description)
+                        <div id="panel-description" role="tabpanel" aria-labelledby="tab-description" x-show="tab === 'description'"
+                             @if ($openReviewsTab || array_key_first($tabs) !== 'description') x-cloak @endif
+                             class="article-content text-sm leading-7 text-neutral-700">{!! $product->description !!}</div>
+                    @endif
+
+                    @if (! empty($product->specifications))
+                        <div id="panel-specifications" role="tabpanel" aria-labelledby="tab-specifications" x-show="tab === 'specifications'" x-cloak>
+                            <dl class="divide-y divide-neutral-100 text-sm">
+                                @foreach ($product->specifications as $key => $value)
+                                    <div class="flex justify-between gap-4 py-3">
+                                        <dt class="text-neutral-500">{{ $key }}</dt>
+                                        <dd class="font-medium text-neutral-900">{{ $value }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        </div>
+                    @endif
+
+                    <div id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews" x-show="tab === 'reviews'"
+                         @unless ($openReviewsTab || array_key_first($tabs) === 'reviews') x-cloak @endunless>
+                        @if ($averageRating)
+                            <p class="mb-4 text-sm text-neutral-700">
+                                میانگین امتیاز:
+                                <span class="font-bold text-amber-500" aria-hidden="true">{{ str_repeat('★', (int) round($averageRating)) }}{{ str_repeat('☆', 5 - (int) round($averageRating)) }}</span>
+                                <span>{{ number_format($averageRating, 1) }} از ۵</span>
+                            </p>
+                        @endif
+
+                        @forelse ($reviews as $review)
+                            <article class="border-b border-neutral-100 py-4 first:pt-0">
+                                <div class="mb-1 flex flex-wrap items-center gap-2 text-sm">
+                                    <span class="font-semibold text-neutral-900">{{ $review->author_name }}</span>
+                                    @if ($review->customer_id && in_array($review->customer_id, $verifiedBuyerIds, true))
+                                        <span class="rounded bg-green-50 px-1.5 py-0.5 text-xs text-green-700">خریدار این محصول</span>
+                                    @endif
+                                    @if ($review->rating)
+                                        <span class="text-amber-500" aria-label="{{ $review->rating }} از ۵ ستاره">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                                    @endif
+                                    <span class="text-xs text-neutral-400">{{ \App\Support\PersianDate::format($review->created_at, 'd MMMM y') }}</span>
+                                </div>
+                                <p class="whitespace-pre-line text-sm leading-7 text-neutral-700">{{ $review->body }}</p>
+                            </article>
+                        @empty
+                            <p class="mb-2 text-sm text-neutral-500">هنوز نظری برای این محصول ثبت نشده است. اولین نفر باشید.</p>
+                        @endforelse
+
+                        <div class="mt-6 rounded-xl bg-neutral-50 p-4">
+                            <h3 class="mb-3 text-sm font-bold text-neutral-900">نظر خود را بنویسید</h3>
+
+                            @if (session('review_sent'))
+                                <p class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                                    نظر شما ثبت شد و پس از تأیید نمایش داده می‌شود. سپاسگزاریم.
+                                </p>
+                            @else
+                                <form method="POST" action="{{ route('products.reviews.store', $product) }}" class="space-y-3">
+                                    @csrf
+                                    <div class="absolute h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+                                        <label>وب‌سایت<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                                    </div>
+                                    <div>
+                                        <label for="review-name" class="mb-1 block text-sm font-medium text-neutral-800">نام</label>
+                                        <input id="review-name" name="author_name" value="{{ old('author_name', $accountCustomer?->name) }}" required maxlength="255"
+                                               class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm sm:w-1/2">
+                                        @error('author_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+                                    <fieldset>
+                                        <legend class="mb-1 text-sm font-medium text-neutral-800">امتیاز (اختیاری)</legend>
+                                        <div class="flex flex-row-reverse justify-end gap-1" dir="ltr">
+                                            @foreach ([5, 4, 3, 2, 1] as $stars)
+                                                <label class="cursor-pointer">
+                                                    <input type="radio" name="rating" value="{{ $stars }}" class="peer sr-only" @checked((int) old('rating') === $stars)>
+                                                    <span class="block rounded border border-neutral-300 px-2 py-1 text-sm text-neutral-500 peer-checked:border-amber-400 peer-checked:bg-amber-50 peer-checked:text-amber-600 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-accent">
+                                                        {{ $stars }} ★
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </fieldset>
+                                    <div>
+                                        <label for="review-body" class="mb-1 block text-sm font-medium text-neutral-800">متن نظر</label>
+                                        <textarea id="review-body" name="body" rows="4" required maxlength="2000"
+                                                  class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm">{{ old('body') }}</textarea>
+                                        @error('body')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+                                    <button type="submit" class="rounded-full bg-brand-charcoal px-6 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800">ثبت نظر</button>
+                                    <p class="text-xs text-neutral-500">نظرها پس از تأیید مدیر سایت نمایش داده می‌شوند.</p>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
-
-    @if ($product->description || ! empty($product->specifications))
-        <div class="mt-12 grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-            @if ($product->description)
-                <section aria-labelledby="description-heading">
-                    <h2 id="description-heading" class="mb-4 text-lg font-bold text-neutral-900">توضیحات</h2>
-                    <div class="article-content text-sm leading-7 text-neutral-700">{!! $product->description !!}</div>
-                </section>
-            @endif
-            @if (! empty($product->specifications))
-                <section aria-labelledby="specs-heading">
-                    <h2 id="specs-heading" class="mb-4 text-lg font-bold text-neutral-900">مشخصات فنی</h2>
-                    <dl class="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white px-4 text-sm">
-                        @foreach ($product->specifications as $key => $value)
-                            <div class="flex justify-between gap-4 py-3">
-                                <dt class="text-neutral-500">{{ $key }}</dt>
-                                <dd class="font-medium text-neutral-900">{{ $value }}</dd>
-                            </div>
-                        @endforeach
-                    </dl>
-                </section>
-            @endif
-        </div>
-    @endif
 
     @if ($related->isNotEmpty())
         <div class="mt-16">
