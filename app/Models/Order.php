@@ -7,6 +7,7 @@ use App\Services\Checkout\ShippingQuote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -26,6 +27,12 @@ class Order extends Model
         'refunded' => 'بازگشت‌شده',
     ];
 
+    /** Placed by the customer through the website checkout. */
+    public const SOURCE_WEBSITE = 'website';
+
+    /** Entered by staff in the dashboard (phone order, quote request, ...). */
+    public const SOURCE_MANUAL = 'manual';
+
     /**
      * The customer-facing progress steps, in order; "cancelled" is shown
      * separately rather than as a step.
@@ -34,6 +41,8 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'source',
+        'created_by_user_id',
         'customer_id',
         'customer_name',
         'customer_phone',
@@ -70,6 +79,23 @@ class Order extends Model
             ShippingMethod::Announced => new ShippingQuote($method, $this->shipping_cost_rial > 0 ? $this->shipping_cost_rial : null),
             ShippingMethod::CashOnDelivery, ShippingMethod::Flat => new ShippingQuote($method, $this->shipping_cost_rial),
         };
+    }
+
+    /**
+     * A human-friendly unique number, e.g. PB-20261101-K3X9QZ.
+     */
+    public static function generateOrderNumber(): string
+    {
+        do {
+            $candidate = 'PB-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
+        } while (static::query()->where('order_number', $candidate)->exists());
+
+        return $candidate;
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function customer(): BelongsTo

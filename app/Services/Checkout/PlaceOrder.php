@@ -8,7 +8,6 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -80,7 +79,8 @@ class PlaceOrder
             $shippingCost = $shipping->costRial ?? 0;
 
             $order = $customer->orders()->create([
-                'order_number' => $this->generateOrderNumber(),
+                'order_number' => Order::generateOrderNumber(),
+                'source' => Order::SOURCE_WEBSITE,
                 'customer_name' => $details['name'],
                 'customer_phone' => $details['phone'],
                 'customer_email' => $details['email'] ?? null,
@@ -153,14 +153,5 @@ class PlaceOrder
         }
 
         return $variants;
-    }
-
-    private function generateOrderNumber(): string
-    {
-        do {
-            $candidate = 'PB-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
-        } while (Order::query()->where('order_number', $candidate)->exists());
-
-        return $candidate;
     }
 }

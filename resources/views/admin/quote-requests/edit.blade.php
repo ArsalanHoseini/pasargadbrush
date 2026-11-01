@@ -44,6 +44,21 @@
     </div>
 
     <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="mb-6 rounded border border-neutral-200 bg-neutral-50 p-4">
+            @if ($quoteRequest->order)
+                <p class="text-sm">
+                    برای این درخواست سفارش ثبت شده است:
+                    <a href="{{ route('admin.orders.edit', $quoteRequest->order) }}" class="font-medium text-blue-700 hover:underline" dir="ltr">{{ $quoteRequest->order->order_number }}</a>
+                </p>
+            @else
+                <p class="mb-3 text-sm text-neutral-600">مشتری قیمت را پذیرفت؟ سفارش را با اطلاعات و ابعاد همین درخواست ثبت کنید.</p>
+                <a href="{{ route('admin.orders.create', ['quote_request' => $quoteRequest->id]) }}"
+                   class="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+                    ثبت سفارش از این درخواست
+                </a>
+            @endif
+        </div>
+
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مدیریت درخواست</h2>
         <form method="POST" action="{{ route('admin.quote-requests.update', $quoteRequest) }}" class="space-y-4">
             @csrf

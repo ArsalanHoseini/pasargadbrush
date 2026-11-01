@@ -3,10 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreManualOrderRequest;
 use App\Models\AuditLog;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\QuoteRequest;
+use App\Services\Cart\CartManager;
+use App\Services\Checkout\CreateManualOrder;
+use App\Services\Checkout\NotifyOrderPlaced;
 use App\Services\Checkout\OrderStock;
+use App\Services\Checkout\ShippingCalculator;
 use App\Services\Checkout\ShippingMethod;
+use App\Services\Customization\DimensionForm;
+use App\Support\PersianDigits;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +36,45 @@ class OrderController extends Controller
             ->withQueryString();
 
         return view('admin.orders.index', ['orders' => $orders, 'status' => $status]);
+    }
+
+    /**
+     * Manual order entry; with ?quote_request={id} the form is pre-filled
+     * from that request (customer, product, dimensions).
+     */
+    public function create(Request $request, ShippingCalculator $shipping, DimensionForm $dimensionForm): View|RedirectResponse
+    {
+        $quoteRequest = $request->filled('quote_request')
+            ? QuoteRequest::with('product.dimensionFields')->findOrFail($request->integer('quote_request'))
+            : null;
+
+        if ($quoteRequest?->order_id) {
+            return redirect()->route('admin.orders.edit', $quoteRequest->order_id)
+                ->with('status', 'برای این درخواست قبلاً سفارش ثبت شده است.');
+        }
+
+        $products = Product::query()
+            ->with(['variants' => fn ($query) => $query->orderBy('sort_order'), 'dimensionFields', 'schematic'])
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.orders.create', [
+            'quoteRequest' => $quoteRequest,
+            'products' => $products,
+            'defaultShippingMethod' => $shipping->currentMethod(),
+            'prefill' => $this->prefillFromQuoteRequest($quoteRequest, $dimensionForm),
+        ]);
+    }
+
+    public function store(StoreManualOrderRequest $request, CreateManualOrder $createManualOrder, NotifyOrderPlaced $notifyOrderPlaced): RedirectResponse
+    {
+        $order = $createManualOrder->handle($request->validated(), $request->products(), $request->user());
+
+        if ($request->boolean('notify_customer')) {
+            $notifyOrderPlaced->notifyCustomer($order);
+        }
+
+        return redirect()->route('admin.orders.edit', $order)->with('status', 'سفارش '.$order->order_number.' ثبت شد.');
     }
 
     public function edit(Order $order): View
@@ -106,6 +154,35 @@ class OrderController extends Controller
         }
 
         return redirect()->route('admin.orders.index')->with('status', 'سفارش به‌روزرسانی شد.');
+    }
+
+    /**
+     * @return array{name: string, phone: string, email: string, notes: string, items: list<array<string, mixed>>}
+     */
+    private function prefillFromQuoteRequest(?QuoteRequest $quoteRequest, DimensionForm $dimensionForm): array
+    {
+        if (! $quoteRequest) {
+            return ['name' => '', 'phone' => '', 'email' => '', 'notes' => '', 'items' => []];
+        }
+
+        // "requested_quantity" is free text (e.g. «۵۰۰ عدد»); use its first number.
+        preg_match('/\d+/', PersianDigits::toLatin((string) $quoteRequest->requested_quantity), $quantityMatch);
+
+        return [
+            'name' => $quoteRequest->name,
+            'phone' => $quoteRequest->phone,
+            'email' => (string) $quoteRequest->email,
+            'notes' => 'ثبت‌شده از درخواست استعلام #'.$quoteRequest->id.($quoteRequest->company ? ' — '.$quoteRequest->company : ''),
+            'items' => $quoteRequest->product ? [[
+                'product_id' => $quoteRequest->product->id,
+                'product_variant_id' => '',
+                'name' => '',
+                'quantity' => max(1, min((int) ($quantityMatch[0] ?? 1), CartManager::MAX_QUANTITY)),
+                'unit_price_toman' => '',
+                'dimensions' => (object) $dimensionForm->valuesFromSnapshot($quoteRequest->product, $quoteRequest->customization),
+                'customization_notes' => $quoteRequest->customization['notes'] ?? '',
+            ]] : [],
+        ];
     }
 
     /**

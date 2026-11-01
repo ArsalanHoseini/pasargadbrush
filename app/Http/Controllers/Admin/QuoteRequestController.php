@@ -30,7 +30,7 @@ class QuoteRequestController extends Controller
 
     public function edit(QuoteRequest $quoteRequest): View
     {
-        return view('admin.quote-requests.edit', ['quoteRequest' => $quoteRequest->load('product')]);
+        return view('admin.quote-requests.edit', ['quoteRequest' => $quoteRequest->load('product', 'order')]);
     }
 
     public function update(Request $request, QuoteRequest $quoteRequest): RedirectResponse

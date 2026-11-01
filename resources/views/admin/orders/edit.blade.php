@@ -3,7 +3,15 @@
 @section('title', 'سفارش '.$order->order_number)
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold" dir="ltr">{{ $order->order_number }}</h1>
+<h1 class="mb-1 text-lg font-semibold" dir="ltr">{{ $order->order_number }}</h1>
+<p class="mb-6 text-xs text-neutral-500">
+    @if ($order->source === \App\Models\Order::SOURCE_MANUAL)
+        ثبت دستی{{ $order->createdBy ? ' توسط '.$order->createdBy->name : '' }}
+    @else
+        ثبت‌شده توسط مشتری در سایت
+    @endif
+    — {{ \App\Support\PersianDate::format($order->placed_at) }}
+</p>
 
 @if ($errors->any())
     <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">

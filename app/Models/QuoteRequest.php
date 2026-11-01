@@ -16,6 +16,7 @@ class QuoteRequest extends Model
         'message',
         'requested_quantity',
         'customization',
+        'order_id',
         'status',
         'admin_notes',
     ];
@@ -23,6 +24,14 @@ class QuoteRequest extends Model
     protected $casts = [
         'customization' => 'array',
     ];
+
+    /**
+     * The order staff registered from this request, if any.
+     */
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     public function product(): BelongsTo
     {

@@ -9,11 +9,14 @@ use Illuminate\Http\Request;
 
 /**
  * The customer-facing dimensions form of a product (defined per product by
- * staff), shared by the cart and the quote-request flow: request
- * normalization, validation rules, Persian field names for error messages,
- * and the snapshot stored on cart lines, order lines and quote requests.
+ * staff), shared by the cart, the quote-request flow and staff-entered
+ * orders: request normalization, validation rules, Persian field names for
+ * error messages, and the snapshot stored on cart lines, order lines and
+ * quote requests.
  *
- * Inputs: dimensions[{field id}] and customization_notes.
+ * Inputs: {prefix}dimensions[{field id}] and {prefix}customization_notes —
+ * the prefix is empty for the single-product forms, and e.g. "items.2." for
+ * one line of a staff-entered order.
  *
  * Snapshot shape:
  *   ['dimensions' => [['code' => 'A', 'label' => 'قطر خارجی', 'unit' => 'mm', 'value' => '120'], ...],
@@ -26,30 +29,35 @@ class DimensionForm
     /**
      * Persian keyboards type Persian digits and «٫» as the decimal separator.
      */
-    public function normalize(Request $request): void
+    public function normalize(Request $request, string $prefix = ''): void
     {
-        $dimensions = $request->input('dimensions');
+        $key = $prefix.'dimensions';
+        $dimensions = $request->input($key);
 
         if (! is_array($dimensions)) {
             return;
         }
 
-        $request->merge(['dimensions' => array_map(
+        $normalized = array_map(
             fn ($value) => is_string($value)
                 ? trim(str_replace(['٫', ','], '.', PersianDigits::toLatin($value)))
                 : $value,
             $dimensions,
-        )]);
+        );
+
+        $input = $request->all();
+        data_set($input, $key, $normalized);
+        $request->merge($input);
     }
 
     /**
      * @return array<string, array<int, string>>
      */
-    public function rules(Product $product): array
+    public function rules(Product $product, string $prefix = ''): array
     {
         $rules = [
-            'dimensions' => [$product->requiresDimensions() ? 'required' : 'nullable', 'array'],
-            self::NOTES_INPUT => ['nullable', 'string', 'max:1000'],
+            $prefix.'dimensions' => [$product->requiresDimensions() ? 'required' : 'nullable', 'array'],
+            $prefix.self::NOTES_INPUT => ['nullable', 'string', 'max:1000'],
         ];
 
         foreach ($product->dimensionFields as $field) {
@@ -63,22 +71,23 @@ class DimensionForm
                 $fieldRules[] = 'max:'.$field->max_value;
             }
 
-            $rules['dimensions.'.$field->id] = $fieldRules;
+            $rules[$prefix.'dimensions.'.$field->id] = $fieldRules;
         }
 
         return $rules;
     }
 
     /**
+     * @param  string  $labelPrefix  Prepended to each name, e.g. "ردیف ۲ — ".
      * @return array<string, string>
      */
-    public function attributes(Product $product): array
+    public function attributes(Product $product, string $prefix = '', string $labelPrefix = ''): array
     {
         return $product->dimensionFields
             ->mapWithKeys(fn (ProductDimensionField $field) => [
-                'dimensions.'.$field->id => "{$field->label} ({$field->code})",
+                $prefix.'dimensions.'.$field->id => "{$labelPrefix}{$field->label} ({$field->code})",
             ])
-            ->put(self::NOTES_INPUT, 'توضیحات')
+            ->put($prefix.self::NOTES_INPUT, $labelPrefix.'توضیحات')
             ->all();
     }
 
@@ -86,7 +95,7 @@ class DimensionForm
      * Freezes the field definitions together with the values, so a later
      * edit to the product's form never changes what a customer submitted.
      *
-     * @param  array<string, mixed>  $validated
+     * @param  array<string, mixed>  $validated  Holding "dimensions" and "customization_notes" (unprefixed).
      * @return array{dimensions: list<array{code: string, label: string, unit: string, value: string}>, notes: ?string}|null
      */
     public function snapshot(Product $product, array $validated): ?array
@@ -112,5 +121,23 @@ class DimensionForm
             'dimensions' => $dimensions,
             'notes' => filled($validated[self::NOTES_INPUT] ?? null) ? $validated[self::NOTES_INPUT] : null,
         ];
+    }
+
+    /**
+     * The reverse of snapshot(): field id => value, matched by letter, so a
+     * quote request's dimensions can pre-fill a new order line for the same
+     * product.
+     *
+     * @param  array<string, mixed>|null  $snapshot
+     * @return array<int, string>
+     */
+    public function valuesFromSnapshot(Product $product, ?array $snapshot): array
+    {
+        $byCode = collect($snapshot['dimensions'] ?? [])->pluck('value', 'code');
+
+        return $product->dimensionFields
+            ->filter(fn (ProductDimensionField $field) => $byCode->has($field->code))
+            ->mapWithKeys(fn (ProductDimensionField $field) => [$field->id => $byCode->get($field->code)])
+            ->all();
     }
 }

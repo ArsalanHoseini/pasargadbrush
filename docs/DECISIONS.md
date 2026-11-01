@@ -4,6 +4,20 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Staff-entered (manual) orders, incl. from a quote request — customization stage 2
+
+**Why:** owner's flow for quote-only products — the customer sends a quote request (with dimensions); an expert agrees the price, then registers the order on the site by hand. Also covers phone orders.
+
+**Design:**
+- `/admin/orders/create` («+ ثبت سفارش دستی» on the orders list), and `?quote_request={id}` from the quote request page («ثبت سفارش از این درخواست»), which pre-fills customer, product, the request's dimensions (matched to the product's current fields **by letter** — `DimensionForm::valuesFromSnapshot()`), the first number found in the free-text requested quantity, and an internal note referencing the request.
+- Lines: any product (quote-only and inactive included — staff decide), optional variant, quantity, unit price set by staff, optional line title, and the product's dimension fields, validated with the same `DimensionForm` rules customers face (now prefix-aware, errors read «ردیف ۱ — قطر خارجی (E) ...»).
+- `CreateManualOrder`: same no-overwrite customer rule and contact snapshot as checkout; prices are final (`requires_price_confirmation = false`); **tracked stock is enforced and deducted** (under a row lock) because cancelling later returns it via `OrderStock` — skipping it would inflate stock; product availability is *not* enforced. Shipping method/cost chosen per order (COD never charges). The quote request gets `order_id` + status `closed`; a request can only become one order. Audit-logged as `order.created_manually`.
+- `orders.source` (`website`/`manual`) + `created_by_user_id`; «ثبت دستی» badge in the list, «ثبت دستی توسط …» on the order page.
+- Notifications: the business isn't notified of its own entry; the customer gets the normal confirmation email/SMS (with the order number for tracking) only if staff tick the box (default on). `NotifyOrderPlaced` split into `notifyBusiness()` / `notifyCustomer()`.
+- Order number generation moved to `Order::generateOrderNumber()` (shared by both paths).
+
+---
+
 ## 2026-11-01 — Per-product dimensions form with a schematic (customization), stage 1
 
 **Owner's request:** every product can have its own schematic drawing and a set of dimensions (A, B, O.H., …) the customer must give exactly; defined per product in the dashboard; for purchasable products the form appears on adding to the cart.

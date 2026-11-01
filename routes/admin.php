@@ -56,6 +56,6 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
 
     Route::resource('pages', PageController::class)->except('show');
 
-    Route::resource('orders', OrderController::class)->only(['index', 'edit', 'update']);
+    Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::resource('customers', CustomerController::class)->only(['index', 'show']);
 });

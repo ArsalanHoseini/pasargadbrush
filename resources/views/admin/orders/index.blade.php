@@ -7,7 +7,10 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
 @endphp
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">سفارش‌ها</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <h1 class="text-lg font-semibold">سفارش‌ها</h1>
+    <a href="{{ route('admin.orders.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">+ ثبت سفارش دستی</a>
+</div>
 
 <div class="mb-6 flex flex-wrap gap-2 text-sm">
     <a href="{{ route('admin.orders.index') }}"
@@ -44,6 +47,9 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
                         <td class="px-4 py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
                         <td class="px-4 py-3">
                             {{ $statusLabels[$order->status] }}
+                            @if ($order->source === \App\Models\Order::SOURCE_MANUAL)
+                                <span class="mr-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700">ثبت دستی</span>
+                            @endif
                             @if ($order->requires_price_confirmation)
                                 <span class="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">نیاز به تأیید قیمت</span>
                             @endif

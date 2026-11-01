@@ -22,6 +22,12 @@ class NotifyOrderPlaced
 
     public function handle(Order $order): void
     {
+        $this->notifyBusiness($order);
+        $this->notifyCustomer($order);
+    }
+
+    public function notifyBusiness(Order $order): void
+    {
         $order->loadMissing('customer', 'items', 'shippingAddress');
 
         $adminEmail = setting('contact_email');
@@ -34,6 +40,11 @@ class NotifyOrderPlaced
         if ($adminMobile) {
             $this->attempt('admin sms', $order, fn () => $this->sms->send($adminMobile, $this->adminSmsText($order)));
         }
+    }
+
+    public function notifyCustomer(Order $order): void
+    {
+        $order->loadMissing('customer', 'items', 'shippingAddress');
 
         // The contact details entered on this order, not the customer record —
         // the record is never updated by checkout (see PlaceOrder).

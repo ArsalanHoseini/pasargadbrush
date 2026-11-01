@@ -200,7 +200,11 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Quote products: the quote request form includes the schematic + dimensions; stored on the request, shown in admin and the notification email.
 - 5 migrations (dimension fields, product schematic, cart_items customization + unique index dropped, order_items/orders, quote_requests) — run locally on MySQL.
 - 24 new tests (`ProductCustomizationTest`, `Admin/ProductCustomizationManagementTest`). Full suite 217/217 passing. Verified in a real browser against MySQL with temporary ASCII data (customize page, out-of-range error, Persian-digit input → cart line), then removed.
-- **Stage 2 (next, awaiting go-ahead):** manual order entry by staff in the dashboard, including from a quote request. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+
+**Manual order entry by staff, incl. from a quote request — customization stage 2 (completed, 2026-11-01)**
+- `/admin/orders/create` (+ «ثبت سفارش از این درخواست» on quote requests, pre-filled). Dynamic lines (Alpine `manualOrderForm` in `resources/js/app.js`) with per-product variants and dimension fields; staff-set prices; shipping/status/payment; optional customer notification.
+- Migration `add_manual_entry_to_orders_and_quote_requests` (orders.source, orders.created_by_user_id, quote_requests.order_id) — run locally.
+- 12 new tests (`Admin/ManualOrderTest`). Full suite 229/229 passing. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

@@ -31,6 +31,64 @@ Alpine.data('richTextEditor', (initialHtml) => ({
     },
 }));
 
+/**
+ * Admin manual order entry: dynamic order lines whose variant list and
+ * dimension fields follow the chosen product (catalog comes from the server).
+ */
+Alpine.data('manualOrderForm', (catalog, initialItems) => {
+    let nextKey = 0;
+    const blankItem = () => ({
+        product_id: '', product_variant_id: '', name: '', quantity: 1,
+        unit_price_toman: '', dimensions: {}, customization_notes: '',
+    });
+    const withKey = (item) => ({
+        ...blankItem(),
+        ...item,
+        dimensions: { ...(item.dimensions ?? {}) },
+        key: nextKey++,
+    });
+
+    return {
+        catalog,
+        items: (initialItems.length ? initialItems : [blankItem()]).map(withKey),
+
+        addItem() {
+            this.items.push(withKey(blankItem()));
+        },
+        removeItem(index) {
+            this.items.splice(index, 1);
+        },
+        productOf(item) {
+            return this.catalog[item.product_id] ?? null;
+        },
+        variantsOf(item) {
+            return this.productOf(item)?.variants ?? [];
+        },
+        fieldsOf(item) {
+            return this.productOf(item)?.fields ?? [];
+        },
+        productChanged(item) {
+            item.product_variant_id = '';
+            item.dimensions = {};
+        },
+        variantChanged(item) {
+            const variant = this.variantsOf(item).find((v) => String(v.id) === String(item.product_variant_id));
+            if (variant && (item.unit_price_toman === '' || item.unit_price_toman === null)) {
+                item.unit_price_toman = variant.price_toman;
+            }
+        },
+        lineTotal(item) {
+            return (Number(item.quantity) || 0) * (Number(item.unit_price_toman) || 0);
+        },
+        subtotal() {
+            return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0);
+        },
+        toman(amount) {
+            return Number(amount).toLocaleString('en-US') + ' تومان';
+        },
+    };
+});
+
 Alpine.start();
 
 async function initScrollAnimations() {
