@@ -77,12 +77,28 @@
                     <div class="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ $message }}</div>
                 @enderror
 
+                @if ($product->requiresDimensions())
+                    <p class="mb-3 text-xs text-neutral-600">
+                        این محصول بر اساس ابعاد شما ساخته می‌شود — پس از انتخاب، فرم ابعاد نمایش داده می‌شود.
+                    </p>
+                @endif
+
                 <div class="mb-6 space-y-2">
                     @foreach ($product->variants as $variant)
-                        <form method="POST" action="{{ route('cart.items.store') }}"
+                        {{-- A product with a dimensions form goes through the
+                             customize step first; it posts to the cart from there. --}}
+                        <form @if ($product->requiresDimensions())
+                                  method="GET" action="{{ route('products.customize', $product) }}"
+                              @else
+                                  method="POST" action="{{ route('cart.items.store') }}"
+                              @endif
                               class="flex flex-wrap items-center justify-between gap-3 rounded border border-neutral-200 px-4 py-3">
-                            @csrf
-                            <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
+                            @if ($product->requiresDimensions())
+                                <input type="hidden" name="variant" value="{{ $variant->id }}">
+                            @else
+                                @csrf
+                                <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
+                            @endif
                             <span class="text-sm">{{ $variant->label }}</span>
                             <div class="flex items-center gap-3">
                                 <span class="font-medium" dir="ltr">{{ \App\Support\Money::toman($variant->price_rial) }}</span>

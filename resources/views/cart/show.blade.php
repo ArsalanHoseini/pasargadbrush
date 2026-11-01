@@ -35,6 +35,7 @@
                     <div>
                         <p class="font-medium text-neutral-900">{{ $item->variant->product->name }}</p>
                         <p class="text-xs text-neutral-500">{{ $item->variant->label }}</p>
+                        @include('orders.partials.customization', ['customization' => $item->customization])
                         <p class="mt-1 text-sm" dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial) }}</p>
                         @isset($problems[$item->id])
                             <p class="mt-1 text-xs font-medium text-red-600">{{ $problems[$item->id] }}</p>
@@ -62,7 +63,7 @@
         </div>
 
         <div class="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            @include('orders.partials.totals', ['subtotalRial' => $total, 'shipping' => $shipping])
+            @include('orders.partials.totals', ['subtotalRial' => $total, 'shipping' => $shipping, 'priceNeedsConfirmation' => $priceNeedsConfirmation])
         </div>
 
         @if ($problems === [])

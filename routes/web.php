@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductCustomizationController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ Route::post('/quote-requests', [QuoteRequestController::class, 'store'])
 
 Route::get('/categories/{category:slug}', [ProductCategoryController::class, 'show'])->name('categories.show');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}/customize', [ProductCustomizationController::class, 'create'])->name('products.customize');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed');

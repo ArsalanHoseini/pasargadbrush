@@ -191,8 +191,16 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 
 **Shipping configurable from the dashboard (completed, 2026-11-01)**
 - `/admin/shipping` («ارسال» in the admin nav): Announced (default) / پس‌کرایه / flat rate with optional free-shipping threshold. Per-order shipping amount field on the admin order page for Announced/flat orders.
-- Orders store their shipping method (migration `add_shipping_method_to_orders_table` — **not yet run locally**: MySQL was down at the time; run `php artisan migrate`).
-- 14 new tests (`ShippingTest`, `Admin/ShippingSettingTest`). Full suite 193/193 passing. Not yet checked in a browser (local MySQL down). Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- Orders store their shipping method (migration `add_shipping_method_to_orders_table`, run locally later the same day).
+- 14 new tests (`ShippingTest`, `Admin/ShippingSettingTest`). Full suite 193/193 passing.
+
+**Product customization (schematic + dimensions), stage 1 (completed, 2026-11-01)**
+- Admin product form: «سفارشی‌سازی — شماتیک و ابعاد» section (schematic upload + dimension rows: letter, label, unit, required, min/max, reorder).
+- Priced products: add-to-cart → `/products/{slug}/customize` → cart line with a dimensions snapshot; shown in cart, checkout, confirmation, tracking page, emails and admin. Orders with such lines are flagged for price confirmation; staff set final unit prices in the admin order page.
+- Quote products: the quote request form includes the schematic + dimensions; stored on the request, shown in admin and the notification email.
+- 5 migrations (dimension fields, product schematic, cart_items customization + unique index dropped, order_items/orders, quote_requests) — run locally on MySQL.
+- 24 new tests (`ProductCustomizationTest`, `Admin/ProductCustomizationManagementTest`). Full suite 217/217 passing. Verified in a real browser against MySQL with temporary ASCII data (customize page, out-of-range error, Persian-digit input → cart line), then removed.
+- **Stage 2 (next, awaiting go-ahead):** manual order entry by staff in the dashboard, including from a quote request. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

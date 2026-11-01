@@ -14,30 +14,44 @@ class CartManager
      */
     public const MAX_QUANTITY = 1000;
 
-    public function addItem(Cart $cart, ProductVariant $variant, int $quantity): CartItem
+    /**
+     * A line with customer dimensions is always its own line (the same
+     * variant in two sizes is two different products to make); plain lines
+     * of the same variant are merged.
+     *
+     * @param  array<string, mixed>|null  $customization  See DimensionForm::snapshot().
+     */
+    public function addItem(Cart $cart, ProductVariant $variant, int $quantity, ?array $customization = null): CartItem
     {
-        $item = $cart->items()->where('product_variant_id', $variant->id)->first();
+        if ($customization === null) {
+            $item = $cart->items()
+                ->where('product_variant_id', $variant->id)
+                ->whereNull('customization')
+                ->first();
 
-        if ($item) {
-            $item->update(['quantity' => min($item->quantity + $quantity, self::MAX_QUANTITY)]);
+            if ($item) {
+                $item->update(['quantity' => min($item->quantity + $quantity, self::MAX_QUANTITY)]);
 
-            return $item;
+                return $item;
+            }
         }
 
         return $cart->items()->create([
             'product_variant_id' => $variant->id,
             'quantity' => min($quantity, self::MAX_QUANTITY),
+            'customization' => $customization,
         ]);
     }
 
     /**
-     * The quantity a line would have after adding $quantity more.
+     * How many of this variant the cart would hold in total after adding
+     * $quantity more — stock is per variant, whatever the lines' dimensions.
      */
     public function quantityAfterAdding(Cart $cart, ProductVariant $variant, int $quantity): int
     {
-        $existing = (int) $cart->items()->where('product_variant_id', $variant->id)->value('quantity');
+        $existing = (int) $cart->items()->where('product_variant_id', $variant->id)->sum('quantity');
 
-        return min($existing + $quantity, self::MAX_QUANTITY);
+        return $existing + min($quantity, self::MAX_QUANTITY);
     }
 
     public function updateQuantity(CartItem $item, int $quantity): void
@@ -61,9 +75,10 @@ class CartManager
     public function problems(Cart $cart): array
     {
         $problems = [];
+        $quantitiesByVariant = $this->quantitiesByVariant($cart);
 
         foreach ($cart->items as $item) {
-            $reason = $item->variant->unavailableReason($item->quantity);
+            $reason = $item->variant->unavailableReason($quantitiesByVariant[$item->product_variant_id]);
 
             if ($reason !== null) {
                 $problems[$item->id] = $reason;
@@ -71,6 +86,28 @@ class CartManager
         }
 
         return $problems;
+    }
+
+    /**
+     * Total quantity per variant across all of the cart's lines.
+     *
+     * @return array<int, int>
+     */
+    public function quantitiesByVariant(Cart $cart): array
+    {
+        return $cart->items
+            ->groupBy('product_variant_id')
+            ->map(fn ($items) => (int) $items->sum('quantity'))
+            ->all();
+    }
+
+    /**
+     * Whether any line carries customer dimensions — its price is then only
+     * provisional until staff confirm it.
+     */
+    public function hasCustomizedItems(Cart $cart): bool
+    {
+        return $cart->items->contains(fn (CartItem $item) => $item->customization !== null);
     }
 
     /**

@@ -81,13 +81,16 @@
         <ul class="divide-y divide-neutral-100 text-sm">
             @foreach ($order->items as $item)
                 <li class="flex justify-between gap-4 py-2">
-                    <span>{{ $item->name_snapshot }} × {{ $item->quantity }}</span>
+                    <div>
+                        <span>{{ $item->name_snapshot }} × {{ $item->quantity }}</span>
+                        @include('orders.partials.customization', ['customization' => $item->customization])
+                    </div>
                     <span class="shrink-0" dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>
                 </li>
             @endforeach
         </ul>
         <div class="mt-3 border-t border-neutral-100 pt-3">
-            @include('orders.partials.totals', ['subtotalRial' => $order->subtotal_rial, 'shipping' => $order->shippingQuote()])
+            @include('orders.partials.totals', ['subtotalRial' => $order->subtotal_rial, 'shipping' => $order->shippingQuote(), 'priceNeedsConfirmation' => $order->requires_price_confirmation])
         </div>
     </div>
 

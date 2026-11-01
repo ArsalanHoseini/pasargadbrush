@@ -32,6 +32,12 @@
             @if ($quoteRequest->requested_quantity)
                 <div><dt class="text-neutral-500">تیراژ/تعداد</dt><dd class="font-medium">{{ $quoteRequest->requested_quantity }}</dd></div>
             @endif
+            @if (! empty($quoteRequest->customization))
+                <div>
+                    <dt class="text-neutral-500">ابعاد درخواستی</dt>
+                    <dd>@include('orders.partials.customization', ['customization' => $quoteRequest->customization])</dd>
+                </div>
+            @endif
             <div><dt class="text-neutral-500">پیام</dt><dd class="whitespace-pre-line">{{ $quoteRequest->message }}</dd></div>
             <div><dt class="text-neutral-500">تاریخ ثبت</dt><dd>{{ $quoteRequest->created_at->format('Y-m-d H:i') }}</dd></div>
         </dl>

@@ -20,4 +20,9 @@
             <span dir="ltr">{{ \App\Support\Money::toman($subtotalRial + $shipping->costRial) }}</span>
         </div>
     @endif
+    @if ($priceNeedsConfirmation ?? false)
+        <p class="rounded bg-amber-50 p-2 text-xs text-amber-800">
+            قیمت اقلام با ابعاد سفارشی، قیمت پایه است و قیمت نهایی پس از بررسی ابعاد توسط کارشناس تأیید و به شما اعلام می‌شود.
+        </p>
+    @endif
 </div>

@@ -8,6 +8,7 @@ use App\Models\ProductVariant;
 use App\Services\Cart\CartManager;
 use App\Services\Cart\CartResolver;
 use App\Services\Checkout\ShippingCalculator;
+use App\Services\Customization\DimensionForm;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -27,14 +28,26 @@ class CartController extends Controller
             'cart' => $cart,
             'total' => $total,
             'shipping' => $shipping->quote($total),
+            'priceNeedsConfirmation' => $cart && $this->manager->hasCustomizedItems($cart),
             'problems' => $cart ? $this->manager->problems($cart) : [],
         ]);
     }
 
-    public function store(AddCartItemRequest $request)
+    public function store(AddCartItemRequest $request, DimensionForm $dimensionForm)
     {
-        $variant = ProductVariant::with('product')->findOrFail($request->integer('product_variant_id'));
+        $variant = ProductVariant::with('product.dimensionFields')->findOrFail($request->integer('product_variant_id'));
         abort_unless($variant->product->is_active && $variant->product->type === 'priced', 404);
+
+        $customization = null;
+
+        if ($variant->product->requiresDimensions()) {
+            $dimensionForm->normalize($request);
+            $validated = $request->validate(
+                $dimensionForm->rules($variant->product),
+                attributes: $dimensionForm->attributes($variant->product),
+            );
+            $customization = $dimensionForm->snapshot($variant->product, $validated);
+        }
 
         $existingCart = $this->resolver->resolveForDisplay($request);
         $quantityAfterAdding = $existingCart
@@ -48,7 +61,11 @@ class CartController extends Controller
         }
 
         $cart = $this->resolver->resolveForWrite($request);
-        $this->manager->addItem($cart, $variant, $request->integer('quantity'));
+        $this->manager->addItem($cart, $variant, $request->integer('quantity'), $customization);
+
+        if ($customization !== null) {
+            return redirect()->route('cart.show')->with('status', 'محصول با ابعاد واردشده به سبد خرید اضافه شد.');
+        }
 
         return back()->with('status', 'به سبد خرید اضافه شد.');
     }
@@ -63,7 +80,8 @@ class CartController extends Controller
         // Lowering a quantity or removing a line is always allowed, even for
         // an item that has since become unavailable — only increases are checked.
         if ($quantity > $cartItem->quantity) {
-            $reason = $cartItem->variant->unavailableReason($quantity);
+            $variantTotal = $this->manager->quantitiesByVariant($cartItem->cart)[$cartItem->product_variant_id];
+            $reason = $cartItem->variant->unavailableReason($variantTotal - $cartItem->quantity + $quantity);
 
             if ($reason !== null) {
                 return back()->withErrors(['quantity' => $reason]);

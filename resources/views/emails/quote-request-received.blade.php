@@ -24,6 +24,15 @@
         <p><strong>تیراژ/تعداد درخواستی:</strong> {{ $quoteRequest->requested_quantity }}</p>
     @endif
 
+    @if (! empty($quoteRequest->customization['dimensions']))
+        <p><strong>ابعاد درخواستی:</strong></p>
+        <ul>
+            @foreach ($quoteRequest->customization['dimensions'] as $dimension)
+                <li>{{ $dimension['code'] }} — {{ $dimension['label'] }}: {{ $dimension['value'] }} {{ \App\Models\ProductDimensionField::UNITS[$dimension['unit']] ?? $dimension['unit'] }}</li>
+            @endforeach
+        </ul>
+    @endif
+
     <p><strong>پیام:</strong></p>
     <p>{{ $quoteRequest->message }}</p>
 

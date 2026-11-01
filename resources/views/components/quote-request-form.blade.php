@@ -40,6 +40,12 @@
                 <input name="requested_quantity" placeholder="تیراژ/تعداد درخواستی (اختیاری)" value="{{ old('requested_quantity') }}"
                        class="rounded border border-neutral-300 px-3 py-2 text-sm">
             </div>
+            @if ($product?->requiresDimensions())
+                <div class="rounded border border-neutral-200 bg-neutral-50 p-3">
+                    <p class="mb-3 text-sm font-medium text-neutral-800">ابعاد مورد نیاز</p>
+                    <x-dimension-fields :product="$product" :with-notes="false" />
+                </div>
+            @endif
             <input name="email" type="email" placeholder="ایمیل (اختیاری)" value="{{ old('email') }}" dir="ltr"
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
             <textarea name="message" rows="4" placeholder="توضیح نیاز شما (ابعاد، مشخصات، کاربرد) *" required

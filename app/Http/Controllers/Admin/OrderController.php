@@ -45,16 +45,28 @@ class OrderController extends Controller
             'payment_status' => ['required', Rule::in(array_keys(Order::PAYMENT_STATUS_LABELS))],
             'notes' => ['nullable', 'string', 'max:2000'],
             'shipping_cost_toman' => ['nullable', 'integer', 'min:0'],
-        ], attributes: ['shipping_cost_toman' => 'هزینه ارسال']);
+            'item_prices' => ['nullable', 'array'],
+            'item_prices.*' => ['nullable', 'integer', 'min:0'],
+            'price_confirmed' => ['nullable', 'boolean'],
+        ], attributes: ['shipping_cost_toman' => 'هزینه ارسال', 'item_prices.*' => 'قیمت واحد']);
 
+        $itemPrices = $data['item_prices'] ?? [];
+        $priceConfirmed = (bool) ($data['price_confirmed'] ?? false);
+        unset($data['item_prices'], $data['price_confirmed']);
+
+        [$data, $lineUpdates] = $this->withConfirmedPrices($order, $data, $itemPrices, $priceConfirmed);
         $data = $this->withShippingCost($order, $data);
 
         $changes = array_diff_assoc($data, $order->only(array_keys($data)));
 
+        if ($lineUpdates !== []) {
+            $changes['item_prices_rial'] = array_map(fn (array $line) => $line['unit_price_rial'], $lineUpdates);
+        }
+
         $isBeingCancelled = $order->status !== 'cancelled' && $data['status'] === 'cancelled';
         $isBeingUncancelled = $order->status === 'cancelled' && $data['status'] !== 'cancelled';
 
-        $shortages = DB::transaction(function () use ($order, $data, $isBeingCancelled, $isBeingUncancelled, $orderStock) {
+        $shortages = DB::transaction(function () use ($order, $data, $lineUpdates, $isBeingCancelled, $isBeingUncancelled, $orderStock) {
             if ($isBeingCancelled) {
                 $orderStock->release($order);
             }
@@ -65,6 +77,10 @@ class OrderController extends Controller
                 if ($shortages !== []) {
                     return $shortages;
                 }
+            }
+
+            foreach ($lineUpdates as $itemId => $line) {
+                $order->items()->whereKey($itemId)->update($line);
             }
 
             $order->update($data);
@@ -111,8 +127,49 @@ class OrderController extends Controller
         }
 
         $data['shipping_cost_rial'] = $shippingCostToman * 10;
-        $data['total_rial'] = $order->subtotal_rial + $data['shipping_cost_rial'];
+        $data['total_rial'] = ($data['subtotal_rial'] ?? $order->subtotal_rial) + $data['shipping_cost_rial'];
 
         return $data;
+    }
+
+    /**
+     * While an order with custom-dimension lines awaits price confirmation,
+     * staff can set each line's final unit price (Toman); line totals,
+     * subtotal and total follow. Ticking "price confirmed" clears the flag,
+     * after which prices are no longer editable here.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int|string, int|null>  $itemPrices  Unit prices in Toman, keyed by order item id.
+     * @return array{0: array<string, mixed>, 1: array<int, array{unit_price_rial: int, line_total_rial: int}>}
+     */
+    private function withConfirmedPrices(Order $order, array $data, array $itemPrices, bool $priceConfirmed): array
+    {
+        if (! $order->requires_price_confirmation) {
+            return [$data, []];
+        }
+
+        $lineUpdates = [];
+        $subtotal = 0;
+
+        foreach ($order->items as $item) {
+            $unitPrice = isset($itemPrices[$item->id]) ? (int) $itemPrices[$item->id] * 10 : $item->unit_price_rial;
+            $lineTotal = $unitPrice * $item->quantity;
+            $subtotal += $lineTotal;
+
+            if ($unitPrice !== $item->unit_price_rial) {
+                $lineUpdates[$item->id] = ['unit_price_rial' => $unitPrice, 'line_total_rial' => $lineTotal];
+            }
+        }
+
+        if ($subtotal !== $order->subtotal_rial) {
+            $data['subtotal_rial'] = $subtotal;
+            $data['total_rial'] = $subtotal + $order->shipping_cost_rial;
+        }
+
+        if ($priceConfirmed) {
+            $data['requires_price_confirmation'] = false;
+        }
+
+        return [$data, $lineUpdates];
     }
 }

@@ -49,12 +49,20 @@
             <h2 class="mb-4 text-sm font-medium text-neutral-500">اقلام سفارش</h2>
             <ul class="divide-y divide-neutral-100 text-sm">
                 @foreach ($order->items as $item)
-                    <li class="flex justify-between py-2">
-                        <span>{{ $item->name_snapshot }} × {{ $item->quantity }}</span>
-                        <span dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>
+                    <li class="flex justify-between gap-4 py-2">
+                        <div>
+                            <span>{{ $item->name_snapshot }} × {{ $item->quantity }}</span>
+                            @include('orders.partials.customization', ['customization' => $item->customization])
+                        </div>
+                        <span class="shrink-0" dir="ltr">{{ \App\Support\Money::toman($item->line_total_rial) }}</span>
                     </li>
                 @endforeach
             </ul>
+            @if ($order->requires_price_confirmation)
+                <p class="mt-3 rounded bg-amber-50 p-2 text-xs text-amber-800">
+                    این سفارش اقلام با ابعاد سفارشی دارد و قیمت‌ها هنوز «قیمت پایه» هستند — ابعاد را بررسی کنید و قیمت نهایی را در فرم «مدیریت سفارش» تأیید کنید.
+                </p>
+            @endif
             <div class="mt-3 space-y-1 border-t border-neutral-100 pt-3 text-sm">
                 <div class="flex justify-between"><span>جمع اقلام</span><span dir="ltr">{{ \App\Support\Money::toman($order->subtotal_rial) }}</span></div>
                 <div class="flex justify-between"><span>روش ارسال</span><span>{{ $shipping->method->label() }}</span></div>
@@ -75,6 +83,26 @@
         <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="space-y-4">
             @csrf
             @method('PUT')
+
+            @if ($order->requires_price_confirmation)
+                <fieldset class="rounded border border-amber-200 bg-amber-50/50 p-3">
+                    <legend class="px-1 text-sm font-medium">تأیید قیمت نهایی</legend>
+                    <div class="space-y-2">
+                        @foreach ($order->items as $item)
+                            <div class="flex items-center justify-between gap-3">
+                                <label for="item-price-{{ $item->id }}" class="text-xs">{{ $item->name_snapshot }} × {{ $item->quantity }} — قیمت واحد (تومان)</label>
+                                <input id="item-price-{{ $item->id }}" name="item_prices[{{ $item->id }}]" type="number" min="0" dir="ltr"
+                                       value="{{ old('item_prices.'.$item->id, intdiv($item->unit_price_rial, 10)) }}"
+                                       class="w-36 rounded border border-neutral-300 px-2 py-1 text-sm">
+                            </div>
+                        @endforeach
+                    </div>
+                    <label class="mt-3 flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="price_confirmed" value="1">
+                        قیمت نهایی تأیید شد (برچسب «نیاز به تأیید قیمت» برداشته می‌شود)
+                    </label>
+                </fieldset>
+            @endif
 
             <div>
                 <label class="mb-1 block text-sm font-medium">وضعیت سفارش</label>

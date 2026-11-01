@@ -26,6 +26,7 @@ class Product extends Model
         'meta_description',
         'canonical_url',
         'og_image_media_id',
+        'schematic_media_id',
         'sort_order',
         'published_at',
     ];
@@ -55,6 +56,25 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function dimensionFields(): HasMany
+    {
+        return $this->hasMany(ProductDimensionField::class)->orderBy('sort_order');
+    }
+
+    public function schematic(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'schematic_media_id');
+    }
+
+    /**
+     * A product with a dimensions form can only be ordered (or quoted) with
+     * the customer's dimensions attached.
+     */
+    public function requiresDimensions(): bool
+    {
+        return $this->dimensionFields->isNotEmpty();
     }
 
     public function attributeValues(): BelongsToMany

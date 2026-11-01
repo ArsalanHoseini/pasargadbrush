@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Media\StoreUploadedMedia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\Media;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
+    public function __construct(private StoreUploadedMedia $mediaUploader) {}
+
     public function index(): View
     {
         $products = Product::query()
@@ -40,6 +43,8 @@ class ProductController extends Controller
             $this->syncCategories($product, $request->input('category_ids', []));
             $this->syncImages($product, $request->input('image_ids', []));
             $this->syncVariants($product, $request->input('variants', []));
+            $this->syncDimensionFields($product, $request->input('dimension_fields', []));
+            $this->syncSchematic($product, $request);
 
             return $product;
         });
@@ -67,6 +72,8 @@ class ProductController extends Controller
             $this->syncCategories($product, $request->input('category_ids', []));
             $this->syncImages($product, $request->input('image_ids', []));
             $this->syncVariants($product, $request->input('variants', []));
+            $this->syncDimensionFields($product, $request->input('dimension_fields', []));
+            $this->syncSchematic($product, $request);
         });
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول به‌روزرسانی شد.');
@@ -92,6 +99,7 @@ class ProductController extends Controller
             'selectedCategoryIds' => $product->exists ? $product->categories->pluck('id')->all() : [],
             'selectedImageIds' => $product->exists ? $product->images->pluck('id')->all() : [],
             'variants' => $product->exists ? $product->variants()->orderBy('sort_order')->get() : collect(),
+            'dimensionFields' => $product->exists ? $product->dimensionFields : collect(),
             'specificationRows' => collect($product->specifications ?? [])
                 ->map(fn ($value, $key) => ['key' => $key, 'value' => $value])
                 ->values(),
@@ -103,7 +111,7 @@ class ProductController extends Controller
      */
     private function prepared(StoreProductRequest $request): array
     {
-        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications']);
+        $data = $request->safe()->except(['category_ids', 'image_ids', 'variants', 'specifications', 'schematic', 'remove_schematic', 'dimension_fields']);
         $data['slug'] = ($data['slug'] ?? null) ?: PersianSlug::make($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active'] = $request->boolean('is_active');
@@ -168,5 +176,66 @@ class ProductController extends Controller
         }
 
         $product->variants()->whereNotIn('id', $keptIds)->delete();
+    }
+
+    /**
+     * Same keep/update/delete pattern as variants. Past cart/order lines are
+     * unaffected by edits here — they carry their own snapshot.
+     *
+     * @param  array<int, array<string, mixed>>  $fields
+     */
+    private function syncDimensionFields(Product $product, array $fields): void
+    {
+        $keptIds = [];
+
+        foreach (array_values($fields) as $position => $field) {
+            $attributes = [
+                'code' => trim($field['code']),
+                'label' => trim($field['label']),
+                'unit' => $field['unit'],
+                'is_required' => ! empty($field['is_required']),
+                'min_value' => filled($field['min_value'] ?? null) ? $field['min_value'] : null,
+                'max_value' => filled($field['max_value'] ?? null) ? $field['max_value'] : null,
+                'sort_order' => $position,
+            ];
+
+            $existing = ! empty($field['id'])
+                ? $product->dimensionFields()->whereKey($field['id'])->first()
+                : null;
+
+            if ($existing) {
+                $existing->update($attributes);
+                $keptIds[] = $existing->id;
+
+                continue;
+            }
+
+            $keptIds[] = $product->dimensionFields()->create($attributes)->id;
+        }
+
+        $product->dimensionFields()->whereNotIn('id', $keptIds)->delete();
+    }
+
+    /**
+     * The schematic is uploaded straight from the product form into the media
+     * library. Replacing or removing it only unlinks the old image; the file
+     * stays in the library.
+     */
+    private function syncSchematic(Product $product, StoreProductRequest $request): void
+    {
+        if ($request->hasFile('schematic')) {
+            $media = $this->mediaUploader->handle(
+                $request->file('schematic'),
+                $request->user()?->id,
+                'شماتیک ابعاد '.$product->name,
+            );
+            $product->update(['schematic_media_id' => $media->id]);
+
+            return;
+        }
+
+        if ($request->boolean('remove_schematic')) {
+            $product->update(['schematic_media_id' => null]);
+        }
     }
 }

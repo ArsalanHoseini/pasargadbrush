@@ -2,13 +2,35 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Product;
+use App\Services\Customization\DimensionForm;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreQuoteRequestRequest extends FormRequest
 {
+    private ?Product $product = null;
+
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * The product being quoted, with its dimensions form (null for a general
+     * request or an unknown id — the exists rule reports the latter).
+     */
+    public function product(): ?Product
+    {
+        if ($this->product === null && $this->filled('product_id')) {
+            $this->product = Product::with('dimensionFields')->find($this->input('product_id'));
+        }
+
+        return $this->product;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        app(DimensionForm::class)->normalize($this);
     }
 
     /**
@@ -27,7 +49,16 @@ class StoreQuoteRequestRequest extends FormRequest
             // Honeypot: a real visitor never fills this (hidden via CSS); a bot
             // filling every field usually does. Must stay empty.
             'website' => ['prohibited'],
+            ...($this->product() ? app(DimensionForm::class)->rules($this->product()) : []),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return $this->product() ? app(DimensionForm::class)->attributes($this->product()) : [];
     }
 
     /**

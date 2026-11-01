@@ -42,7 +42,12 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
                         <td class="px-4 py-3" dir="ltr">{{ $order->order_number }}</td>
                         <td class="px-4 py-3">{{ ($order->customer_name ?? $order->customer?->name) ?? '—' }}</td>
                         <td class="px-4 py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
-                        <td class="px-4 py-3">{{ $statusLabels[$order->status] }}</td>
+                        <td class="px-4 py-3">
+                            {{ $statusLabels[$order->status] }}
+                            @if ($order->requires_price_confirmation)
+                                <span class="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">نیاز به تأیید قیمت</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             @if ($order->payment_status === 'paid')
                                 <span class="rounded bg-green-50 px-2 py-0.5 text-xs text-green-700">پرداخت‌شده</span>

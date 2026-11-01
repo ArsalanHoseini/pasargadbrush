@@ -4,6 +4,24 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Per-product dimensions form with a schematic (customization), stage 1
+
+**Owner's request:** every product can have its own schematic drawing and a set of dimensions (A, B, O.H., …) the customer must give exactly; defined per product in the dashboard; for purchasable products the form appears on adding to the cart.
+
+**Owner's answers (2026-11-01):**
+- Dimensions **don't** change the price automatically: the line is priced at the variant's base price, the order is flagged `requires_price_confirmation`, and staff confirm/adjust the final unit prices in the admin order page.
+- Quote-only products get the same form inside the quote request; staff then register the order on the site themselves → **stage 2** (manual order entry, incl. from a quote request) — not built yet.
+- Each product is defined **fully on its own** (no shared shape templates — the alternative was offered and declined).
+
+**Design:**
+- `product_dimension_fields` (code = the letter on the drawing, Persian label, unit mm/cm/m/inch, required, optional min/max, order) + `products.schematic_media_id`, uploaded straight from the product form via `StoreUploadedMedia` (SVG excluded, as in the media library). No fields = no form; the product behaves exactly as before.
+- `App\Services\Customization\DimensionForm` is the single place for the form's normalization (Persian digits, «٫»), validation (required/numeric/>0/min/max, Persian field names like «قطر خارجی (D)»), and the **snapshot** `{dimensions: [{code,label,unit,value}], notes}` stored on `cart_items`, `order_items` and `quote_requests`. Snapshots freeze labels/units, so later edits to a product's form never alter what a customer submitted.
+- Flow: «افزودن به سبد» on such a product goes to `/products/{slug}/customize?variant=&quantity=` (schematic + fields + notes) and only that form adds to the cart — the add-to-cart endpoint itself re-validates, so it can't be bypassed. A customized line is always its own cart line (same variant, two sizes = two lines), so the `(cart_id, product_variant_id)` unique index was dropped (cart_id indexed first for the MySQL FK). Stock is now checked per variant across all its lines.
+- Every customer-facing total shows a "base price, final price confirmed by an expert" note when customized lines are present. Admin order page: per-line unit price inputs + «قیمت نهایی تأیید شد» while flagged (line totals, subtotal and total follow; audited as `item_prices_rial`); not editable once confirmed. Order list shows a «نیاز به تأیید قیمت» badge.
+- **Not yet:** notifying the customer when the final price is confirmed (no status-change notifications exist yet).
+
+---
+
 ## 2026-11-01 — Shipping is configured by staff in the dashboard (/admin/shipping)
 
 **Owner's decision:** rather than choosing a shipping rule now, make it configurable from the dashboard. Built a dedicated page (the generic `/admin/settings` page only does free-text fields) with three methods (`App\Services\Checkout\ShippingMethod`):

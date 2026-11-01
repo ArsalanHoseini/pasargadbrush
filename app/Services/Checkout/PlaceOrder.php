@@ -71,6 +71,7 @@ class PlaceOrder
                     'sku_snapshot' => $variant->sku,
                     'unit_price_rial' => $variant->price_rial,
                     'quantity' => $item->quantity,
+                    'customization' => $item->customization,
                     'line_total_rial' => $lineTotal,
                 ];
             }
@@ -90,6 +91,9 @@ class PlaceOrder
                 'subtotal_rial' => $subtotal,
                 'shipping_cost_rial' => $shippingCost,
                 'total_rial' => $subtotal + $shippingCost,
+                // Custom dimensions are priced at the variant's base price for now;
+                // staff review the dimensions and confirm the final price.
+                'requires_price_confirmation' => $cart->items->contains(fn ($item) => $item->customization !== null),
                 'placed_at' => now(),
             ]);
 
@@ -129,11 +133,14 @@ class PlaceOrder
             ->keyBy('id');
 
         $problems = [];
+        $quantitiesByVariant = $cart->items
+            ->groupBy('product_variant_id')
+            ->map(fn ($items) => (int) $items->sum('quantity'));
 
         foreach ($cart->items as $item) {
             $variant = $variants->get($item->product_variant_id);
             $reason = $variant
-                ? $variant->unavailableReason($item->quantity)
+                ? $variant->unavailableReason($quantitiesByVariant[$item->product_variant_id])
                 : 'این محصول دیگر به‌صورت آنلاین قابل خرید نیست.';
 
             if ($reason !== null) {

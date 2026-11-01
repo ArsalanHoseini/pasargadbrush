@@ -46,12 +46,14 @@ class Order extends Model
         'subtotal_rial',
         'shipping_cost_rial',
         'total_rial',
+        'requires_price_confirmation',
         'notes',
         'placed_at',
     ];
 
     protected $casts = [
         'placed_at' => 'datetime',
+        'requires_price_confirmation' => 'boolean',
     ];
 
     /**

@@ -19,13 +19,16 @@
         <ul class="divide-y divide-neutral-100 text-sm">
             @foreach ($cart->items as $item)
                 <li class="flex justify-between py-2">
-                    <span>{{ $item->variant->product->name }} — {{ $item->variant->label }} × {{ $item->quantity }}</span>
+                    <div>
+                        <span>{{ $item->variant->product->name }} — {{ $item->variant->label }} × {{ $item->quantity }}</span>
+                        @include('orders.partials.customization', ['customization' => $item->customization])
+                    </div>
                     <span dir="ltr">{{ \App\Support\Money::toman($item->variant->price_rial * $item->quantity) }}</span>
                 </li>
             @endforeach
         </ul>
         <div class="mt-3 border-t border-neutral-100 pt-3">
-            @include('orders.partials.totals', ['subtotalRial' => $total, 'shipping' => $shipping])
+            @include('orders.partials.totals', ['subtotalRial' => $total, 'shipping' => $shipping, 'priceNeedsConfirmation' => $priceNeedsConfirmation])
         </div>
     </div>
 

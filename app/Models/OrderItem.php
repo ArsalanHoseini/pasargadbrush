@@ -15,7 +15,12 @@ class OrderItem extends Model
         'sku_snapshot',
         'unit_price_rial',
         'quantity',
+        'customization',
         'line_total_rial',
+    ];
+
+    protected $casts = [
+        'customization' => 'array',
     ];
 
     public function order(): BelongsTo

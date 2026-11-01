@@ -15,8 +15,13 @@ class QuoteRequest extends Model
         'company',
         'message',
         'requested_quantity',
+        'customization',
         'status',
         'admin_notes',
+    ];
+
+    protected $casts = [
+        'customization' => 'array',
     ];
 
     public function product(): BelongsTo

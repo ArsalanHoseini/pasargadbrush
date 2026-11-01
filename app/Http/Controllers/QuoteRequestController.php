@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreQuoteRequestRequest;
 use App\Mail\NewQuoteRequestReceived;
 use App\Models\QuoteRequest;
+use App\Services\Customization\DimensionForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class QuoteRequestController extends Controller
 {
-    public function store(StoreQuoteRequestRequest $request): RedirectResponse
+    public function store(StoreQuoteRequestRequest $request, DimensionForm $dimensionForm): RedirectResponse
     {
-        $quoteRequest = QuoteRequest::create($request->safe()->except('website'));
+        $quoteRequest = QuoteRequest::create([
+            ...$request->safe()->except(['website', 'dimensions', DimensionForm::NOTES_INPUT]),
+            'customization' => $request->product()
+                ? $dimensionForm->snapshot($request->product(), $request->validated())
+                : null,
+        ]);
 
         $adminEmail = setting('contact_email');
 
