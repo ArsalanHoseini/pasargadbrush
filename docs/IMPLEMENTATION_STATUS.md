@@ -216,7 +216,10 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Staff: `/admin/conversations` («پیام‌ها» with awaiting-reply badge; open first; filter by status), thread view with reply/attachments, close/reopen; start a thread from an order, quote request or customer page.
 - 3 migrations (conversations, conversation_messages, message_attachments) — run locally.
 - 16 new tests (`CustomerMessagingTest`, `Admin/ConversationManagementTest`). Full suite 271/271 passing. Verified in a real browser against MySQL: SMS-code login → new ticket with a PDF attachment → thread shown → attachment served (200, application/pdf) from private storage; all test data and files removed afterwards.
-- **Next:** stage C (reorder). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+
+**Reorder — stage C (completed, 2026-11-01)**
+- «سفارش مجدد» on `/account/orders/{order}` → `Reorder` service → cart at today's prices; skipped lines listed with reasons in the cart.
+- 7 new tests (`ReorderTest`). Full suite 278/278 passing. Not separately checked in a browser (server-rendered button + redirect, covered end to end by the feature tests). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

@@ -75,6 +75,7 @@ Route::middleware('auth:customer')->prefix('account')->name('account.')->group(f
     Route::get('/', [Account\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [Account\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [Account\OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/reorder', [Account\OrderController::class, 'reorder'])->name('orders.reorder');
     Route::get('/quote-requests', [Account\QuoteRequestController::class, 'index'])->name('quote-requests.index');
     Route::get('/profile', [Account\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [Account\ProfileController::class, 'update'])->name('profile.update');

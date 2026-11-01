@@ -12,6 +12,17 @@
         </div>
     @endif
 
+    @if (session('reorder_skipped'))
+        <div class="mb-6 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <p class="mb-1 font-medium">این اقلام به سبد اضافه نشدند:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach (session('reorder_skipped') as $skipped)
+                    <li>{{ $skipped['name'] }} — {{ $skipped['reason'] }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             @foreach ($errors->all() as $error)

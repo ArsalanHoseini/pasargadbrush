@@ -4,6 +4,12 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Reorder (stage C of the customer portal)
+
+**Decision:** «سفارش مجدد» on a customer's order page puts its lines back in the cart **at today's prices** (the cart never stores prices, so this is automatic) through the same checks as a normal add-to-cart (`App\Services\Cart\Reorder`): the variant must still be orderable online and in stock (per-variant totals), and a custom-dimension line's old dimensions are mapped by letter onto the product's *current* form and re-validated with `DimensionForm` — if the form changed so they no longer fit, the line is skipped and the customer is asked to re-enter them on the product page. Lines without a variant (quote-only products from staff-entered orders), deactivated or out-of-stock products are skipped too; every skipped line is listed with its reason on the cart page. Plain lines merge with what's already in the cart; customized lines stay separate.
+
+---
+
 ## 2026-11-01 — Staff ↔ customer messaging with attachments (stage B of the customer portal)
 
 **Design:**
