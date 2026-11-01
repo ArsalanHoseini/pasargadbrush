@@ -32,6 +32,10 @@
         @endif
         @include('orders.partials.customization', ['customization' => $quoteRequest->customization])
         <p class="mt-2 whitespace-pre-line text-neutral-700">{{ $quoteRequest->message }}</p>
+        <a href="{{ $quoteRequest->conversation ? route('account.conversations.show', $quoteRequest->conversation) : route('account.conversations.create', ['quote_request' => $quoteRequest->id]) }}"
+           class="mt-3 inline-block text-xs font-medium text-brand-accent-dark hover:underline">
+            {{ $quoteRequest->conversation ? 'مشاهده گفتگو با کارشناس' : 'پیام به کارشناس درباره‌ی این استعلام' }}
+        </a>
     </article>
 @empty
     <div class="rounded-lg border border-neutral-200 bg-white p-5 text-sm text-neutral-500">

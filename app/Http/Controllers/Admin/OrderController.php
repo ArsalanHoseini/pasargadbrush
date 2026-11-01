@@ -80,7 +80,7 @@ class OrderController extends Controller
     public function edit(Order $order): View
     {
         return view('admin.orders.edit', [
-            'order' => $order->load(['customer', 'shippingAddress', 'items', 'payments']),
+            'order' => $order->load(['customer', 'shippingAddress', 'items', 'payments', 'conversation']),
             'shipping' => $order->shippingQuote(),
         ]);
     }

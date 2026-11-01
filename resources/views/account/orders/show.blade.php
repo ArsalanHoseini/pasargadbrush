@@ -8,5 +8,13 @@
     <a href="{{ route('account.orders.index') }}" class="text-sm text-brand-accent-dark hover:underline">بازگشت به سفارش‌ها</a>
 </div>
 
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-4 text-sm">
+    <span>سؤالی درباره‌ی این سفارش دارید یا می‌خواهید فایلی بفرستید؟</span>
+    <a href="{{ $order->conversation ? route('account.conversations.show', $order->conversation) : route('account.conversations.create', ['order' => $order->id]) }}"
+       class="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white hover:bg-neutral-700">
+        {{ $order->conversation ? 'مشاهده گفتگو با کارشناس' : 'پیام به کارشناس درباره‌ی این سفارش' }}
+    </a>
+</div>
+
 @include('orders.partials.details')
 @endsection

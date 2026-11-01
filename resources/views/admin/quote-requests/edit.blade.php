@@ -57,6 +57,10 @@
                     ثبت سفارش از این درخواست
                 </a>
             @endif
+            <a href="{{ $quoteRequest->conversation ? route('admin.conversations.show', $quoteRequest->conversation) : route('admin.conversations.create', ['quote_request' => $quoteRequest->id]) }}"
+               class="mr-3 inline-block text-sm text-blue-700 hover:underline">
+                {{ $quoteRequest->conversation ? 'مشاهده گفتگو با مشتری' : 'ارسال پیام به مشتری' }}
+            </a>
         </div>
 
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مدیریت درخواست</h2>

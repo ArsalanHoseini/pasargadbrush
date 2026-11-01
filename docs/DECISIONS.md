@@ -4,6 +4,19 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Staff ↔ customer messaging with attachments (stage B of the customer portal)
+
+**Design:**
+- One system for both kinds the owner asked for: `conversations` linked to an order **or** a quote request (unique — at most one thread each, reused if it exists) **or** neither (a general ticket). `conversation_messages` (author `customer` | `staff` + `user_id`) and `message_attachments`.
+- Status = whose turn it is: a customer message → `open` («در انتظار پاسخ» for staff, badge in the admin nav); a staff message → `answered`; staff can close/reopen; a customer writing in a closed thread reopens it. Per-side unread flags (`customer_unread` / `staff_unread`) drive the dashboard badges and are cleared on view.
+- **Attachments:** images (jpg/png/webp) and PDF only (SVG/others refused), ≤5 per message, ≤10 MB each, content-type checked by Laravel's `mimes` rule. Stored on the **private** `local` disk under random names (original name kept as metadata only) and served only through authorizing controllers (`account.conversations.attachment` checks the customer owns the thread; the admin route is behind staff auth) with `X-Content-Type-Options: nosniff`. Files are deleted if the DB write fails.
+- **Notifications** (`ConversationNotifier`, each channel failure-isolated): customer message → email to the business; staff message → SMS to the customer with a direct link (+ email if they have one). The business is not SMSed per message (noise) — the admin nav badge and email cover it; easy to add.
+- Staff can start a thread from an order, a quote request, or a customer page. For a guest quote request with a valid mobile, the customer record is created only when the message is actually sent (not when the form is opened), so the customer sees it after their first SMS login; a landline-only request can't be messaged (redirect with an explanation).
+
+**Not yet:** realtime updates (pages are plain request/response; customers are notified by SMS/email instead).
+
+---
+
 ## 2026-11-01 — Customer accounts & dashboard (stage A of the customer-portal work)
 
 **Owner's answers (2026-11-01):** login with **both** SMS code and (optional) password; staff↔customer communication as **per-order/quote conversations + general tickets** (stage B, not built yet); dashboard sections: orders, quote requests, profile & addresses, **file attachments in messages** (stage B), **reorder** (stage C).

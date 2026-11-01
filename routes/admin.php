@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\ConversationController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
@@ -58,4 +59,9 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
 
     Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::resource('customers', CustomerController::class)->only(['index', 'show']);
+
+    Route::get('/conversations/attachments/{attachment}', [ConversationController::class, 'attachment'])->name('conversations.attachment');
+    Route::resource('conversations', ConversationController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('/conversations/{conversation}/reply', [ConversationController::class, 'reply'])->name('conversations.reply');
+    Route::put('/conversations/{conversation}/status', [ConversationController::class, 'updateStatus'])->name('conversations.status');
 });

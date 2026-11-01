@@ -21,6 +21,6 @@ class OrderController extends Controller
         // 404 rather than 403, so order ids can't be probed.
         abort_unless($order->customer_id === $request->user('customer')->id, 404);
 
-        return view('account.orders.show', ['order' => $order->load('items', 'shippingAddress')]);
+        return view('account.orders.show', ['order' => $order->load('items', 'shippingAddress', 'conversation')]);
     }
 }

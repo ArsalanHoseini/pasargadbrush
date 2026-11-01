@@ -34,6 +34,13 @@
                         @endif
                     </a>
                     <a href="{{ route('admin.orders.index') }}" class="text-neutral-600 hover:text-neutral-900">سفارش‌ها</a>
+                    <a href="{{ route('admin.conversations.index') }}" class="text-neutral-600 hover:text-neutral-900">
+                        پیام‌ها
+                        @php($awaitingReplyCount = \App\Models\Conversation::where('status', 'open')->count())
+                        @if ($awaitingReplyCount > 0)
+                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $awaitingReplyCount }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.customers.index') }}" class="text-neutral-600 hover:text-neutral-900">مشتریان</a>
                     <a href="{{ route('admin.pages.index') }}" class="text-neutral-600 hover:text-neutral-900">صفحات ثابت</a>
                     <a href="{{ route('admin.shipping.edit') }}" class="text-neutral-600 hover:text-neutral-900">ارسال</a>

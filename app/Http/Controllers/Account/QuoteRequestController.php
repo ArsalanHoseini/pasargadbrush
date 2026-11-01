@@ -38,7 +38,7 @@ class QuoteRequestController extends Controller
     {
         return view('account.quote-requests.index', [
             'quoteRequests' => self::visibleTo($request->user('customer'))
-                ->with('product', 'order')
+                ->with('product', 'order', 'conversation')
                 ->latest()
                 ->paginate(15),
         ]);

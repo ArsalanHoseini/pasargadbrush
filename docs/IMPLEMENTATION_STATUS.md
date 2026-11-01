@@ -210,7 +210,13 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - `/login` (SMS code or password), `/account` dashboard: orders (+ detail), quote requests, profile + optional password, address book. Header shows «ورود» / «حساب من». Checkout and the quote form use the account when logged in.
 - 4 migrations (customer account fields, `customer_login_codes`, address-book fields, `quote_requests.customer_id`) — run locally.
 - 26 new tests (`CustomerLoginTest`, `CustomerAccountTest`). Full suite 255/255 passing. Verified in a real browser against MySQL: SMS code request → code read from the log (log SMS driver) → login → profile completion → every dashboard page 200; test customer/codes deleted afterwards.
-- **Next:** stage B (staff↔customer messaging with attachments), stage C (reorder). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+
+**Staff ↔ customer messaging — stage B (completed, 2026-11-01)**
+- Customer: `/account/messages` (list with unread markers, new ticket, threads, reply, attachment download); «پیام به کارشناس» on each order and quote request; unread badge in the account menu.
+- Staff: `/admin/conversations` («پیام‌ها» with awaiting-reply badge; open first; filter by status), thread view with reply/attachments, close/reopen; start a thread from an order, quote request or customer page.
+- 3 migrations (conversations, conversation_messages, message_attachments) — run locally.
+- 16 new tests (`CustomerMessagingTest`, `Admin/ConversationManagementTest`). Full suite 271/271 passing. Verified in a real browser against MySQL: SMS-code login → new ticket with a PDF attachment → thread shown → attachment served (200, application/pdf) from private storage; all test data and files removed afterwards.
+- **Next:** stage C (reorder). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

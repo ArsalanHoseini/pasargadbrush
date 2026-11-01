@@ -46,6 +46,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Address::class)->where('is_saved', true)->orderByDesc('is_default')->latest();
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     public function quoteRequests(): HasMany
     {
         return $this->hasMany(QuoteRequest::class);

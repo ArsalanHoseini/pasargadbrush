@@ -80,4 +80,15 @@ Route::middleware('auth:customer')->prefix('account')->name('account.')->group(f
     Route::put('/profile', [Account\ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [Account\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::resource('addresses', Account\AddressController::class)->except('show');
+
+    Route::get('/messages', [Account\ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/messages/create', [Account\ConversationController::class, 'create'])->name('conversations.create');
+    Route::post('/messages', [Account\ConversationController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('conversations.store');
+    Route::get('/messages/attachments/{attachment}', [Account\ConversationController::class, 'attachment'])->name('conversations.attachment');
+    Route::get('/messages/{conversation}', [Account\ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/messages/{conversation}/reply', [Account\ConversationController::class, 'reply'])
+        ->middleware('throttle:20,1')
+        ->name('conversations.reply');
 });

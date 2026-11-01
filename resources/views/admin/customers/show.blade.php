@@ -3,7 +3,10 @@
 @section('title', $customer->name)
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">{{ $customer->name }}</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <h1 class="text-lg font-semibold">{{ $customer->name }}</h1>
+    <a href="{{ route('admin.conversations.create', ['customer' => $customer->id]) }}" class="rounded bg-neutral-900 px-3 py-1.5 text-sm text-white hover:bg-neutral-700">ارسال پیام به مشتری</a>
+</div>
 
 <div class="grid gap-6 lg:grid-cols-2">
     <div class="rounded-lg border border-neutral-200 bg-white p-6">

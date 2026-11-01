@@ -13,6 +13,15 @@
     — {{ \App\Support\PersianDate::format($order->placed_at) }}
 </p>
 
+@if ($order->customer)
+    <p class="-mt-4 mb-6">
+        <a href="{{ $order->conversation ? route('admin.conversations.show', $order->conversation) : route('admin.conversations.create', ['order' => $order->id]) }}"
+           class="text-sm text-blue-700 hover:underline">
+            {{ $order->conversation ? 'مشاهده گفتگو با مشتری درباره‌ی این سفارش' : 'ارسال پیام به مشتری درباره‌ی این سفارش' }}
+        </a>
+    </p>
+@endif
+
 @if ($errors->any())
     <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
         @foreach ($errors->all() as $error)

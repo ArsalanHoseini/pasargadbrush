@@ -5,6 +5,7 @@
         ['route' => 'account.dashboard', 'match' => 'account.dashboard', 'label' => 'پیشخوان'],
         ['route' => 'account.orders.index', 'match' => 'account.orders.*', 'label' => 'سفارش‌های من'],
         ['route' => 'account.quote-requests.index', 'match' => 'account.quote-requests.*', 'label' => 'استعلام‌های قیمت'],
+        ['route' => 'account.conversations.index', 'match' => 'account.conversations.*', 'label' => 'پیام‌ها', 'badge' => auth('customer')->user()->conversations()->where('customer_unread', true)->count()],
         ['route' => 'account.addresses.index', 'match' => 'account.addresses.*', 'label' => 'آدرس‌ها'],
         ['route' => 'account.profile.edit', 'match' => 'account.profile.*', 'label' => 'حساب کاربری'],
     ];
@@ -24,7 +25,7 @@
                            'bg-neutral-900 text-white' => request()->routeIs($item['match']),
                            'text-neutral-700 hover:bg-neutral-100' => ! request()->routeIs($item['match']),
                        ])
-                       @if (request()->routeIs($item['match'])) aria-current="page" @endif>{{ $item['label'] }}</a>
+                       @if (request()->routeIs($item['match'])) aria-current="page" @endif>{{ $item['label'] }}@if (! empty($item['badge']))<span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $item['badge'] }}<span class="sr-only"> پیام خوانده‌نشده</span></span>@endif</a>
                 @endforeach
                 <form method="POST" action="{{ route('account.logout') }}" class="shrink-0">
                     @csrf
