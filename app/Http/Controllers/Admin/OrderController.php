@@ -11,6 +11,7 @@ use App\Models\QuoteRequest;
 use App\Services\Cart\CartManager;
 use App\Services\Checkout\CreateManualOrder;
 use App\Services\Checkout\NotifyOrderPlaced;
+use App\Services\Checkout\NotifyOrderUpdated;
 use App\Services\Checkout\OrderStock;
 use App\Services\Checkout\ShippingCalculator;
 use App\Services\Checkout\ShippingMethod;
@@ -85,7 +86,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function update(Request $request, Order $order, OrderStock $orderStock): RedirectResponse
+    public function update(Request $request, Order $order, OrderStock $orderStock, NotifyOrderUpdated $notifyOrderUpdated): RedirectResponse
     {
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(Order::STATUS_LABELS))],
@@ -96,11 +97,16 @@ class OrderController extends Controller
             'item_prices' => ['nullable', 'array'],
             'item_prices.*' => ['nullable', 'integer', 'min:0'],
             'price_confirmed' => ['nullable', 'boolean'],
+            'notify_customer' => ['nullable', 'boolean'],
         ], attributes: ['shipping_cost_toman' => 'هزینه ارسال', 'item_prices.*' => 'قیمت واحد']);
 
         $itemPrices = $data['item_prices'] ?? [];
         $priceConfirmed = (bool) ($data['price_confirmed'] ?? false);
-        unset($data['item_prices'], $data['price_confirmed']);
+        $notifyCustomer = (bool) ($data['notify_customer'] ?? false);
+        unset($data['item_prices'], $data['price_confirmed'], $data['notify_customer']);
+
+        $previousStatus = $order->status;
+        $wasAwaitingPrice = $order->requires_price_confirmation;
 
         [$data, $lineUpdates] = $this->withConfirmedPrices($order, $data, $itemPrices, $priceConfirmed);
         $data = $this->withShippingCost($order, $data);
@@ -142,6 +148,16 @@ class OrderController extends Controller
             ]);
         }
 
+        $customerNotified = $notifyCustomer && $notifyOrderUpdated->handle(
+            $order->refresh(),
+            statusChanged: $order->status !== $previousStatus,
+            priceConfirmed: $wasAwaitingPrice && ! $order->requires_price_confirmation,
+        );
+
+        if ($customerNotified) {
+            $changes['customer_notified'] = true;
+        }
+
         if (! empty($changes)) {
             AuditLog::create([
                 'user_id' => $request->user()->id,
@@ -153,7 +169,9 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.orders.index')->with('status', 'سفارش به‌روزرسانی شد.');
+        return redirect()->route('admin.orders.index')->with('status', $customerNotified
+            ? 'سفارش به‌روزرسانی شد و به مشتری پیامک/ایمیل ارسال شد.'
+            : 'سفارش به‌روزرسانی شد.');
     }
 
     /**

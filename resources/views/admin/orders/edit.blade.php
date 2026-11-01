@@ -166,6 +166,18 @@
                 <textarea name="notes" rows="4" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('notes', $order->notes) }}</textarea>
             </div>
 
+            <label class="flex items-start gap-2 rounded border border-neutral-200 bg-neutral-50 p-3 text-sm">
+                <input type="hidden" name="notify_customer" value="0">
+                <input type="checkbox" name="notify_customer" value="1" class="mt-1" @checked(old('notify_customer', '1') === '1')>
+                <span>
+                    اطلاع‌رسانی به مشتری
+                    <span class="block text-xs text-neutral-500">
+                        اگر وضعیت سفارش تغییر کند یا قیمت نهایی تأیید شود، به مشتری پیامک
+                        {{ $order->customer_email ? 'و ایمیل' : '' }} ارسال می‌شود. برای اصلاحات جزئی، تیک را بردارید.
+                    </span>
+                </span>
+            </label>
+
             <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
                 ذخیره
             </button>

@@ -239,7 +239,10 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Migration `add_source_to_seo_redirects_table` — run locally. Review list: `docs/migration/url-mapping.csv`.
 - 21 new tests (`SeoRedirectTest`, `SitemapTest`, `Admin/SeoRedirectManagementTest`, `WordPressImport/LegacyRedirectBuilderTest`). Full suite 319/319 passing.
 - Verified against the real running server: product, category, unmatched-category→search, page, date-prefixed post, 410, old sitemap, old feed, product tag, resized old image all resolve to live 200 pages; sitemap valid XML (95 URLs, 107 images).
-- **Content gap to resolve with the owner:** 5 live products + ~14 newer categories not on the new site. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- **Content gap to resolve with the owner:** 5 live products + ~14 newer categories not on the new site.
+
+**Customer notifications on order updates (completed, 2026-11-01)**
+- Status change (with tracking code when shipped) and final-price confirmation → one SMS + email per save, opt-out checkbox on the admin order page. 8 new tests (`Admin/OrderUpdateNotificationTest`). Full suite 327/327 passing. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

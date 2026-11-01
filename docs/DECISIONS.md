@@ -4,6 +4,14 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Customer notifications on order status change and final-price confirmation
+
+- `NotifyOrderUpdated`, called from the admin order save: announces a status the customer cares about (confirmed / processing / shipped — with the parcel tracking code — / completed / cancelled; never "pending") and/or the final price being confirmed (grand total, or the items subtotal + "shipping announced separately" while shipping is unknown). Both in one save → **one** combined SMS (+ one email if the order has an address), linking to the tracking page. Uses the order's contact snapshot.
+- An «اطلاع‌رسانی به مشتری» checkbox on the order page (ticked by default) lets staff skip it for minor corrections; a request without the field sends nothing, so other callers/tests aren't affected. When something was sent, the audit entry records `customer_notified`.
+- Failure-isolated like every other notification: a broken SMS/mail channel is logged and never blocks saving.
+
+---
+
 ## 2026-11-01 — SEO preservation: 301s for every old WordPress URL, slug-change redirects, sitemap.xml, robots.txt
 
 **Why:** the owner flagged this as critical before go-live — the new site's URLs differ from WordPress's, so without redirects every indexed page and backlink would 404.
