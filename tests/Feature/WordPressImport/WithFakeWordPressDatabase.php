@@ -49,16 +49,24 @@ trait WithFakeWordPressDatabase
             $table->unsignedBigInteger('element_id');
             $table->string('element_type');
             $table->string('language_code');
+            $table->unsignedBigInteger('trid')->nullable();
         });
 
         $schema->create('posts', function ($table) {
             $table->id('ID');
             $table->string('post_title');
             $table->string('post_name');
+            $table->string('post_type')->default('post');
             $table->text('post_excerpt')->nullable();
             $table->longText('post_content')->nullable();
             $table->string('post_status');
             $table->dateTime('post_date');
+        });
+
+        $schema->create('options', function ($table) {
+            $table->id('option_id');
+            $table->string('option_name');
+            $table->longText('option_value')->nullable();
         });
 
         $schema->create('postmeta', function ($table) {

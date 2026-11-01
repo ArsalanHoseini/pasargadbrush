@@ -52,6 +52,7 @@
                     <a href="{{ route('admin.customers.index') }}" class="text-neutral-600 hover:text-neutral-900">مشتریان</a>
                     <a href="{{ route('admin.pages.index') }}" class="text-neutral-600 hover:text-neutral-900">صفحات ثابت</a>
                     <a href="{{ route('admin.shipping.edit') }}" class="text-neutral-600 hover:text-neutral-900">ارسال</a>
+                    <a href="{{ route('admin.redirects.index') }}" class="text-neutral-600 hover:text-neutral-900">ریدایرکت‌ها</a>
                     <a href="{{ route('admin.settings.edit') }}" class="text-neutral-600 hover:text-neutral-900">تنظیمات</a>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">

@@ -6,6 +6,9 @@
     <title>@hasSection('title')@yield('title') — پاسارگاد برس@else پاسارگاد برس | تولیدکننده برس و فرچه صنعتی@endif</title>
     <meta name="description" content="@yield('meta_description', 'تولیدکننده انواع برس و فرچه صنعتی — برس ابزاری، قالیشویی، هویج‌شویی، نواری و درزگیر، صنایع غذایی.')">
     <link rel="canonical" href="@yield('canonical', url()->current())">
+    @hasSection('robots')
+        <meta name="robots" content="@yield('robots')">
+    @endif
     <meta property="og:title" content="@yield('title', 'پاسارگاد برس')">
     <meta property="og:description" content="@yield('meta_description', 'تولیدکننده انواع برس و فرچه صنعتی')">
     <meta property="og:type" content="website">

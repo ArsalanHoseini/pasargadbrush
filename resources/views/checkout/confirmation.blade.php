@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'سفارش ثبت شد')
+@section('robots', 'noindex, follow')
 
 @section('content')
 <div class="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">

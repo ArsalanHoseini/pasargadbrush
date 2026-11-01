@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsSlugRedirects;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,13 @@ use Illuminate\Support\Facades\Cache;
 
 class ProductCategory extends Model
 {
+    use RecordsSlugRedirects;
+
+    public static function publicPathForSlug(string $slug): string
+    {
+        return '/categories/'.$slug;
+    }
+
     protected static function booted(): void
     {
         static::saved(fn () => Cache::forget('nav.categories'));

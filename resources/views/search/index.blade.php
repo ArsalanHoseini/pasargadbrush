@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('title', $query !== '' ? 'جستجو: '.$query : 'جستجو')
+@section('robots', 'noindex, follow')
 @section('meta_description', 'جستجوی محصولات پاسارگاد برس')
 
 @section('content')

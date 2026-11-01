@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsSlugRedirects;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,13 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class BlogPost extends Model
 {
+    use RecordsSlugRedirects;
+
+    public static function publicPathForSlug(string $slug): string
+    {
+        return '/blog/'.$slug;
+    }
+
     protected $fillable = [
         'blog_category_id',
         'title',

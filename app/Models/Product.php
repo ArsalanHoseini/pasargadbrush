@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsSlugRedirects;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,13 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Product extends Model
 {
+    use RecordsSlugRedirects;
+
+    public static function publicPathForSlug(string $slug): string
+    {
+        return '/products/'.$slug;
+    }
+
     protected $fillable = [
         'sku',
         'slug',

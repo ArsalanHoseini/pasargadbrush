@@ -4,6 +4,26 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — SEO preservation: 301s for every old WordPress URL, slug-change redirects, sitemap.xml, robots.txt
+
+**Why:** the owner flagged this as critical before go-live — the new site's URLs differ from WordPress's, so without redirects every indexed page and backlink would 404.
+
+**Old URL shapes** (read from the local WP copy, never production): permalinks `/%postname%/`, WooCommerce `/product/{slug}/` and `/product-category/{slug}/`, WPML language as a query parameter (ar/en items have their own slugs on the same paths), images under `/wp-content/uploads/`.
+
+**Design:**
+- `seo_redirects` (existing table) + `source` (`wordpress` | `auto` | `manual`) + `notes`; `to_path` nullable for 410.
+- `RedirectLegacyUrls` is a **global** middleware that only acts on a would-be 404 for GET/HEAD outside /admin — a real page always wins, normal traffic does no lookup. The map is cached as a plain array (lesson from `SettingCacheTest`); hits are counted with a plain query so the cache isn't flushed per hit. Matching normalizes percent-encoding, trailing slash, case and query string (so `?lang=ar` works), and falls back to the slug without a `/YYYY/MM/DD/` prefix and to the original of WordPress's resized images (`-300x200`).
+- `php artisan wp:import-redirects [--commit] [--csv=…]` (`LegacyRedirectBuilder`): products via SKU `WP-{id}`, posts/categories/images via `migration_mappings`, ar/en items via their WPML Persian original, pages via an explicit table, Yoast Premium's own redirects (13, as 410) last. Fallbacks for content that isn't on the new site: a product → one of its categories → **a site search for its name** (generic «برس/فرچه/های» stripped); a newer category → its single product, else the category most of its products are in, else a search. Idempotent; never touches `manual`/`auto` rows; removes stale generated rows. Run locally: 573 redirects (14 × 410). Full list for review: `docs/migration/url-mapping.csv`.
+- **Content gap found** (reported to the owner): 5 products and ~14 product categories exist on the live site but not on the new one (added to WordPress after the import) — they currently redirect to a search.
+- `RecordsSlugRedirects` trait on Product, ProductCategory, BlogPost and Page: a slug change records old → new (source `auto`) and repoints existing redirects to the new path (no chains).
+- `/admin/redirects`: list (search, filter by source, hit counts), add/edit/delete (301/302/410); an edited row becomes `manual`.
+- `/sitemap.xml` (home, blog, active categories/products with gallery+schematic images, published posts/pages, tags with posts) and a dynamic `/robots.txt` (static `public/robots.txt` removed — it would have shadowed the route) disallowing admin/account/login/cart/checkout/order-tracking. Utility pages (search, cart, checkout, login, account, tracking) carry `noindex`.
+- Persian 404/410 pages (standalone — no session/route context for unmatched URLs).
+- Search improved, because redirects now land on it: per-word AND (falls back to OR), stop words ignored, Arabic «ي/ك» ≡ Persian «ی/ک».
+- **Production:** `APP_URL` must be `https://pasargadbrush.com` (sitemap/robots use it), and `wp:import-redirects --commit` must be run on the server against the final WordPress data.
+
+---
+
 ## 2026-11-01 — Product page redesign stage 2: key features, applications, tabs + reviews
 
 - **Key features** (`product_highlights`): up to 4 per product, title + optional image (uploaded in the product form, shown as circles beside the main image; below it on mobile).

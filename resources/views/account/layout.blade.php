@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('robots', 'noindex, nofollow')
+
 @php
     $accountNav = [
         ['route' => 'account.dashboard', 'match' => 'account.dashboard', 'label' => 'پیشخوان'],

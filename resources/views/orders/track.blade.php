@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'پیگیری سفارش')
+@section('robots', 'noindex, follow')
 @section('meta_description', 'پیگیری وضعیت سفارش با شماره سفارش و شماره موبایل')
 
 @section('content')

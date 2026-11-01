@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'ورود / ثبت‌نام')
+@section('robots', 'noindex, follow')
 
 @section('content')
 <div class="mx-auto max-w-md px-4 py-12 sm:px-6" x-data="{ tab: @js($errors->has('password') || old('login_method') === 'password' ? 'password' : 'code') }">

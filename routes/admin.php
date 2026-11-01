@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\QuoteRequestController;
+use App\Http\Controllers\Admin\SeoRedirectController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ShippingSettingController;
 use App\Http\Controllers\Admin\WordpressImportController;
@@ -65,6 +66,7 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::put('/shipping', [ShippingSettingController::class, 'update'])->name('shipping.update');
 
     Route::resource('pages', PageController::class)->except('show');
+    Route::resource('redirects', SeoRedirectController::class)->except('show');
 
     Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::resource('customers', CustomerController::class)->only(['index', 'show']);

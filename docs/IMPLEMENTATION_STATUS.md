@@ -232,7 +232,14 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Key features beside the image, applications bar with icons (`/admin/applications`), tabs (description / specs / reviews), moderated reviews with ratings and verified-buyer badge (`/admin/product-reviews`).
 - 4 migrations (product_highlights, applications, application_product, product_reviews) — run locally.
 - 12 new tests (`ProductPageContentTest`, `Admin/ProductContentManagementTest`). Full suite 298/298 passing.
-- Verified in a real browser against MySQL with temporary data on a real quote-only product (5 dimensions + fiber choice, 2 schematics, 3 features, 5 applications): desktop layout matches the owner's mockup; mobile horizontal-scroll bug found and fixed. All temporary data and files removed afterwards. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- Verified in a real browser against MySQL with temporary data on a real quote-only product (5 dimensions + fiber choice, 2 schematics, 3 features, 5 applications): desktop layout matches the owner's mockup; mobile horizontal-scroll bug found and fixed. All temporary data and files removed afterwards.
+
+**SEO preservation: redirects, sitemap, robots (completed, 2026-11-01)**
+- 573 redirects generated from the local WordPress copy (`wp:import-redirects --commit`, run locally), global 404-only redirect middleware, automatic redirects on slug change, `/admin/redirects`, `/sitemap.xml`, dynamic `/robots.txt`, noindex on utility pages, Persian 404/410, better search. See `docs/DECISIONS.md`.
+- Migration `add_source_to_seo_redirects_table` — run locally. Review list: `docs/migration/url-mapping.csv`.
+- 21 new tests (`SeoRedirectTest`, `SitemapTest`, `Admin/SeoRedirectManagementTest`, `WordPressImport/LegacyRedirectBuilderTest`). Full suite 319/319 passing.
+- Verified against the real running server: product, category, unmatched-category→search, page, date-prefixed post, 410, old sitemap, old feed, product tag, resized old image all resolve to live 200 pages; sitemap valid XML (95 URLs, 107 images).
+- **Content gap to resolve with the owner:** 5 live products + ~14 newer categories not on the new site. **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 
