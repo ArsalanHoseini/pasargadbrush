@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Checkout\ShippingMethod;
+use App\Services\Checkout\ShippingQuote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,6 +42,7 @@ class Order extends Model
         'shipment_tracking_code',
         'payment_status',
         'shipping_address_id',
+        'shipping_method',
         'subtotal_rial',
         'shipping_cost_rial',
         'total_rial',
@@ -50,6 +53,22 @@ class Order extends Model
     protected $casts = [
         'placed_at' => 'datetime',
     ];
+
+    /**
+     * How this order's shipping reads, from the method it was placed with —
+     * never from the current settings. Under Announced (and for orders placed
+     * before shipping methods existed) the cost is unknown until staff enter
+     * a non-zero amount on the order.
+     */
+    public function shippingQuote(): ShippingQuote
+    {
+        $method = ShippingMethod::tryFrom((string) $this->shipping_method) ?? ShippingMethod::Announced;
+
+        return match ($method) {
+            ShippingMethod::Announced => new ShippingQuote($method, $this->shipping_cost_rial > 0 ? $this->shipping_cost_rial : null),
+            ShippingMethod::CashOnDelivery, ShippingMethod::Flat => new ShippingQuote($method, $this->shipping_cost_rial),
+        };
+    }
 
     public function customer(): BelongsTo
     {

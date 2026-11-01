@@ -9,6 +9,7 @@ use App\Services\Cart\CartResolver;
 use App\Services\Checkout\CartNotOrderable;
 use App\Services\Checkout\NotifyOrderPlaced;
 use App\Services\Checkout\PlaceOrder;
+use App\Services\Checkout\ShippingCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,7 +21,7 @@ class CheckoutController extends Controller
         private CartManager $manager,
     ) {}
 
-    public function create(Request $request): View|RedirectResponse
+    public function create(Request $request, ShippingCalculator $shipping): View|RedirectResponse
     {
         $cart = $this->resolver->resolveForDisplay($request);
 
@@ -32,9 +33,12 @@ class CheckoutController extends Controller
             return $this->backToCartWithProblems();
         }
 
+        $total = $this->manager->totalRial($cart);
+
         return view('checkout.create', [
             'cart' => $cart,
-            'total' => $this->manager->totalRial($cart),
+            'total' => $total,
+            'shipping' => $shipping->quote($total),
         ]);
     }
 

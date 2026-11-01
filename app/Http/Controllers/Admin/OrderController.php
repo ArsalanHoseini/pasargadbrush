@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Order;
 use App\Services\Checkout\OrderStock;
+use App\Services\Checkout\ShippingMethod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class OrderController extends Controller
     {
         return view('admin.orders.edit', [
             'order' => $order->load(['customer', 'shippingAddress', 'items', 'payments']),
+            'shipping' => $order->shippingQuote(),
         ]);
     }
 
@@ -42,7 +44,10 @@ class OrderController extends Controller
             'shipment_tracking_code' => ['nullable', 'string', 'max:100'],
             'payment_status' => ['required', Rule::in(array_keys(Order::PAYMENT_STATUS_LABELS))],
             'notes' => ['nullable', 'string', 'max:2000'],
-        ]);
+            'shipping_cost_toman' => ['nullable', 'integer', 'min:0'],
+        ], attributes: ['shipping_cost_toman' => 'هزینه ارسال']);
+
+        $data = $this->withShippingCost($order, $data);
 
         $changes = array_diff_assoc($data, $order->only(array_keys($data)));
 
@@ -85,5 +90,29 @@ class OrderController extends Controller
         }
 
         return redirect()->route('admin.orders.index')->with('status', 'سفارش به‌روزرسانی شد.');
+    }
+
+    /**
+     * Staff enter the agreed shipping amount (Toman) on "announced" orders,
+     * or correct it on flat-rate ones; the total always follows. Cash-on-
+     * delivery orders are never charged shipping by the shop, so the field
+     * is ignored for them.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withShippingCost(Order $order, array $data): array
+    {
+        $shippingCostToman = $data['shipping_cost_toman'] ?? null;
+        unset($data['shipping_cost_toman']);
+
+        if ($shippingCostToman === null || $order->shippingQuote()->method === ShippingMethod::CashOnDelivery) {
+            return $data;
+        }
+
+        $data['shipping_cost_rial'] = $shippingCostToman * 10;
+        $data['total_rial'] = $order->subtotal_rial + $data['shipping_cost_rial'];
+
+        return $data;
     }
 }

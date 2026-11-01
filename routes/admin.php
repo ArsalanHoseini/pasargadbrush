@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\QuoteRequestController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ShippingSettingController;
 use App\Http\Controllers\Admin\WordpressImportController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+    Route::get('/shipping', [ShippingSettingController::class, 'edit'])->name('shipping.edit');
+    Route::put('/shipping', [ShippingSettingController::class, 'update'])->name('shipping.update');
 
     Route::resource('pages', PageController::class)->except('show');
 

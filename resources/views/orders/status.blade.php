@@ -86,7 +86,9 @@
                 </li>
             @endforeach
         </ul>
-        @include('orders.partials.totals')
+        <div class="mt-3 border-t border-neutral-100 pt-3">
+            @include('orders.partials.totals', ['subtotalRial' => $order->subtotal_rial, 'shipping' => $order->shippingQuote()])
+        </div>
     </div>
 
     @if ($order->shippingAddress)

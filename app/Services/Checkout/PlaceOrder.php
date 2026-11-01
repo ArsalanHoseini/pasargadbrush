@@ -16,12 +16,14 @@ use RuntimeException;
  * the product variant at this moment — never from the cart or the request —
  * so nothing submitted by the browser can affect what gets charged.
  *
- * Shipping cost is currently always 0: no real shipping-rate rules have been
- * confirmed yet (flat rate? free over a threshold? carrier-calculated?) — see
- * docs/DECISIONS.md. Do not invent a rate here.
+ * Shipping comes from the method staff configured at /admin/shipping (see
+ * ShippingCalculator); under the default "announced" method it's 0 here and
+ * staff enter the agreed amount on the order afterwards.
  */
 class PlaceOrder
 {
+    public function __construct(private ShippingCalculator $shipping) {}
+
     /**
      * @param  array{name: string, phone: string, email: ?string, province: string, city: string, address_line: string, postal_code: ?string}  $details
      */
@@ -73,7 +75,8 @@ class PlaceOrder
                 ];
             }
 
-            $shippingCost = 0;
+            $shipping = $this->shipping->quote($subtotal);
+            $shippingCost = $shipping->costRial ?? 0;
 
             $order = $customer->orders()->create([
                 'order_number' => $this->generateOrderNumber(),
@@ -83,6 +86,7 @@ class PlaceOrder
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'shipping_address_id' => $address->id,
+                'shipping_method' => $shipping->method->value,
                 'subtotal_rial' => $subtotal,
                 'shipping_cost_rial' => $shippingCost,
                 'total_rial' => $subtotal + $shippingCost,

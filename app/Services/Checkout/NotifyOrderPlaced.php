@@ -50,7 +50,8 @@ class NotifyOrderPlaced
     {
         return "سفارش جدید {$order->order_number}\n"
             .$order->customer_name.' — '.$order->customer_phone."\n"
-            .'مبلغ: '.Money::toman($order->total_rial);
+            .'جمع کالاها: '.Money::toman($order->subtotal_rial)."\n"
+            .'ارسال: '.$order->shippingQuote()->description();
     }
 
     private function customerSmsText(Order $order): string

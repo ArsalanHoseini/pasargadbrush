@@ -4,6 +4,19 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-01 — Shipping is configured by staff in the dashboard (/admin/shipping)
+
+**Owner's decision:** rather than choosing a shipping rule now, make it configurable from the dashboard. Built a dedicated page (the generic `/admin/settings` page only does free-text fields) with three methods (`App\Services\Checkout\ShippingMethod`):
+- **Announced** (default, = the previous behavior): no amount at checkout; «پس از هماهنگی اعلام می‌شود». Staff then enter the agreed amount on the admin order page («هزینه ارسال (تومان)») and the order total is recalculated.
+- **CashOnDelivery** (پس‌کرایه): the shop charges 0, shown as «پس‌کرایه — هنگام تحویل به باربری پرداخت می‌شود»; the per-order shipping field is ignored for these orders.
+- **Flat**: a fixed amount, optionally free at/above a subtotal threshold.
+
+Amounts entered in Toman, stored in Rial in `settings` (`shipping_method`, `shipping_flat_rate_rial`, `shipping_free_threshold_rial`). `ShippingCalculator` applies them; `PlaceOrder` stores the method on the order (`orders.shipping_method`) along with the cost, and `Order::shippingQuote()` renders every order from its own stored method — so changing the settings never changes how an existing order reads. One partial (`orders/partials/totals`) renders cart, checkout, confirmation and tracking totals; it only shows «جمع کل» when the shipping cost is actually known.
+
+**Not built (can be added on request):** per-province rates (would also need the province field to become a fixed list), factory pickup, carrier-calculated rates. Under Announced, an order explicitly agreed as free shipping (0) can't be distinguished from "not entered yet"; acceptable for now.
+
+---
+
 ## 2026-10-31 — Shipping rule still undecided; customer-facing totals no longer imply shipping is included
 
 **Owner asked (2026-10-31) for the shipping rule:** cash-on-delivery (پس‌کرایه), flat rate, per-province, or announced by phone — plus optional factory pickup / free-over-threshold. **Answer: not decided yet.** The old WooCommerce site had no shipping zones/methods configured either, so there's nothing to carry over. Still no rule invented; `shipping_cost_rial` stays 0 at checkout.

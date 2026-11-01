@@ -187,7 +187,12 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Linked from the footer, the checkout confirmation page and the customer confirmation email.
 - New helpers: `PersianDate` (intl, no package), `PersianDigits` (now shared by `IranianMobile`).
 - Follow-up: shipping rule still undecided by the owner — customer-facing totals now read «جمع کالاها» + «هزینه ارسال: پس از هماهنگی اعلام می‌شود» instead of an implied-final «جمع کل» (3 tests; suite 179/179).
-- 13 new tests (`OrderTrackingTest`, `Unit/PersianDateTest`, admin tracking-code). Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
+- 13 new tests (`OrderTrackingTest`, `Unit/PersianDateTest`, admin tracking-code).
+
+**Shipping configurable from the dashboard (completed, 2026-11-01)**
+- `/admin/shipping` («ارسال» in the admin nav): Announced (default) / پس‌کرایه / flat rate with optional free-shipping threshold. Per-order shipping amount field on the admin order page for Announced/flat orders.
+- Orders store their shipping method (migration `add_shipping_method_to_orders_table` — **not yet run locally**: MySQL was down at the time; run `php artisan migrate`).
+- 14 new tests (`ShippingTest`, `Admin/ShippingSettingTest`). Full suite 193/193 passing. Not yet checked in a browser (local MySQL down). Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
 ## Next concrete step
 

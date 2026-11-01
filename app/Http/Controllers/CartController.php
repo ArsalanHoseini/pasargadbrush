@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Services\Cart\CartManager;
 use App\Services\Cart\CartResolver;
+use App\Services\Checkout\ShippingCalculator;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -17,13 +18,15 @@ class CartController extends Controller
         private CartManager $manager,
     ) {}
 
-    public function show(Request $request): View
+    public function show(Request $request, ShippingCalculator $shipping): View
     {
         $cart = $this->resolver->resolveForDisplay($request);
+        $total = $cart ? $this->manager->totalRial($cart) : 0;
 
         return view('cart.show', [
             'cart' => $cart,
-            'total' => $cart ? $this->manager->totalRial($cart) : 0,
+            'total' => $total,
+            'shipping' => $shipping->quote($total),
             'problems' => $cart ? $this->manager->problems($cart) : [],
         ]);
     }
