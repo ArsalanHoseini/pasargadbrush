@@ -26,7 +26,7 @@ class SitemapController extends Controller
 
         return response()
             ->view('sitemap.index', [
-                'categories' => ProductCategory::query()->where('is_active', true)->get(['slug', 'updated_at']),
+                'categories' => ProductCategory::query()->listable()->get(['slug', 'updated_at']),
                 'products' => $products,
                 'posts' => BlogPost::query()->published()->latest('published_at')->get(['slug', 'updated_at']),
                 'pages' => Page::query()->where('status', 'published')->get(['slug', 'updated_at']),
@@ -34,6 +34,49 @@ class SitemapController extends Controller
                 'latestUpdate' => collect([$products->max('updated_at'), BlogPost::query()->published()->max('updated_at')])->filter()->max(),
             ])
             ->header('Content-Type', 'application/xml; charset=UTF-8');
+    }
+
+    /**
+     * /llms.txt (llmstxt.org): a plain Markdown map of the site for AI agents —
+     * PageSpeed's "Agentic Browsing" check looks for it.
+     */
+    public function llms(): Response
+    {
+        $lines = [
+            '# '.(setting('company_legal_name') ?: 'برس صنعت پاسارگاد'),
+            '',
+            '> تولیدکننده انواع برس و فرچه صنعتی، نظافتی و سفارشی در ایران از سال ۱۳۷۴ (Pasargad Brush — industrial brush manufacturer, Iran). خرید مستقیم از کارخانه؛ قیمت محصولات سفارشی پس از ثبت ابعاد اعلام می‌شود.',
+            '',
+            '- تلفن: '.setting('contact_mobile'),
+            '- ایمیل: '.setting('contact_email'),
+            '- آدرس: '.setting('contact_address'),
+            '',
+            '## دسته‌بندی محصولات',
+            '',
+        ];
+
+        foreach (ProductCategory::query()->listable()->orderBy('sort_order')->orderBy('name')->get(['name', 'slug']) as $category) {
+            $lines[] = "- [{$category->name}](".route('categories.show', $category).')';
+        }
+
+        $lines = [...$lines, '', '## محصولات', ''];
+
+        foreach (Product::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug']) as $product) {
+            $lines[] = "- [{$product->name}](".route('products.show', $product).')';
+        }
+
+        $lines = [
+            ...$lines,
+            '',
+            '## صفحات',
+            '',
+            '- [درباره ما]('.route('pages.show', 'about-us').')',
+            '- [تماس با ما]('.route('pages.show', 'contact-us').')',
+            '- [مقالات]('.route('blog.index').')',
+            '- [نقشه سایت]('.route('sitemap').')',
+        ];
+
+        return response(implode("\n", $lines)."\n")->header('Content-Type', 'text/plain; charset=UTF-8');
     }
 
     public function robots(): Response

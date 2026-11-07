@@ -201,7 +201,7 @@
 
                     @if ($canAddToCart)
                         <button type="submit" @click="mode = 'cart'"
-                                class="flex flex-[1.3] items-center justify-center gap-2 rounded-xl bg-brand-accent px-5 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-brand-accent-dark">
+                                class="flex flex-[1.3] items-center justify-center gap-2 rounded-xl bg-brand-accent-dark px-5 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-brand-accent-darker">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-1.5 7h11.5M9 20a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             افزودن به سبد و ثبت سفارش
                         </button>
@@ -241,7 +241,7 @@
                     <div x-data="{ active: 0 }">
                         <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-neutral-50">
                             @foreach ($product->images as $image)
-                                <img src="{{ $image->url() }}" alt="{{ $product->name }}" x-show="active === {{ $loop->index }}"
+                                <img src="{{ $image->thumbnailUrl(960) }}" alt="{{ $product->name }}" width="960" height="720" x-show="active === {{ $loop->index }}"
                                      @if (! $loop->first) x-cloak loading="lazy" @endif
                                      class="h-full w-full object-contain">
                             @endforeach
@@ -253,7 +253,7 @@
                                             :class="active === {{ $loop->index }} ? 'border-brand-accent' : 'border-transparent'"
                                             class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-neutral-50"
                                             aria-label="تصویر {{ $loop->iteration }}">
-                                        <img src="{{ $image->url() }}" alt="" class="h-full w-full object-cover" loading="lazy">
+                                        <img src="{{ $image->thumbnailUrl(480) }}" alt="" width="64" height="64" class="h-full w-full object-cover" loading="lazy">
                                     </button>
                                 @endforeach
                             </div>
@@ -434,7 +434,7 @@
                     <a href="{{ route('products.show', $item) }}" class="group rounded-lg border border-neutral-200 bg-white p-3 transition hover:shadow-md">
                         <div class="mb-3 aspect-square overflow-hidden rounded bg-neutral-100">
                             @if ($item->images->isNotEmpty())
-                                <img src="{{ $item->images->first()->url() }}" alt="{{ $item->name }}" class="h-full w-full object-cover" loading="lazy">
+                                <img src="{{ $item->images->first()->thumbnailUrl(480) }}" alt="" width="480" height="480" class="h-full w-full object-cover" loading="lazy">
                             @endif
                         </div>
                         <h3 class="text-sm font-medium text-neutral-900 group-hover:text-brand-accent-dark">{{ $item->name }}</h3>

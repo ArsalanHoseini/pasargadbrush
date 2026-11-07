@@ -33,7 +33,7 @@
 
     @if ($post->featuredImage->isNotEmpty())
         <div class="mb-8 aspect-video overflow-hidden rounded-lg bg-neutral-100">
-            <img src="{{ $post->featuredImage->first()->url() }}" alt="{{ $post->title }}" class="h-full w-full object-cover">
+            <img src="{{ $post->featuredImage->first()->thumbnailUrl(960) }}" alt="{{ $post->title }}" width="960" height="540" class="h-full w-full object-cover" fetchpriority="high">
         </div>
     @endif
 
@@ -109,7 +109,7 @@
                 <textarea name="body" rows="4" placeholder="دیدگاه شما *" required
                           class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('body') }}</textarea>
 
-                <button type="submit" class="rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+                <button type="submit" class="rounded-full bg-brand-accent-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-darker">
                     ارسال دیدگاه
                 </button>
             </form>

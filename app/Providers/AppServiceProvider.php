@@ -7,6 +7,7 @@ use App\Services\Cart\CartResolver;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every generated link and canonical tag names the one real address
+        // (https, no www), however the request arrived — see RedirectToCanonicalHost.
+        if ($this->app->isProduction()) {
+            URL::forceRootUrl(config('app.url'));
+            URL::forceScheme('https');
+        }
+
         View::composer(['partials.header', 'partials.footer'], function ($view) {
             // Cache plain arrays, not Eloquent models/Collections — caching
             // objects is fragile across this app's cache-driver (de)serialization
@@ -36,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
                 now()->addHour(),
                 fn () => ProductCategory::query()
                     ->whereNull('parent_id')
-                    ->where('is_active', true)
+                    ->listable()
                     ->orderBy('sort_order')
                     ->orderBy('name')
                     ->get(['id', 'name', 'slug'])

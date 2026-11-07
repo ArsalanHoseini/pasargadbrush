@@ -3,26 +3,13 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Two files instead of four (PageSpeed): Regular also serves «medium» (500)
+   and Bold also serves «semibold» (600), without synthetic bolding. Both are
+   preloaded in layouts/public.blade.php. */
 @font-face {
     font-family: 'Vazirmatn';
     src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Vazirmatn';
-    src: url('../fonts/Vazirmatn-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Vazirmatn';
-    src: url('../fonts/Vazirmatn-SemiBold.woff2') format('woff2');
-    font-weight: 600;
+    font-weight: 100 500;
     font-style: normal;
     font-display: swap;
 }
@@ -30,7 +17,7 @@
 @font-face {
     font-family: 'Vazirmatn';
     src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2');
-    font-weight: 700;
+    font-weight: 600 900;
     font-style: normal;
     font-display: swap;
 }
@@ -46,7 +33,10 @@
     --color-brand-charcoal-deep: #121212;
     --color-brand-steel: #2a2f36;
     --color-brand-accent: #ff7700;
-    --color-brand-accent-dark: #d85f00;
+    --color-brand-accent-dark: #b85300;
+    --color-brand-accent-darker: #9a4500;
+    /* Gold accent of the previous WordPress footer, kept for the rebuilt footer. */
+    --color-brand-gold: #ffc032;
 }
 
 /* Faint industrial dot-grid texture, used on dark hero sections for depth

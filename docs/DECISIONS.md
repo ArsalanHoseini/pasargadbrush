@@ -4,6 +4,16 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-07 — Owner's correction list (11 items) + PageSpeed work
+
+- **Data changes ship as a migration** (`update_contact_details_and_company_name`): phone 09122787949 everywhere (also WhatsApp), Bale 09174287445, address «تخت جمشید، …», Instagram, Google Maps embed + `?cid=` link, and «برس صنعتی پاسارگاد» → «برس صنعت پاسارگاد» in settings/products/posts/pages/alts. Runs with a plain `migrate` on any existing DB; a fresh DB (no settings) is left to `SettingsSeeder`, which has the same values. Note: `contact_mobile` is also where new-order SMS goes, so admin SMS now go to 09122787949 (owner said "all numbers").
+- **13 missing products** were the owner's newest WordPress articles (2026-09-21…26), not registered in WPML — same glitch as برس اسب/اسپیندل. `wp:import-unregistered-products` imports them with full text, photos and the original slug, picks the closest existing category (their WP categories were never migrated), and repoints their old `/product/{slug}` redirects (which fell back to category pages). Classic-editor text had no `<p>` — `WordPressContent::toHtml()` adds them and demotes the content's own `<h1>`; also applied to برس اسب/اسپیندل. 8 of them added to the homepage list (24 cards = full rows at 2/3/4 columns).
+- **Menus/sitemap only list categories with an active product** (`ProductCategory::listable()`), which hides the empty «بدون دسته‌بندی» and the Arabic «فرشاة الصناعی» without deleting them.
+- **The old `public/images/logo.png` was the WordPress theme's «XFACTORY» placeholder** (white text, invisible on the white header). Replaced with the real logo from WordPress (`site_logo` #30640) + favicon.
+- **Footer** rebuilt from the old Elementor template as HTML (the old mobile footer was one image with baked-in text). The map iframe is lazy and covered by a link to Google Maps, so a click opens the location there.
+- **Mobile**: there was no menu or search at all below `md`. Added a fixed bottom bar (home, products sheet, search sheet, cart, account).
+- **PageSpeed**: listing/gallery images use GD-made WebP copies (`ImageThumbnailer`, widths 480/960, made on first use or `php artisan media:thumbnails`; no package); hero no longer waits for GSAP to fade in (Speed Index); fonts 4 → 2 files, preloaded; width/height on images; white-on-orange buttons and orange small text darkened to pass WCAG contrast (`brand-accent-dark` #b85300); `/llms.txt`; 1-year `Expires` in `.htaccess`; `www.` → 301 to APP_URL and, in production, all URLs/canonicals forced to APP_URL over https. http→https is not forced in the app (proxy headers behind WCDN are unverified) — turn on the CDN/host's "force HTTPS".
+
 ## 2026-11-01 — Persian (Shamsi) dates site-wide; app timezone Asia/Tehran
 
 - Every human-facing date (blog list/article/comments, all admin tables, the quote/order/review/conversation pages, footer year) now goes through one helper, `persian_date($date, PersianDate::DATE|DATETIME|COMPACT|COMPACT_DATE)`, built on intl's Persian calendar. Machine-facing dates stay Gregorian/ISO on purpose: RSS `pubDate`, sitemap `lastmod`, `<time datetime>` attributes, order numbers.

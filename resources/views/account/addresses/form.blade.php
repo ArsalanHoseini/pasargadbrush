@@ -62,7 +62,7 @@
     </label>
 
     <div class="flex items-center gap-4">
-        <button type="submit" class="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-accent-dark">ذخیره</button>
+        <button type="submit" class="rounded-full bg-brand-accent-dark px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-accent-darker">ذخیره</button>
         <a href="{{ route('account.addresses.index') }}" class="text-sm text-neutral-500 hover:text-neutral-900">انصراف</a>
     </div>
 </form>

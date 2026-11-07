@@ -21,7 +21,7 @@
            class="mb-8 flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-4 transition hover:shadow-md sm:flex-row">
             <div class="aspect-video w-full overflow-hidden rounded bg-neutral-100 sm:w-72 sm:shrink-0">
                 @if ($featured->featuredImage->isNotEmpty())
-                    <img src="{{ $featured->featuredImage->first()->url() }}" alt="{{ $featured->title }}"
+                    <img src="{{ $featured->featuredImage->first()->thumbnailUrl(480) }}" alt="" width="480" height="270"
                          class="h-full w-full object-cover" loading="lazy">
                 @endif
             </div>
@@ -41,7 +41,7 @@
                 <a href="{{ route('blog.show', $post) }}" class="group rounded-lg border border-neutral-200 bg-white p-4 transition hover:shadow-md">
                     <div class="mb-3 aspect-video overflow-hidden rounded bg-neutral-100">
                         @if ($post->featuredImage->isNotEmpty())
-                            <img src="{{ $post->featuredImage->first()->url() }}" alt="{{ $post->title }}"
+                            <img src="{{ $post->featuredImage->first()->thumbnailUrl(480) }}" alt="" width="480" height="270"
                                  class="h-full w-full object-cover" loading="lazy">
                         @endif
                     </div>

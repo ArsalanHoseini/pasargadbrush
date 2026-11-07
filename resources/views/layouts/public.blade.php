@@ -12,10 +12,14 @@
     <meta property="og:title" content="@yield('title', 'پاسارگاد برس')">
     <meta property="og:description" content="@yield('meta_description', 'تولیدکننده انواع برس و فرچه صنعتی')">
     <meta property="og:type" content="website">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @stack('structured-data')
+    <link rel="preload" as="font" type="font/woff2" href="{{ Vite::asset('resources/fonts/Vazirmatn-Regular.woff2') }}" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="{{ Vite::asset('resources/fonts/Vazirmatn-Bold.woff2') }}" crossorigin>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen flex-col bg-white text-neutral-900 antialiased">
+<body class="flex min-h-screen flex-col bg-white pb-16 text-neutral-900 antialiased md:pb-0">
     @include('partials.header')
 
     <main class="flex-1">

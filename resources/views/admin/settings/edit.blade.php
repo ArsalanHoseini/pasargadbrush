@@ -25,7 +25,8 @@
                     <div>
                         <label class="mb-1 block text-sm font-medium">{{ $field['label'] }}</label>
                         <input name="{{ $key }}" value="{{ old($key, $field['value']) }}"
-                               @if (str_starts_with($key, 'social_')) dir="ltr" placeholder="https://" @endif
+                               @if (str_starts_with($key, 'social_') || str_starts_with($key, 'map_')) dir="ltr" placeholder="https://" @endif
+                               @if (in_array($key, ['contact_whatsapp', 'contact_bale'], true)) dir="ltr" @endif
                                class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
                     </div>
                 @endforeach

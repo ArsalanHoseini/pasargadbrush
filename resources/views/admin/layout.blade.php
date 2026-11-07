@@ -21,7 +21,7 @@
                         نظرات محصولات
                         @php($pendingReviewCount = \App\Models\ProductReview::where('status', 'pending')->count())
                         @if ($pendingReviewCount > 0)
-                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $pendingReviewCount }}</span>
+                            <span class="mr-1 rounded-full bg-brand-accent-dark px-1.5 py-0.5 text-xs text-white">{{ $pendingReviewCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('admin.blog-categories.index') }}" class="text-neutral-600 hover:text-neutral-900">دسته‌بندی بلاگ</a>
@@ -30,7 +30,7 @@
                         دیدگاه‌ها
                         @php($pendingCommentCount = \App\Models\Comment::where('status', 'pending')->count())
                         @if ($pendingCommentCount > 0)
-                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $pendingCommentCount }}</span>
+                            <span class="mr-1 rounded-full bg-brand-accent-dark px-1.5 py-0.5 text-xs text-white">{{ $pendingCommentCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('admin.import.index') }}" class="text-neutral-600 hover:text-neutral-900">ایمپورت وردپرس</a>
@@ -38,7 +38,7 @@
                         درخواست‌های استعلام
                         @php($newCount = \App\Models\QuoteRequest::where('status', 'new')->count())
                         @if ($newCount > 0)
-                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $newCount }}</span>
+                            <span class="mr-1 rounded-full bg-brand-accent-dark px-1.5 py-0.5 text-xs text-white">{{ $newCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('admin.orders.index') }}" class="text-neutral-600 hover:text-neutral-900">سفارش‌ها</a>
@@ -46,7 +46,7 @@
                         پیام‌ها
                         @php($awaitingReplyCount = \App\Models\Conversation::where('status', 'open')->count())
                         @if ($awaitingReplyCount > 0)
-                            <span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $awaitingReplyCount }}</span>
+                            <span class="mr-1 rounded-full bg-brand-accent-dark px-1.5 py-0.5 text-xs text-white">{{ $awaitingReplyCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('admin.customers.index') }}" class="text-neutral-600 hover:text-neutral-900">مشتریان</a>

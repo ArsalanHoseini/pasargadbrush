@@ -43,6 +43,16 @@ class SetHomepageFeaturedProducts extends Command
         'WP-25129' => 'برس هویج شویی',
         'WP-25135' => 'برس سورتینگ مرکبات',
         'WP-25132' => 'برس سیب زمینی شو',
+        // The owner's newest articles (imported 2026-11-07 by wp:import-unregistered-products) —
+        // 8 more keep the grid full at 2, 3 and 4 columns (24 cards).
+        'WP-30850' => 'انواع برس سیلندری',
+        'WP-30842' => 'انواع برس دیسکی',
+        'WP-30818' => 'فرچه قالیشویی',
+        'WP-30821' => 'فرچه شستشو سیب زمینی',
+        'WP-30783' => 'فرچه سورتینگ',
+        'WP-30991' => 'دستگاه برس چمن مصنوعی',
+        'WP-31086' => 'فرچه و برس نساجی',
+        'WP-30710' => 'برس سیلندری',
     ];
 
     public function handle(): int

@@ -16,9 +16,10 @@ class SitemapTest extends TestCase
 
     public function test_sitemap_lists_only_public_pages_with_product_images(): void
     {
-        ProductCategory::create(['name' => 'دسته', 'slug' => 'برس-صنعتی', 'is_active' => true]);
+        $category = ProductCategory::create(['name' => 'دسته', 'slug' => 'برس-صنعتی', 'is_active' => true]);
+        ProductCategory::create(['name' => 'خالی', 'slug' => 'empty-cat', 'is_active' => true]);
         ProductCategory::create(['name' => 'غیرفعال', 'slug' => 'hidden-cat', 'is_active' => false]);
-        $product = Product::create(['sku' => 'P1', 'slug' => 'برس-اسب', 'name' => 'برس اسب', 'type' => 'quote', 'is_active' => true]);
+        $product = Product::create(['sku' => 'P1', 'slug' => 'برس-اسب', 'name' => 'برس اسب', 'type' => 'quote', 'is_active' => true, 'primary_category_id' => $category->id]);
         Product::create(['sku' => 'P2', 'slug' => 'hidden-product', 'name' => 'x', 'type' => 'quote', 'is_active' => false]);
         $image = Media::create(['disk' => 'public', 'path' => 'media/horse.jpg', 'mime_type' => 'image/jpeg', 'size' => 1]);
         $product->images()->attach($image->id, ['role' => 'gallery', 'sort_order' => 0]);
@@ -38,7 +39,7 @@ class SitemapTest extends TestCase
         $this->assertStringContainsString(route('blog.show', 'published-post'), $xml);
         $this->assertStringContainsString(route('pages.show', 'about-us'), $xml);
         $this->assertStringContainsString('<image:loc>'.$image->url().'</image:loc>', $xml);
-        foreach (['hidden-cat', 'hidden-product', 'scheduled-post', 'draft-post', '/cart', '/checkout', '/account'] as $hidden) {
+        foreach (['hidden-cat', 'empty-cat', 'hidden-product', 'scheduled-post', 'draft-post', '/cart', '/checkout', '/account'] as $hidden) {
             $this->assertStringNotContainsString($hidden, $xml);
         }
     }

@@ -36,7 +36,7 @@ class SearchController extends Controller
     private function search(array $words, bool $matchAll): ?LengthAwarePaginator
     {
         $results = Product::query()
-            ->with('images')
+            ->with(['images', 'primaryCategory'])
             ->where('is_active', true)
             ->where(function (Builder $query) use ($words, $matchAll) {
                 foreach ($words as $word) {

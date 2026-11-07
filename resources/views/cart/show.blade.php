@@ -88,7 +88,7 @@
 
         @if ($problems === [])
             <a href="{{ route('checkout.create') }}"
-               class="mt-6 block w-full rounded-full bg-brand-accent px-6 py-3 text-center text-sm font-semibold text-white hover:bg-brand-accent-dark">
+               class="mt-6 block w-full rounded-full bg-brand-accent-dark px-6 py-3 text-center text-sm font-semibold text-white hover:bg-brand-accent-darker">
                 ادامه و تکمیل سفارش
             </a>
         @else

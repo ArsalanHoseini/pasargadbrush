@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\RecordsSlugRedirects;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -39,6 +40,18 @@ class ProductCategory extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Active categories that actually hold an active product — empty leftovers
+     * of the WordPress import (e.g. «بدون دسته‌بندی», the Arabic «فرشاة الصناعی»)
+     * stay out of menus and the sitemap.
+     */
+    public function scopeListable(Builder $query): void
+    {
+        $query->where('is_active', true)->where(fn (Builder $query) => $query
+            ->whereHas('primaryProducts', fn (Builder $products) => $products->where('is_active', true))
+            ->orWhereHas('products', fn (Builder $products) => $products->where('is_active', true)));
+    }
 
     public function parent(): BelongsTo
     {

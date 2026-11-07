@@ -34,7 +34,7 @@
                    value="{{ old('phone') }}" placeholder="۰۹۱۲۱۲۳۴۵۶۷"
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
         </div>
-        <button type="submit" class="w-full rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+        <button type="submit" class="w-full rounded-full bg-brand-accent-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-darker">
             دریافت کد ورود
         </button>
         <p class="text-xs text-neutral-500">اگر حساب ندارید، با همین کد حساب شما ساخته می‌شود.</p>

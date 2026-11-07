@@ -19,7 +19,7 @@ class ProductCategoryController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         $query = Product::query()
-            ->with('images')
+            ->with(['images', 'primaryCategory'])
             ->where('is_active', true)
             ->where(function ($query) use ($category) {
                 $query->where('primary_category_id', $category->id)

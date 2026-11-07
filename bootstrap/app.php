@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserIsAdminStaff;
 use App\Http\Middleware\RedirectLegacyUrls;
+use App\Http\Middleware\RedirectToCanonicalHost;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(RedirectToCanonicalHost::class);
+
         // Global (not just "web"): a URL matching no route at all must reach it too.
         $middleware->append(RedirectLegacyUrls::class);
 

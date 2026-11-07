@@ -9,7 +9,7 @@
         @if ($order->items->isNotEmpty())
             <form method="POST" action="{{ route('account.orders.reorder', $order) }}">
                 @csrf
-                <button type="submit" class="rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-white hover:bg-brand-accent-dark">سفارش مجدد</button>
+                <button type="submit" class="rounded-full bg-brand-accent-dark px-4 py-2 text-xs font-semibold text-white hover:bg-brand-accent-darker">سفارش مجدد</button>
             </form>
         @endif
         <a href="{{ route('account.orders.index') }}" class="text-sm text-brand-accent-dark hover:underline">بازگشت به سفارش‌ها</a>

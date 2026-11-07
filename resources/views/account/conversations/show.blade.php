@@ -35,6 +35,6 @@
         <p class="text-xs text-neutral-500">این گفتگو بسته شده است؛ با ارسال پیام جدید دوباره باز می‌شود.</p>
     @endif
     @include('conversations.partials.compose', ['placeholder' => 'پاسخ خود را بنویسید…'])
-    <button type="submit" class="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-accent-dark">ارسال</button>
+    <button type="submit" class="rounded-full bg-brand-accent-dark px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-accent-darker">ارسال</button>
 </form>
 @endsection
