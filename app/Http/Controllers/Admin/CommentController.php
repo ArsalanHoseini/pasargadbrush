@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CommentController extends Controller
@@ -46,5 +47,31 @@ class CommentController extends Controller
         $comment->delete();
 
         return back()->with('status', 'دیدگاه حذف شد.');
+    }
+
+    /**
+     * Approve, mark as spam or delete several comments at once.
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['approve', 'spam', 'delete'])],
+        ], ['ids.required' => 'هیچ موردی انتخاب نشده است.']);
+
+        $selected = Comment::query()->whereKey($data['ids']);
+
+        $count = match ($data['action']) {
+            'approve' => $selected->update(['status' => 'approved']),
+            'spam' => $selected->update(['status' => 'spam']),
+            'delete' => $selected->delete(),
+        };
+
+        return back()->with('status', $count.' دیدگاه '.match ($data['action']) {
+            'approve' => 'تأیید شد.',
+            'spam' => 'به عنوان اسپم علامت‌گذاری شد.',
+            'delete' => 'حذف شد.',
+        });
     }
 }

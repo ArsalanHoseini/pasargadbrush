@@ -93,6 +93,25 @@ Alpine.data('manualOrderForm', (catalog, initialItems) => {
  * Admin confirmation dialog: any form with data-confirm="message" asks first
  * in a proper modal (admin layout) instead of the browser's confirm().
  */
+/**
+ * Admin list bulk selection: row checkboxes (data-bulk-id) belong to the
+ * #bulk-form outside the table via the form attribute; the bar appears
+ * once something is selected.
+ */
+Alpine.data('bulkSelection', () => ({
+    selected: [],
+
+    get rowIds() {
+        return [...this.$root.querySelectorAll('input[data-bulk-id]')].map((input) => input.value);
+    },
+    get allSelected() {
+        return this.selected.length > 0 && this.selected.length === this.rowIds.length;
+    },
+    toggleAll(checked) {
+        this.selected = checked ? this.rowIds : [];
+    },
+}));
+
 Alpine.store('confirmDialog', {
     open: false,
     message: '',

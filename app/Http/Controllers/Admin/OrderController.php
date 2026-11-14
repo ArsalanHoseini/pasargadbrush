@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\QuoteRequest;
+use App\Services\Admin\OrderTimeline;
 use App\Services\Cart\CartManager;
 use App\Services\Checkout\CreateManualOrder;
 use App\Services\Checkout\NotifyOrderPlaced;
@@ -16,23 +17,126 @@ use App\Services\Checkout\OrderStock;
 use App\Services\Checkout\ShippingCalculator;
 use App\Services\Checkout\ShippingMethod;
 use App\Services\Customization\DimensionForm;
+use App\Support\CsvExport;
+use App\Support\PersianDate;
 use App\Support\PersianDigits;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
+    /** Bulk actions offered on the order list: "field:value" => label. */
+    public const BULK_ACTIONS = [
+        'status:confirmed' => 'وضعیت: تأییدشده',
+        'status:processing' => 'وضعیت: در حال پردازش',
+        'status:shipped' => 'وضعیت: ارسال‌شده',
+        'status:completed' => 'وضعیت: تکمیل‌شده',
+        'payment:paid' => 'پرداخت: پرداخت‌شده',
+    ];
+
     public function index(Request $request): View
     {
         $status = $request->query('status');
-        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
 
-        $orders = Order::query()
-            ->with('customer')
-            ->when($status, fn ($query) => $query->where('status', $status))
+        return view('admin.orders.index', [
+            'orders' => $this->filteredOrders($request)->with('customer')->paginate(20)->withQueryString(),
+            'status' => $status,
+            'statusCounts' => Order::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+        ]);
+    }
+
+    /**
+     * The current list (all its filters, every page) as a CSV for Excel.
+     * Amounts are plain Toman numbers so they can be summed there.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $orders = $this->filteredOrders($request)->with('customer')->lazy(500);
+
+        return CsvExport::download('orders', [
+            'شماره سفارش', 'تاریخ ثبت', 'مشتری', 'موبایل', 'ایمیل', 'وضعیت', 'وضعیت پرداخت', 'منبع',
+            'جمع اقلام (تومان)', 'هزینه ارسال (تومان)', 'مبلغ کل (تومان)', 'کد رهگیری', 'منتظر تأیید قیمت',
+        ], $orders->map(fn (Order $order) => [
+            $order->order_number,
+            PersianDate::format($order->placed_at, PersianDate::COMPACT),
+            $order->customer_name ?? $order->customer?->name,
+            $order->customer_phone ?? $order->customer?->phone,
+            $order->customer_email ?? $order->customer?->email,
+            Order::STATUS_LABELS[$order->status] ?? $order->status,
+            Order::PAYMENT_STATUS_LABELS[$order->payment_status] ?? $order->payment_status,
+            $order->source === Order::SOURCE_MANUAL ? 'ثبت دستی' : 'سایت',
+            intdiv($order->subtotal_rial, 10),
+            intdiv($order->shipping_cost_rial, 10),
+            intdiv($order->total_rial, 10),
+            $order->shipment_tracking_code,
+            $order->requires_price_confirmation ? 'بله' : 'خیر',
+        ]));
+    }
+
+    /**
+     * Moves several orders forward at once (status or "paid"). Cancelling
+     * and un-cancelling stay on the order page, because they release or
+     * reserve stock; cancelled orders are skipped here for the same reason.
+     */
+    public function bulk(Request $request, NotifyOrderUpdated $notifyOrderUpdated): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(array_keys(self::BULK_ACTIONS))],
+            'notify_customer' => ['nullable', 'boolean'],
+        ], ['ids.required' => 'هیچ سفارشی انتخاب نشده است.']);
+
+        [$field, $value] = explode(':', $data['action']);
+        $column = $field === 'payment' ? 'payment_status' : 'status';
+        $updated = 0;
+
+        foreach (Order::query()->whereKey($data['ids'])->where('status', '!=', 'cancelled')->get() as $order) {
+            if ($order->{$column} === $value) {
+                continue;
+            }
+
+            $order->update([$column => $value]);
+            $changes = [$column => $value, 'bulk' => true];
+
+            if ($column === 'status' && $request->boolean('notify_customer')
+                && $notifyOrderUpdated->handle($order, statusChanged: true, priceConfirmed: false)) {
+                $changes['customer_notified'] = true;
+            }
+
+            AuditLog::create([
+                'user_id' => $request->user()->id,
+                'action' => 'order.updated',
+                'auditable_type' => Order::class,
+                'auditable_id' => $order->id,
+                'changes' => $changes,
+                'ip_address' => $request->ip(),
+            ]);
+
+            $updated++;
+        }
+
+        $skipped = count($data['ids']) - $updated;
+
+        return back()->with('status', $updated.' سفارش به‌روزرسانی شد'.($skipped > 0 ? ' ('.$skipped.' مورد لغوشده بود یا از قبل همین وضعیت را داشت).' : '.'));
+    }
+
+    /**
+     * @return Builder<Order>
+     */
+    private function filteredOrders(Request $request): Builder
+    {
+        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
+        $from = PersianDate::parse($request->query('from'));
+        $to = PersianDate::parse($request->query('to'));
+
+        return Order::query()
+            ->when($request->query('status'), fn ($query, $status) => $query->where('status', $status))
             ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
                 ->where('order_number', 'like', "%{$search}%")
                 ->orWhere('customer_name', 'like', "%{$search}%")
@@ -43,15 +147,9 @@ class OrderController extends Controller
             ->when($request->boolean('price_confirmation'), fn ($query) => $query
                 ->where('requires_price_confirmation', true)
                 ->whereNotIn('status', ['cancelled', 'completed']))
-            ->latest('placed_at')
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('admin.orders.index', [
-            'orders' => $orders,
-            'status' => $status,
-            'statusCounts' => Order::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
-        ]);
+            ->when($from, fn ($query) => $query->where('placed_at', '>=', $from))
+            ->when($to, fn ($query) => $query->where('placed_at', '<', $to->modify('+1 day')))
+            ->latest('placed_at');
     }
 
     /**
@@ -93,11 +191,45 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.edit', $order)->with('status', 'سفارش '.$order->order_number.' ثبت شد.');
     }
 
-    public function edit(Order $order): View
+    public function edit(Order $order, OrderTimeline $timeline): View
     {
         return view('admin.orders.edit', [
-            'order' => $order->load(['customer', 'shippingAddress', 'items', 'payments', 'conversation']),
+            'order' => $order->load(['customer', 'shippingAddress', 'items', 'payments', 'conversation', 'createdBy']),
             'shipping' => $order->shippingQuote(),
+            'timeline' => $timeline->for($order),
+        ]);
+    }
+
+    /**
+     * A dated, signed note for the team; never shown to the customer.
+     */
+    public function storeNote(Request $request, Order $order): RedirectResponse
+    {
+        $data = $request->validate(['body' => ['required', 'string', 'max:2000']], attributes: ['body' => 'یادداشت']);
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'order.note',
+            'auditable_type' => Order::class,
+            'auditable_id' => $order->id,
+            'changes' => ['body' => $data['body']],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->to(route('admin.orders.edit', $order).'#timeline')->with('status', 'یادداشت ثبت شد.');
+    }
+
+    /**
+     * Printable invoice or shipping label (A4/A6 via the browser's print).
+     */
+    public function print(Order $order, string $document): View
+    {
+        abort_unless(in_array($document, ['invoice', 'label'], true), 404);
+
+        return view('admin.orders.print', [
+            'order' => $order->load(['customer', 'shippingAddress', 'items']),
+            'shipping' => $order->shippingQuote(),
+            'document' => $document,
         ]);
     }
 

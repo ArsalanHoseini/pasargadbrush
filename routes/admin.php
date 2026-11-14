@@ -45,20 +45,25 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
 
     Route::resource('blog-categories', BlogCategoryController::class)->except('show');
     Route::resource('blog-posts', BlogPostController::class)->except('show');
+    Route::post('/products/bulk', [ProductController::class, 'bulk'])->name('products.bulk');
     Route::resource('products', ProductController::class)->except('show');
 
     Route::resource('applications', ApplicationController::class)->except('show');
 
+    Route::post('/product-reviews/bulk', [ProductReviewController::class, 'bulk'])->name('product-reviews.bulk');
     Route::get('/product-reviews', [ProductReviewController::class, 'index'])->name('product-reviews.index');
     Route::post('/product-reviews/{productReview}/approve', [ProductReviewController::class, 'approve'])->name('product-reviews.approve');
     Route::post('/product-reviews/{productReview}/spam', [ProductReviewController::class, 'spam'])->name('product-reviews.spam');
     Route::delete('/product-reviews/{productReview}', [ProductReviewController::class, 'destroy'])->name('product-reviews.destroy');
 
+    Route::post('/comments/bulk', [CommentController::class, 'bulk'])->name('comments.bulk');
     Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
     Route::post('/comments/{comment}/approve', [CommentController::class, 'approve'])->name('comments.approve');
     Route::post('/comments/{comment}/spam', [CommentController::class, 'spam'])->name('comments.spam');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
+    Route::get('/quote-requests/export', [QuoteRequestController::class, 'export'])->name('quote-requests.export');
+    Route::post('/quote-requests/bulk', [QuoteRequestController::class, 'bulk'])->name('quote-requests.bulk');
     Route::resource('quote-requests', QuoteRequestController::class)->only(['index', 'edit', 'update', 'destroy']);
 
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
@@ -70,7 +75,12 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::resource('pages', PageController::class)->except('show');
     Route::resource('redirects', SeoRedirectController::class)->except('show');
 
+    Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+    Route::post('/orders/bulk', [OrderController::class, 'bulk'])->name('orders.bulk');
+    Route::post('/orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');
+    Route::get('/orders/{order}/print/{document}', [OrderController::class, 'print'])->whereIn('document', ['invoice', 'label'])->name('orders.print');
     Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::resource('customers', CustomerController::class)->only(['index', 'show']);
 
     Route::get('/conversations/attachments/{attachment}', [ConversationController::class, 'attachment'])->name('conversations.attachment');

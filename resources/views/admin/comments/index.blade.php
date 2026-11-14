@@ -7,7 +7,7 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
 @endphp
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">دیدگاه‌ها</h1>
+<x-admin.page-header title="دیدگاه‌ها" />
 
 <div class="mb-6 flex gap-2 text-sm">
     <a href="{{ route('admin.comments.index', ['status' => 'all']) }}"
@@ -23,11 +23,15 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
 @if ($comments->isEmpty())
     <p class="text-sm text-neutral-500">دیدگاهی ثبت نشده است.</p>
 @else
+<div x-data="bulkSelection">
+    <label class="mb-3 flex items-center gap-2 text-sm text-neutral-600"><x-admin.bulk-select-all /> انتخاب همه‌ی این صفحه</label>
     <div class="space-y-4">
         @foreach ($comments as $comment)
             <div class="rounded-lg border border-neutral-200 bg-white p-4 {{ $comment->status === 'pending' ? 'bg-amber-50' : '' }}">
                 <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500">
-                    <span>
+                    <span class="flex items-center gap-2">
+                        <x-admin.bulk-checkbox :value="$comment->id" :label="'انتخاب '.$comment->author_name" />
+                        <span>
                         <strong class="text-neutral-800">{{ $comment->author_name }}</strong>
                         ({{ $comment->author_email }}) — روی
                         @if ($comment->post)
@@ -35,6 +39,7 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
                         @else
                             مقاله حذف‌شده
                         @endif
+                        </span>
                     </span>
                     <span>{{ persian_date($comment->created_at, \App\Support\PersianDate::COMPACT) }} — {{ $statusLabels[$comment->status] }}</span>
                 </div>
@@ -64,6 +69,9 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
             </div>
         @endforeach
     </div>
+
+    <x-admin.bulk-bar :action="route('admin.comments.bulk')" :actions="['approve' => 'تأیید', 'spam' => 'اسپم', 'delete' => 'حذف']" />
+</div>
 
     <div class="mt-6">{{ $comments->links() }}</div>
 @endif

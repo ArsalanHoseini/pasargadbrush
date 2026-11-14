@@ -17,6 +17,7 @@ use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -117,6 +118,33 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('status', 'محصول حذف شد.');
+    }
+
+    /**
+     * Activate, deactivate or delete several products. Products already
+     * used in orders are never deleted (same rule as the single delete).
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['activate', 'deactivate', 'delete'])],
+        ], ['ids.required' => 'هیچ محصولی انتخاب نشده است.']);
+
+        $selected = Product::query()->whereKey($data['ids']);
+
+        if ($data['action'] !== 'delete') {
+            $count = $selected->update(['is_active' => $data['action'] === 'activate']);
+
+            return back()->with('status', $count.' محصول '.($data['action'] === 'activate' ? 'فعال' : 'غیرفعال').' شد.');
+        }
+
+        $deletable = $selected->doesntHave('orderItems')->get();
+        $deletable->each->delete();
+        $kept = count($data['ids']) - $deletable->count();
+
+        return back()->with('status', $deletable->count().' محصول حذف شد'.($kept > 0 ? ' ('.$kept.' محصول در سفارش‌ها استفاده شده و حذف نشد).' : '.'));
     }
 
     private function form(Product $product): View

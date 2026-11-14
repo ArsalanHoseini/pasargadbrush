@@ -21,10 +21,12 @@
         {{ request()->hasAny(['q', 'category', 'type', 'status', 'stock']) ? 'محصولی با این فیلترها پیدا نشد.' : 'هنوز هیچ محصولی ثبت نشده است.' }}
     </x-admin.empty-state>
 @else
+<div x-data="bulkSelection">
     <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right text-xs text-neutral-500">
                 <tr>
+                    <th class="w-10 px-4 py-3"><x-admin.bulk-select-all /></th>
                     <th class="px-4 py-3 font-medium">محصول</th>
                     <th class="px-4 py-3 font-medium">دسته</th>
                     <th class="px-4 py-3 font-medium">نوع / قیمت</th>
@@ -42,6 +44,7 @@
                         $lowestStock = $trackedStock->min('stock_quantity');
                     @endphp
                     <tr class="hover:bg-neutral-50">
+                        <td class="px-4 py-3"><x-admin.bulk-checkbox :value="$product->id" :label="'انتخاب '.$product->name" /></td>
                         <td class="px-4 py-3">
                             <a href="{{ route('admin.products.edit', $product) }}" class="flex items-center gap-3">
                                 @if ($thumbnail)
@@ -102,6 +105,9 @@
             </tbody>
         </table>
     </div>
+
+    <x-admin.bulk-bar :action="route('admin.products.bulk')" :actions="['activate' => 'فعال کردن', 'deactivate' => 'غیرفعال کردن', 'delete' => 'حذف']" />
+</div>
 
     <div class="mt-6">{{ $products->links() }}</div>
 @endif

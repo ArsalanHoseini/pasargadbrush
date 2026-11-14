@@ -261,7 +261,34 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Search + filters: orders (text, payment, source, awaiting price confirmation; status tabs with counts), products (text incl. variant SKU, category, type, status, low stock; list now shows thumbnail, price range, stock), customers (text, has orders; list shows total spent and join date), quote requests (text; tab counts), blog posts (text, category, status), pages, product categories.
 - 29 new tests (`Admin/DashboardTest`, `Admin/AdminSearchTest`, `Admin/AdminListFilterTest`, `Admin/AdminLayoutTest`). Full suite 369/369 passing.
 - Checked in a real browser against a throwaway SQLite copy with ASCII sample data (local MySQL was down): dashboard numbers/chart, product low-stock filter, confirmation dialog blocks deletion, search redirect, filter-bar keeps the status tab, mobile menu with no horizontal scroll. Screenshots weren't possible (app window hidden), and the dialog's close animation couldn't be observed for the same reason.
-- **Next (phase 2, agreed list):** bulk actions, CSV/Excel export, Shamsi date-range filter, two-column forms / tabbed product form, order history timeline from `audit_logs`, printable invoice. Phase 3: admin users and roles, reports.
+- Phase 2 followed; see the next entry.
+
+**Admin redesign — phase 2: bulk actions, export, date filters, order page (completed locally, 2026-11-14)**
+- Shamsi date-range filter (`PersianDate::parse`, `x-admin.filter-date-range`; dates that can't be read are ignored and marked red) on orders (placed date), customers (join date) and quote requests.
+- CSV export for Excel (`App\Support\CsvExport`, UTF-8 BOM) of orders, customers and quote requests. The export follows the list's current filters across all pages, and amounts are plain Toman numbers.
+- Bulk actions (`x-admin.bulk-*` components, Alpine `bulkSelection`, confirmation dialog). Every bulk change to an order is written to `audit_logs`.
+  - Orders: status confirmed / processing / shipped / completed, or mark as paid, with optional customer notification. Cancelled orders are skipped, and cancelling stays on the order page because of stock.
+  - Products: activate / deactivate / delete. Products already used in orders are never deleted.
+  - Quote requests: change status or delete.
+  - Reviews and comments: approve / spam / delete.
+- Order page:
+  - The header has message, invoice and shipping-label actions.
+  - A «تاریخچه و یادداشت‌های داخلی» timeline (`App\Services\Admin\OrderTimeline`) is built from `audit_logs`, with signed internal notes (`order.note`, never shown to customers).
+  - The old notes field is now labelled «توضیحات سفارش».
+- Printable invoice (A4) and shipping label (A6) at `/admin/orders/{order}/print/{invoice|label}`. Unconfirmed prices print as «پیش‌فاکتور».
+- Customer profile:
+  - Stats: orders, total spent, average order, last order and unpaid count, all excluding cancelled orders.
+  - An orders table with status and payment, plus the customer's quote requests.
+  - tel/mailto links for phone and email.
+- 24 new tests (`Admin/AdminBulkActionsTest`, `Admin/AdminExportTest`, `Admin/OrderPageTest`, `Admin/CustomerProfileTest`, plus 2 in `Unit/PersianDateTest`). Full suite 393/393 passing.
+- Browser-checked on the throwaway SQLite copy:
+  - Row and select-all selection feed the bulk form.
+  - The confirmation dialog intercepts the bulk form.
+  - The bulk update runs and reports the skipped rows.
+  - The invoice and timeline render without console errors.
+  - Not checked: the pane was hidden, so there are no screenshots and the bar's fade-in could not be watched.
+- **Not done in this phase:** the tabbed / two-column product form. The form is large, and restructuring it without the owner reviewing the layout is risky.
+- **Phase 3:** admin users and roles, profile/password change, activity log, reports.
 
 ## Next concrete step
 

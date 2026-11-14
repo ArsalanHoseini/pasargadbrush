@@ -519,3 +519,19 @@ Each channel has its own try/catch + `Log::warning` (same resilience rule as quo
 **Decision:** Dashboard sales count every order that isn't cancelled (paid or not), by `placed_at` in Tehran time; the change badge compares against the equal-length period right before. Low stock means a tracked variant (`stock_quantity` not null) at or below 5. Destructive admin forms use `data-confirm="…"`, handled by one Alpine store and a modal in the admin layout, instead of inline `confirm()`. The chart is plain HTML/CSS bars, so no chart library was added.
 
 **Why:** Most orders here are confirmed before payment (quote/price-confirmation flow), so "paid only" would hide real sales. One confirmation pattern keeps every delete consistent and accessible without new dependencies.
+
+## 2026-11-14 — Admin bulk actions, exports and internal notes
+
+**Decision:**
+- Bulk order actions only move orders forward (confirmed → completed, or "paid").
+- Cancelled orders are skipped by bulk actions. Cancelling and un-cancelling stay on the single order page, because those release or reserve stock.
+- Customer notification on a bulk status change is opt-in (off by default).
+- Exports are CSV with a UTF-8 BOM rather than .xlsx, and amounts are whole Toman numbers.
+- Internal order notes are `audit_logs` rows (`action = order.note`), so the order timeline needs no new table.
+- Admin date filters take Shamsi dates typed like `۱۴۰۵/۰۸/۰۱` and convert them with PHP's intl calendar.
+
+**Why:**
+- Stock and notification side effects must stay deliberate.
+- CSV opens directly in Excel, while an .xlsx writer would be a new dependency.
+- Reusing `audit_logs` keeps who did what, and the notes, in one history.
+- A Shamsi date-picker library would also be a new dependency, and typed dates with validation cover the need.

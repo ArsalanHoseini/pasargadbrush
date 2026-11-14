@@ -9,6 +9,7 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
 @section('content')
 <x-admin.page-header title="سفارش‌ها" description="سفارش‌های سایت و سفارش‌های ثبت‌شده توسط کارشناسان">
     <x-slot:actions>
+        <x-admin.button :href="route('admin.orders.export', request()->query())" variant="secondary" icon="download">خروجی Excel</x-admin.button>
         <x-admin.button :href="route('admin.orders.create')" icon="plus">ثبت سفارش دستی</x-admin.button>
     </x-slot:actions>
 </x-admin.page-header>
@@ -30,15 +31,18 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
     <x-admin.filter-select name="payment_status" label="پرداخت" :options="\App\Models\Order::PAYMENT_STATUS_LABELS" />
     <x-admin.filter-select name="source" label="منبع" :options="[\App\Models\Order::SOURCE_WEBSITE => 'سایت', \App\Models\Order::SOURCE_MANUAL => 'ثبت دستی']" />
     <x-admin.filter-select name="price_confirmation" label="تأیید قیمت" :options="['1' => 'منتظر تأیید قیمت']" />
+    <x-admin.filter-date-range label="تاریخ ثبت" />
 </x-admin.filter-bar>
 
 @if ($orders->isEmpty())
     <x-admin.empty-state icon="shopping-bag">سفارشی با این مشخصات پیدا نشد.</x-admin.empty-state>
 @else
+<div x-data="bulkSelection">
     <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right">
                 <tr>
+                    <th class="w-10 px-4 py-3"><x-admin.bulk-select-all /></th>
                     <th class="px-4 py-3 font-medium">شماره سفارش</th>
                     <th class="px-4 py-3 font-medium">مشتری</th>
                     <th class="px-4 py-3 font-medium">مبلغ کل</th>
@@ -50,7 +54,8 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
             </thead>
             <tbody class="divide-y divide-neutral-100">
                 @foreach ($orders as $order)
-                    <tr class="hover:bg-neutral-50">
+                    <tr class="hover:bg-neutral-50" :class="selected.includes('{{ $order->id }}') && 'bg-orange-50/60'">
+                        <td class="px-4 py-3"><x-admin.bulk-checkbox :value="$order->id" :label="'انتخاب '.$order->order_number" /></td>
                         <td class="px-4 py-3 font-medium" dir="ltr"><a href="{{ route('admin.orders.edit', $order) }}" class="hover:text-brand-accent-dark">{{ $order->order_number }}</a></td>
                         <td class="px-4 py-3">{{ ($order->customer_name ?? $order->customer?->name) ?? '—' }}</td>
                         <td class="px-4 py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
@@ -79,6 +84,15 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
             </tbody>
         </table>
     </div>
+
+    <x-admin.bulk-bar :action="route('admin.orders.bulk')" :actions="\App\Http\Controllers\Admin\OrderController::BULK_ACTIONS">
+        <label class="flex items-center gap-1.5 text-white/80">
+            <input type="checkbox" name="notify_customer" value="1" class="accent-brand-accent">
+            اطلاع‌رسانی تغییر وضعیت به مشتری
+        </label>
+        <span class="text-xs text-white/50">سفارش‌های لغوشده تغییر نمی‌کنند؛ لغو سفارش از صفحه‌ی خود سفارش انجام می‌شود.</span>
+    </x-admin.bulk-bar>
+</div>
 
     <div class="mt-6">{{ $orders->links() }}</div>
 @endif

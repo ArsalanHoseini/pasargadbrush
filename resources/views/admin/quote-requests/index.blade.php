@@ -3,11 +3,15 @@
 @section('title', 'درخواست‌های استعلام قیمت')
 
 @php
-$statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد', 'quoted' => 'قیمت ارسال شد', 'closed' => 'بسته شده'];
+$statusLabels = \App\Http\Controllers\Admin\QuoteRequestController::STATUS_LABELS;
 @endphp
 
 @section('content')
-<x-admin.page-header title="درخواست‌های استعلام قیمت" description="درخواست‌های قیمت از فرم محصولات و صفحه تماس" />
+<x-admin.page-header title="درخواست‌های استعلام قیمت" description="درخواست‌های قیمت از فرم محصولات و صفحه تماس">
+    <x-slot:actions>
+        <x-admin.button :href="route('admin.quote-requests.export', request()->query())" variant="secondary" icon="download">خروجی Excel</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
 <div class="mb-4 flex flex-wrap gap-1 border-b border-neutral-200 text-sm">
     <a href="{{ route('admin.quote-requests.index') }}"
@@ -22,15 +26,19 @@ $statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد',
     @endforeach
 </div>
 
-<x-admin.filter-bar :action="route('admin.quote-requests.index')" :keep="['status']" placeholder="نام، موبایل، شرکت یا محصول…" />
+<x-admin.filter-bar :action="route('admin.quote-requests.index')" :keep="['status']" placeholder="نام، موبایل، شرکت یا محصول…">
+    <x-admin.filter-date-range />
+</x-admin.filter-bar>
 
 @if ($quoteRequests->isEmpty())
-    <x-admin.empty-state icon="inbox">{{ request()->hasAny(['q']) ? 'موردی با این فیلترها پیدا نشد.' : 'درخواستی ثبت نشده است.' }}</x-admin.empty-state>
+    <x-admin.empty-state icon="inbox">{{ request()->hasAny(['q', 'from', 'to']) ? 'موردی با این فیلترها پیدا نشد.' : 'درخواستی ثبت نشده است.' }}</x-admin.empty-state>
 @else
+<div x-data="bulkSelection">
     <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right">
                 <tr>
+                    <th class="w-10 px-4 py-3"><x-admin.bulk-select-all /></th>
                     <th class="px-4 py-3 font-medium">نام</th>
                     <th class="px-4 py-3 font-medium">محصول</th>
                     <th class="px-4 py-3 font-medium">تلفن</th>
@@ -42,7 +50,8 @@ $statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد',
             <tbody class="divide-y divide-neutral-100">
                 @foreach ($quoteRequests as $quoteRequest)
                     <tr class="{{ $quoteRequest->status === 'new' ? 'bg-amber-50' : '' }}">
-                        <td class="px-4 py-3">{{ $quoteRequest->name }}</td>
+                        <td class="px-4 py-3"><x-admin.bulk-checkbox :value="$quoteRequest->id" :label="'انتخاب '.$quoteRequest->name" /></td>
+                        <td class="px-4 py-3"><a href="{{ route('admin.quote-requests.edit', $quoteRequest) }}" class="font-medium hover:text-brand-accent-dark">{{ $quoteRequest->name }}</a></td>
                         <td class="px-4 py-3 text-neutral-500">{{ $quoteRequest->product?->name ?? 'عمومی' }}</td>
                         <td class="px-4 py-3 text-neutral-500" dir="ltr">{{ $quoteRequest->phone }}</td>
                         <td class="px-4 py-3">{{ $statusLabels[$quoteRequest->status] }}</td>
@@ -55,6 +64,10 @@ $statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد',
             </tbody>
         </table>
     </div>
+
+    <x-admin.bulk-bar :action="route('admin.quote-requests.bulk')"
+        :actions="collect($statusLabels)->mapWithKeys(fn ($label, $value) => ['status:'.$value => 'وضعیت: '.$label])->put('delete', 'حذف')->all()" />
+</div>
 
     <div class="mt-6">{{ $quoteRequests->links() }}</div>
 @endif

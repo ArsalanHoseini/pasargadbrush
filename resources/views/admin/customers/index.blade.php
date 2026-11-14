@@ -3,14 +3,19 @@
 @section('title', 'مشتریان')
 
 @section('content')
-<x-admin.page-header title="مشتریان" :description="$customers->total().' مشتری'" />
+<x-admin.page-header title="مشتریان" :description="$customers->total().' مشتری'">
+    <x-slot:actions>
+        <x-admin.button :href="route('admin.customers.export', request()->query())" variant="secondary" icon="download">خروجی Excel</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
 <x-admin.filter-bar :action="route('admin.customers.index')" placeholder="نام، شرکت، موبایل یا ایمیل…">
     <x-admin.filter-select name="has_orders" label="سفارش" :options="['yes' => 'دارای سفارش', 'no' => 'بدون سفارش']" />
+    <x-admin.filter-date-range label="تاریخ عضویت" />
 </x-admin.filter-bar>
 
 @if ($customers->isEmpty())
-    <x-admin.empty-state icon="users">{{ request()->hasAny(['q', 'has_orders']) ? 'مشتری‌ای با این فیلترها پیدا نشد.' : 'هنوز مشتری‌ای ثبت نشده است.' }}</x-admin.empty-state>
+    <x-admin.empty-state icon="users">{{ request()->hasAny(['q', 'has_orders', 'from', 'to']) ? 'مشتری‌ای با این فیلترها پیدا نشد.' : 'هنوز مشتری‌ای ثبت نشده است.' }}</x-admin.empty-state>
 @else
     <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
