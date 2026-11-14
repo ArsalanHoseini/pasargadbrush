@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Comment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,7 @@ class CommentController extends Controller
         ], ['ids.required' => 'هیچ موردی انتخاب نشده است.']);
 
         $selected = Comment::query()->whereKey($data['ids']);
+        AuditLog::record('comment.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
 
         $count = match ($data['action']) {
             'approve' => $selected->update(['status' => 'approved']),

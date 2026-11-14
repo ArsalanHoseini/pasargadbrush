@@ -15,7 +15,9 @@ use App\Models\QuoteRequest;
 class AdminNavigation
 {
     /**
-     * @return list<array{label: string, items: list<array{label: string, route: string, active: string, icon: string, badge: int}>}>
+     * Items marked 'admin' are hidden from editors (their routes are admin-only too).
+     *
+     * @return list<array{label: string, items: list<array{label: string, route: string, active: string, icon: string, badge: int, admin?: bool}>}>
      */
     public static function groups(): array
     {
@@ -23,10 +25,11 @@ class AdminNavigation
 
         $groups = [
             ['label' => 'فروش', 'items' => [
-                ['label' => 'سفارش‌ها', 'route' => 'admin.orders.index', 'active' => 'admin.orders.*', 'icon' => 'shopping-bag', 'badge' => $badges['orders']],
-                ['label' => 'درخواست‌های استعلام', 'route' => 'admin.quote-requests.index', 'active' => 'admin.quote-requests.*', 'icon' => 'inbox', 'badge' => $badges['quote-requests']],
-                ['label' => 'پیام‌ها', 'route' => 'admin.conversations.index', 'active' => 'admin.conversations.*', 'icon' => 'chat', 'badge' => $badges['conversations']],
-                ['label' => 'مشتریان', 'route' => 'admin.customers.index', 'active' => 'admin.customers.*', 'icon' => 'users', 'badge' => 0],
+                ['label' => 'سفارش‌ها', 'route' => 'admin.orders.index', 'active' => 'admin.orders.*', 'icon' => 'shopping-bag', 'badge' => $badges['orders'], 'admin' => true],
+                ['label' => 'درخواست‌های استعلام', 'route' => 'admin.quote-requests.index', 'active' => 'admin.quote-requests.*', 'icon' => 'inbox', 'badge' => $badges['quote-requests'], 'admin' => true],
+                ['label' => 'پیام‌ها', 'route' => 'admin.conversations.index', 'active' => 'admin.conversations.*', 'icon' => 'chat', 'badge' => $badges['conversations'], 'admin' => true],
+                ['label' => 'مشتریان', 'route' => 'admin.customers.index', 'active' => 'admin.customers.*', 'icon' => 'users', 'badge' => 0, 'admin' => true],
+                ['label' => 'گزارش فروش', 'route' => 'admin.reports.index', 'active' => 'admin.reports.*', 'icon' => 'chart', 'badge' => 0, 'admin' => true],
             ]],
             ['label' => 'کاتالوگ', 'items' => [
                 ['label' => 'محصولات', 'route' => 'admin.products.index', 'active' => 'admin.products.*', 'icon' => 'cube', 'badge' => 0],
@@ -42,14 +45,24 @@ class AdminNavigation
                 ['label' => 'کتابخانه مدیا', 'route' => 'admin.media.index', 'active' => 'admin.media.*', 'icon' => 'photo', 'badge' => 0],
             ]],
             ['label' => 'تنظیمات', 'items' => [
-                ['label' => 'تنظیمات سایت', 'route' => 'admin.settings.edit', 'active' => 'admin.settings.*', 'icon' => 'cog', 'badge' => 0],
-                ['label' => 'ارسال', 'route' => 'admin.shipping.edit', 'active' => 'admin.shipping.*', 'icon' => 'truck', 'badge' => 0],
-                ['label' => 'ریدایرکت‌ها', 'route' => 'admin.redirects.index', 'active' => 'admin.redirects.*', 'icon' => 'arrows', 'badge' => 0],
-                ['label' => 'ایمپورت وردپرس', 'route' => 'admin.import.index', 'active' => 'admin.import.*', 'icon' => 'download', 'badge' => 0],
+                ['label' => 'تنظیمات سایت', 'route' => 'admin.settings.edit', 'active' => 'admin.settings.*', 'icon' => 'cog', 'badge' => 0, 'admin' => true],
+                ['label' => 'ارسال', 'route' => 'admin.shipping.edit', 'active' => 'admin.shipping.*', 'icon' => 'truck', 'badge' => 0, 'admin' => true],
+                ['label' => 'ریدایرکت‌ها', 'route' => 'admin.redirects.index', 'active' => 'admin.redirects.*', 'icon' => 'arrows', 'badge' => 0, 'admin' => true],
+                ['label' => 'کاربران پنل', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => 'user-group', 'badge' => 0, 'admin' => true],
+                ['label' => 'گزارش فعالیت', 'route' => 'admin.activity.index', 'active' => 'admin.activity.*', 'icon' => 'clock', 'badge' => 0, 'admin' => true],
+                ['label' => 'ایمپورت وردپرس', 'route' => 'admin.import.index', 'active' => 'admin.import.*', 'icon' => 'download', 'badge' => 0, 'admin' => true],
             ]],
         ];
 
-        return $groups;
+        $isAdmin = (bool) auth()->user()?->isAdmin();
+
+        return array_values(array_filter(array_map(
+            fn (array $group) => [...$group, 'items' => array_values(array_filter(
+                $group['items'],
+                fn (array $item) => $isAdmin || ! ($item['admin'] ?? false),
+            ))],
+            $groups,
+        ), fn (array $group) => $group['items'] !== []));
     }
 
     /**

@@ -14,7 +14,8 @@ use Illuminate\View\View;
 
 /**
  * The admin top-bar search: orders, products, customers and quote requests
- * at once. An exact order number jumps straight to that order.
+ * at once. An exact order number jumps straight to that order. Editors
+ * only search products (sales data is admin-only).
  */
 class SearchController extends Controller
 {
@@ -28,7 +29,8 @@ class SearchController extends Controller
             return view('admin.search', ['term' => $term, 'results' => null]);
         }
 
-        $exactOrder = Order::where('order_number', $term)->first();
+        $isAdmin = $request->user()->isAdmin();
+        $exactOrder = $isAdmin ? Order::where('order_number', $term)->first() : null;
 
         if ($exactOrder) {
             return redirect()->route('admin.orders.edit', $exactOrder);
@@ -37,7 +39,7 @@ class SearchController extends Controller
         $like = '%'.$term.'%';
 
         $results = [
-            'orders' => Order::query()
+            'orders' => ! $isAdmin ? collect() : Order::query()
                 ->where(fn ($query) => $query
                     ->where('order_number', 'like', $like)
                     ->orWhere('customer_name', 'like', $like)
@@ -52,7 +54,7 @@ class SearchController extends Controller
                 ->orderBy('name')
                 ->limit(self::RESULTS_PER_TYPE)
                 ->get(),
-            'customers' => Customer::query()
+            'customers' => ! $isAdmin ? collect() : Customer::query()
                 ->where(fn ($query) => $query
                     ->where('name', 'like', $like)
                     ->orWhere('company_name', 'like', $like)
@@ -61,7 +63,7 @@ class SearchController extends Controller
                 ->latest()
                 ->limit(self::RESULTS_PER_TYPE)
                 ->get(),
-            'quoteRequests' => QuoteRequest::query()
+            'quoteRequests' => ! $isAdmin ? collect() : QuoteRequest::query()
                 ->with('product')
                 ->where(fn ($query) => $query
                     ->where('name', 'like', $like)

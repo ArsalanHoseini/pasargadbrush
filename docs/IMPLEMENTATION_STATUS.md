@@ -288,7 +288,29 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
   - The invoice and timeline render without console errors.
   - Not checked: the pane was hidden, so there are no screenshots and the bar's fade-in could not be watched.
 - **Not done in this phase:** the tabbed / two-column product form. The form is large, and restructuring it without the owner reviewing the layout is risky.
-- **Phase 3:** admin users and roles, profile/password change, activity log, reports.
+- Phase 3 followed; see the next entry.
+
+**Admin redesign — phase 3: staff roles, accounts, activity log, sales report (completed locally, 2026-11-14)**
+- **Roles are now enforced** (owner chose "catalog + content" for editors).
+  - Editors manage: products, categories, applications, product reviews, blog posts and categories, comments, static pages and media.
+  - Admin-only, via the `admin` gate and `can:admin` on a route group: orders, customers, quote requests, conversations, reports, settings, shipping, redirects, WordPress import, users and the activity log.
+  - The sidebar, dashboard and search hide admin-only parts from editors: no sales figures, and search returns products only.
+- **Staff accounts** (`/admin/users`, `Admin\UserController`): create, edit or delete staff, choose the role, and set a password (min 8, confirmed; left blank on edit, it stays unchanged).
+  - An admin can't demote or delete themself, and the last admin is always kept.
+  - The list shows each user's last activity.
+- **«حساب من»** (`/admin/profile`, linked from the sidebar user box): every staff member can edit their own name and email, and change their password with the current one.
+- **Activity log** (`/admin/activity`): every `audit_logs` row in Persian (`App\Services\Admin\ActivityDescriptions`), with who, when, a link to what was touched, and a short detail. Filters: user, area and Shamsi date range.
+  - Newly recorded actions: logins, product create/update/delete and bulk actions, bulk actions on quote requests, reviews and comments, site and shipping settings saves, user and profile changes.
+  - Helper: `AuditLog::record()`.
+- **Sales report** (`/admin/reports`, `App\Services\Admin\SalesReport`):
+  - Presets: 30 days, this or last Shamsi month, 3 months, this Shamsi year. A custom Shamsi range is also available.
+  - Summary: revenue, paid revenue, orders, cancelled count, average order, items sold.
+  - Breakdowns: Shamsi monthly bars, top products, and orders by status, source and province.
+  - CSV export of sales by product.
+  - New helpers: `PersianDate::startOfMonth()` and `startOfYear()`.
+- 46 new tests (`Admin/StaffRolesTest`, `UserManagementTest`, `StaffProfileTest`, `ActivityLogTest`, `SalesReportTest`, plus 1 in `Unit/PersianDateTest`). Full suite 439/439 passing.
+- Checked on the throwaway SQLite copy: the report, users, activity and profile pages load for an admin, and the report figures and Shamsi months match the sample data. Not checked: the pane couldn't open the pages directly, so there are no screenshots.
+- **Still open from the original list:** the tabbed / two-column product form (waiting for the owner to see the current layout).
 
 ## Next concrete step
 

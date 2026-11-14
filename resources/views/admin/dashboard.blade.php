@@ -17,18 +17,22 @@
         'amber' => 'bg-amber-50 text-amber-600',
         'neutral' => 'bg-neutral-100 text-neutral-600',
     ];
-    $maxDailyRevenue = max(1, max(array_column($dailySales, 'revenue_rial')));
-    $hasSalesInChart = collect($dailySales)->sum('order_count') > 0;
+    $isAdmin = auth()->user()->isAdmin();
+    $maxDailyRevenue = max([1, ...array_column($dailySales ?? [], 'revenue_rial')]);
+    $hasSalesInChart = collect($dailySales ?? [])->sum('order_count') > 0;
 @endphp
 
 @section('content')
 <x-admin.page-header title="داشبورد" :description="'سلام '.auth()->user()->name.'، امروز '.persian_date(now(), \App\Support\PersianDate::DATE)">
     <x-slot:actions>
-        <x-admin.button :href="route('admin.orders.create')" icon="plus">ثبت سفارش دستی</x-admin.button>
-        <x-admin.button :href="route('admin.products.create')" variant="secondary" icon="cube">محصول جدید</x-admin.button>
+        @if ($isAdmin)
+            <x-admin.button :href="route('admin.orders.create')" icon="plus">ثبت سفارش دستی</x-admin.button>
+        @endif
+        <x-admin.button :href="route('admin.products.create')" :variant="$isAdmin ? 'secondary' : 'primary'" icon="cube">محصول جدید</x-admin.button>
     </x-slot:actions>
 </x-admin.page-header>
 
+@if ($isAdmin)
 {{-- Sales KPIs --}}
 <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     @foreach ($salesPeriods as $period)
@@ -57,7 +61,10 @@
     </div>
 </div>
 
+@endif
+
 <div class="mb-6 grid gap-6 xl:grid-cols-3">
+    @if ($isAdmin)
     {{-- 30-day chart --}}
     <section class="rounded-xl border border-neutral-200 bg-white p-5 xl:col-span-2" aria-labelledby="sales-chart-title">
         <div class="mb-4 flex items-center justify-between">
@@ -96,6 +103,7 @@
             </div>
         @endif
     </section>
+    @endif
 
     {{-- Needs attention --}}
     <section class="rounded-xl border border-neutral-200 bg-white p-5" aria-labelledby="action-items-title">
@@ -125,6 +133,7 @@
     </section>
 </div>
 
+@if ($isAdmin)
 <div class="mb-6 grid gap-6 xl:grid-cols-3">
     {{-- Recent orders --}}
     <section class="rounded-xl border border-neutral-200 bg-white xl:col-span-2">
@@ -186,8 +195,10 @@
         @endif
     </section>
 </div>
+@endif
 
 <div class="grid gap-6 xl:grid-cols-3">
+    @if ($isAdmin)
     {{-- Recent quote requests --}}
     <section class="rounded-xl border border-neutral-200 bg-white xl:col-span-2">
         <div class="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
@@ -215,6 +226,7 @@
             </ul>
         @endif
     </section>
+    @endif
 
     {{-- Catalog at a glance --}}
     <section class="rounded-xl border border-neutral-200 bg-white p-5">
@@ -228,10 +240,17 @@
                 <p class="text-xs text-neutral-500">دسته‌بندی‌ها</p>
                 <p class="mt-1 text-lg font-bold">{{ $categoryCount }}</p>
             </a>
-            <a href="{{ route('admin.quote-requests.index', ['status' => 'new']) }}" class="rounded-lg bg-neutral-50 p-3 hover:bg-neutral-100">
-                <p class="text-xs text-neutral-500">استعلام جدید</p>
-                <p @class(['mt-1 text-lg font-bold', 'text-brand-accent-dark' => $newQuoteRequestCount > 0])>{{ $newQuoteRequestCount }}</p>
-            </a>
+            @if ($isAdmin)
+                <a href="{{ route('admin.quote-requests.index', ['status' => 'new']) }}" class="rounded-lg bg-neutral-50 p-3 hover:bg-neutral-100">
+                    <p class="text-xs text-neutral-500">استعلام جدید</p>
+                    <p @class(['mt-1 text-lg font-bold', 'text-brand-accent-dark' => $newQuoteRequestCount > 0])>{{ $newQuoteRequestCount }}</p>
+                </a>
+            @else
+                <a href="{{ route('admin.blog-posts.create') }}" class="rounded-lg bg-neutral-50 p-3 hover:bg-neutral-100">
+                    <p class="text-xs text-neutral-500">بلاگ</p>
+                    <p class="mt-1 text-sm font-medium text-brand-accent-dark">مقاله جدید ←</p>
+                </a>
+            @endif
             <a href="{{ route('admin.media.index') }}" class="rounded-lg bg-neutral-50 p-3 hover:bg-neutral-100">
                 <p class="text-xs text-neutral-500">کتابخانه مدیا</p>
                 <p class="mt-1 text-sm font-medium text-brand-accent-dark">آپلود فایل ←</p>

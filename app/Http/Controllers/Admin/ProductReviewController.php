@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\ProductReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,7 @@ class ProductReviewController extends Controller
         ], ['ids.required' => 'هیچ موردی انتخاب نشده است.']);
 
         $selected = ProductReview::query()->whereKey($data['ids']);
+        AuditLog::record('review.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
 
         $count = match ($data['action']) {
             'approve' => $selected->update(['status' => 'approved']),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\QuoteRequest;
 use App\Support\CsvExport;
 use App\Support\PersianDate;
@@ -54,6 +55,7 @@ class QuoteRequestController extends Controller
         ], ['ids.required' => 'هیچ درخواستی انتخاب نشده است.']);
 
         $selected = QuoteRequest::query()->whereKey($data['ids']);
+        AuditLog::record('quote_request.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
 
         if ($data['action'] === 'delete') {
             $count = $selected->delete();

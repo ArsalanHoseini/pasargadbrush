@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\ProductCategory;
+use App\Models\User;
 use App\Services\Cart\CartResolver;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Sales, customers, settings, users, reports and the activity log are
+        // admin-only; editors keep the catalog and content.
+        Gate::define('admin', fn (User $user): bool => $user->isAdmin());
+
         // Every generated link and canonical tag names the one real address
         // (https, no www), however the request arrived — see RedirectToCanonicalHost.
         if ($this->app->isProduction()) {

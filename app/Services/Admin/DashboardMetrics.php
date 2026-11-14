@@ -90,15 +90,17 @@ class DashboardMetrics
 
     /**
      * What staff should deal with next, most urgent first; only non-empty
-     * entries are returned.
+     * entries are returned. Without $includeSales (editors) the order,
+     * message and quote entries are left out.
      *
-     * @return list<array{label: string, count: int, url: string, icon: string, tone: string}>
+     * @return list<array{label: string, count: int, url: string, icon: string, tone: string, admin?: bool}>
      */
-    public function actionItems(): array
+    public function actionItems(bool $includeSales = true): array
     {
         $items = [
             [
                 'label' => 'سفارش منتظر تأیید قیمت نهایی',
+                'admin' => true,
                 'count' => Order::where('requires_price_confirmation', true)->whereNotIn('status', ['cancelled', 'completed'])->count(),
                 'url' => route('admin.orders.index', ['price_confirmation' => 1]),
                 'icon' => 'banknotes',
@@ -106,6 +108,7 @@ class DashboardMetrics
             ],
             [
                 'label' => 'سفارش جدید در انتظار بررسی',
+                'admin' => true,
                 'count' => Order::where('status', 'pending')->count(),
                 'url' => route('admin.orders.index', ['status' => 'pending']),
                 'icon' => 'shopping-bag',
@@ -113,6 +116,7 @@ class DashboardMetrics
             ],
             [
                 'label' => 'پیام بی‌پاسخ مشتری',
+                'admin' => true,
                 'count' => Conversation::where('status', Conversation::STATUS_OPEN)->count(),
                 'url' => route('admin.conversations.index', ['status' => Conversation::STATUS_OPEN]),
                 'icon' => 'chat',
@@ -120,6 +124,7 @@ class DashboardMetrics
             ],
             [
                 'label' => 'درخواست استعلام جدید',
+                'admin' => true,
                 'count' => QuoteRequest::where('status', 'new')->count(),
                 'url' => route('admin.quote-requests.index', ['status' => 'new']),
                 'icon' => 'inbox',
@@ -148,7 +153,7 @@ class DashboardMetrics
             ],
         ];
 
-        return array_values(array_filter($items, fn (array $item): bool => $item['count'] > 0));
+        return array_values(array_filter($items, fn (array $item): bool => $item['count'] > 0 && ($includeSales || ! ($item['admin'] ?? false))));
     }
 
     /**

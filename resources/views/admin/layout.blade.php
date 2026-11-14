@@ -69,10 +69,10 @@
         <div class="shrink-0 border-t border-white/10 p-3 text-sm">
             <div class="flex items-center gap-3 px-2 py-1">
                 <span class="flex size-8 items-center justify-center rounded-full bg-white/10 text-white">{{ mb_substr(auth()->user()->name, 0, 1) }}</span>
-                <div class="min-w-0 flex-1">
+                <a href="{{ route('admin.profile.edit') }}" class="min-w-0 flex-1 rounded hover:text-white" title="حساب من">
                     <p class="truncate text-white">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-neutral-500">{{ auth()->user()->role === 'admin' ? 'مدیر' : 'ویرایشگر' }}</p>
-                </div>
+                    <p class="text-xs text-neutral-500">{{ auth()->user()->roleLabel() }} — حساب من</p>
+                </a>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit" class="rounded p-1.5 hover:bg-white/10 hover:text-white" title="خروج" aria-label="خروج">
@@ -102,7 +102,7 @@
             <form method="GET" action="{{ route('admin.search') }}" class="relative mr-auto w-full max-w-sm" role="search">
                 <x-admin.icon name="search" class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
                 <input type="search" name="q" value="{{ request()->routeIs('admin.search') ? request('q') : '' }}"
-                       placeholder="جستجوی سفارش، محصول، مشتری…" aria-label="جستجو در پنل"
+                       placeholder="{{ auth()->user()->isAdmin() ? 'جستجوی سفارش، محصول، مشتری…' : 'جستجوی محصول…' }}" aria-label="جستجو در پنل"
                        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-3 pr-9 text-sm focus:border-brand-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
             </form>
 

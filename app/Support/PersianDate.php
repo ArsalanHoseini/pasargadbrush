@@ -73,6 +73,47 @@ class PersianDate
             return null;
         }
 
+        return self::toDateTime($calendar);
+    }
+
+    /**
+     * Midnight (Tehran) on the 1st of the Persian month containing $date,
+     * optionally a number of months earlier — e.g. the start of «آبان ۱۴۰۵».
+     */
+    public static function startOfMonth(DateTimeInterface $date, int $monthsAgo = 0): DateTimeImmutable
+    {
+        $calendar = self::calendarAt($date);
+        $calendar->set(IntlCalendar::FIELD_DAY_OF_MONTH, 1);
+        $calendar->add(IntlCalendar::FIELD_MONTH, -$monthsAgo);
+
+        return self::toDateTime($calendar);
+    }
+
+    /**
+     * Midnight (Tehran) on 1 Farvardin of the Persian year containing $date.
+     */
+    public static function startOfYear(DateTimeInterface $date): DateTimeImmutable
+    {
+        $calendar = self::calendarAt($date);
+        $calendar->set(IntlCalendar::FIELD_DAY_OF_YEAR, 1);
+
+        return self::toDateTime($calendar);
+    }
+
+    private static function calendarAt(DateTimeInterface $date): IntlCalendar
+    {
+        $calendar = IntlCalendar::createInstance('Asia/Tehran', 'fa_IR@calendar=persian');
+        $calendar->setTime($date->getTimestamp() * 1000);
+        $calendar->set(IntlCalendar::FIELD_HOUR_OF_DAY, 0);
+        $calendar->set(IntlCalendar::FIELD_MINUTE, 0);
+        $calendar->set(IntlCalendar::FIELD_SECOND, 0);
+        $calendar->set(IntlCalendar::FIELD_MILLISECOND, 0);
+
+        return $calendar;
+    }
+
+    private static function toDateTime(IntlCalendar $calendar): DateTimeImmutable
+    {
         return (new DateTimeImmutable('@'.intdiv((int) $calendar->getTime(), 1000)))->setTimezone(new DateTimeZone('Asia/Tehran'));
     }
 }

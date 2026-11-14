@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,6 +61,8 @@ class SettingController extends Controller
                 ['value' => $value !== null ? trim($value) : null, 'group' => self::FIELDS[$key][1]],
             );
         }
+
+        AuditLog::record('settings.updated');
 
         return redirect()->route('admin.settings.edit')->with('status', 'تنظیمات ذخیره شد.');
     }

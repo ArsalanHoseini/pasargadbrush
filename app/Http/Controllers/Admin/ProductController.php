@@ -6,6 +6,7 @@ use App\Actions\Media\StoreUploadedMedia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\Application;
+use App\Models\AuditLog;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCategory;
@@ -77,6 +78,8 @@ class ProductController extends Controller
             return $product;
         });
 
+        AuditLog::record('product.created', $product, ['name' => $product->name]);
+
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول ایجاد شد.');
     }
 
@@ -106,6 +109,8 @@ class ProductController extends Controller
             $product->applications()->sync($request->input('application_ids', []));
         });
 
+        AuditLog::record('product.updated', $product, ['name' => $product->name]);
+
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول به‌روزرسانی شد.');
     }
 
@@ -115,6 +120,7 @@ class ProductController extends Controller
             return redirect()->route('admin.products.index')->with('status', 'این محصول در سفارش‌ها استفاده شده و قابل حذف نیست.');
         }
 
+        AuditLog::record('product.deleted', $product, ['name' => $product->name]);
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('status', 'محصول حذف شد.');
@@ -133,6 +139,7 @@ class ProductController extends Controller
         ], ['ids.required' => 'هیچ محصولی انتخاب نشده است.']);
 
         $selected = Product::query()->whereKey($data['ids']);
+        AuditLog::record('product.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
 
         if ($data['action'] !== 'delete') {
             $count = $selected->update(['is_active' => $data['action'] === 'activate']);

@@ -42,4 +42,13 @@ class PersianDateTest extends TestCase
         $this->assertNull(PersianDate::parse('دیروز'));
         $this->assertNull(PersianDate::parse(null));
     }
+
+    public function test_start_of_persian_month_and_year(): void
+    {
+        $date = new DateTimeImmutable('2026-11-14 15:00:00', new DateTimeZone('Asia/Tehran'));
+
+        $this->assertSame('2026-10-23 00:00:00', PersianDate::startOfMonth($date)->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-09-23', PersianDate::startOfMonth($date, 1)->format('Y-m-d'));
+        $this->assertSame('2026-03-21', PersianDate::startOfYear($date)->format('Y-m-d'));
+    }
 }

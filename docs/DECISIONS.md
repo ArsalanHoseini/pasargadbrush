@@ -535,3 +535,14 @@ Each channel has its own try/catch + `Log::warning` (same resilience rule as quo
 - CSV opens directly in Excel, while an .xlsx writer would be a new dependency.
 - Reusing `audit_logs` keeps who did what, and the notes, in one history.
 - A Shamsi date-picker library would also be a new dependency, and typed dates with validation cover the need.
+
+## 2026-11-14 — Staff roles
+
+**Decision:** The owner chose "catalog + content" for editors.
+- Editors manage products, categories, applications, product reviews, the blog, comments, static pages and media.
+- Admin-only: orders, customers, quote requests, customer messages, reports, settings, shipping, redirects, WordPress import, staff accounts and the activity log.
+- Enforced with one `admin` gate on a route group (`can:admin`). The sidebar, dashboard and search hide what an editor can't open.
+- An admin can't demote or delete themself, and the last admin is never removed.
+- Logins and catalog/settings/staff changes are now written to `audit_logs` alongside order changes.
+
+**Why:** Customer contact details and sales figures stay with the owner's team, while content writers can still do their whole job. One gate keeps the rule in a single place if the owner wants to move an area later.
