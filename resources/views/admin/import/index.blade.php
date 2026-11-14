@@ -24,7 +24,7 @@
                         </button>
                     </form>
                     <form method="POST" action="{{ route('admin.import.run', $key) }}"
-                          onsubmit="return confirm('این مرحله واقعاً در دیتابیس نوشته می‌شود. ادامه می‌دهید؟');">
+                          data-confirm="این مرحله واقعاً در دیتابیس نوشته می‌شود. ادامه می‌دهید؟">
                         @csrf
                         <input type="hidden" name="commit" value="1">
                         <button type="submit" class="rounded bg-neutral-900 px-3 py-1.5 text-sm text-white hover:bg-neutral-700">

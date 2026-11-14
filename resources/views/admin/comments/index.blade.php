@@ -55,7 +55,7 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
                         </form>
                     @endif
                     <form method="POST" action="{{ route('admin.comments.destroy', $comment) }}"
-                          onsubmit="return confirm('حذف این دیدگاه قطعی است. ادامه می‌دهید؟');">
+                          data-confirm="حذف این دیدگاه قطعی است. ادامه می‌دهید؟">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-700 hover:underline">حذف</button>

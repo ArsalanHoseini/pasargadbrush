@@ -28,7 +28,7 @@
                 </div>
                 <div class="flex shrink-0 gap-3 text-xs">
                     <a href="{{ route('admin.applications.edit', $application) }}" class="text-blue-700 hover:underline">ویرایش</a>
-                    <form method="POST" action="{{ route('admin.applications.destroy', $application) }}" onsubmit="return confirm('این کاربرد حذف شود؟');">
+                    <form method="POST" action="{{ route('admin.applications.destroy', $application) }}" data-confirm="این کاربرد حذف شود؟">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-600 hover:underline">حذف</button>

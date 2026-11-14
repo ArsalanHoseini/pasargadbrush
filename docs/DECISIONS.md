@@ -511,3 +511,11 @@ Each channel has its own try/catch + `Log::warning` (same resilience rule as quo
 **Decision:** Added `laravel/boost` as a dev dependency and ran `php artisan boost:install`, per the instructions the Laravel 13 skeleton itself ships in `AGENTS.md`.
 
 **Why:** Official Laravel tooling for AI-assisted development (generates app-aware agent guidelines/tools); dev-only, no production impact.
+
+---
+
+## 2026-11-14 — Admin dashboard figures and confirmation pattern
+
+**Decision:** Dashboard sales count every order that isn't cancelled (paid or not), by `placed_at` in Tehran time; the change badge compares against the equal-length period right before. Low stock means a tracked variant (`stock_quantity` not null) at or below 5. Destructive admin forms use `data-confirm="…"`, handled by one Alpine store and a modal in the admin layout, instead of inline `confirm()`. The chart is plain HTML/CSS bars, so no chart library was added.
+
+**Why:** Most orders here are confirmed before payment (quote/price-confirmation flow), so "paid only" would hide real sales. One confirmation pattern keeps every delete consistent and accessible without new dependencies.

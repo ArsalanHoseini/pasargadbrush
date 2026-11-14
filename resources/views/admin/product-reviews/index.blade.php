@@ -61,7 +61,7 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
                         </form>
                     @endif
                     <form method="POST" action="{{ route('admin.product-reviews.destroy', $review) }}"
-                          onsubmit="return confirm('حذف این نظر قطعی است. ادامه می‌دهید؟');">
+                          data-confirm="حذف این نظر قطعی است. ادامه می‌دهید؟">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-700 hover:underline">حذف</button>

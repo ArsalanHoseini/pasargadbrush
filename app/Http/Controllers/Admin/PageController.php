@@ -7,13 +7,22 @@ use App\Http\Requests\Admin\StorePageRequest;
 use App\Models\Page;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PageController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $pages = Page::query()->orderBy('title')->paginate(20);
+        $search = trim((string) $request->query('q', ''));
+
+        $pages = Page::query()
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('title', 'like', "%{$search}%")
+                ->orWhere('slug', 'like', "%{$search}%")))
+            ->orderBy('title')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.pages.index', ['pages' => $pages]);
     }

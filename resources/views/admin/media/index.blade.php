@@ -45,7 +45,7 @@
                 <p class="truncate text-xs text-neutral-500" title="{{ $item->path }}">{{ basename($item->path) }}</p>
                 <p class="mb-2 text-xs text-neutral-400">{{ number_format($item->size / 1024, 0) }} کیلوبایت</p>
                 <form method="POST" action="{{ route('admin.media.destroy', $item) }}"
-                      onsubmit="return confirm('این فایل حذف شود؟');">
+                      data-confirm="این فایل حذف شود؟">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="text-xs text-red-600 hover:text-red-800">حذف</button>

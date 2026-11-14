@@ -11,8 +11,11 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductDimensionField;
 use App\Models\ProductVariant;
+use App\Services\Admin\DashboardMetrics;
+use App\Support\PersianDigits;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -20,14 +23,34 @@ class ProductController extends Controller
 {
     public function __construct(private StoreUploadedMedia $mediaUploader) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $products = Product::query()
-            ->with('primaryCategory')
-            ->latest()
-            ->paginate(20);
+        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
+        $categoryId = $request->integer('category');
 
-        return view('admin.products.index', ['products' => $products]);
+        $products = Product::query()
+            ->with(['primaryCategory', 'images', 'variants'])
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhereHas('variants', fn ($query) => $query->where('sku', 'like', "%{$search}%"))))
+            ->when($categoryId, fn ($query) => $query->where(fn ($query) => $query
+                ->where('primary_category_id', $categoryId)
+                ->orWhereHas('categories', fn ($query) => $query->whereKey($categoryId))))
+            ->when(in_array($request->query('type'), ['priced', 'quote'], true), fn ($query) => $query->where('type', $request->query('type')))
+            ->when($request->query('status') === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($request->query('status') === 'inactive', fn ($query) => $query->where('is_active', false))
+            ->when($request->query('stock') === 'low', fn ($query) => $query->whereHas('variants', fn ($query) => $query
+                ->whereNotNull('stock_quantity')
+                ->where('stock_quantity', '<=', DashboardMetrics::LOW_STOCK_THRESHOLD)))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.products.index', [
+            'products' => $products,
+            'categoryOptions' => ProductCategory::orderBy('name')->pluck('name', 'id'),
+        ]);
     }
 
     public function create(): View

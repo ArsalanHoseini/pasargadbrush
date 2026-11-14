@@ -89,6 +89,51 @@ Alpine.data('manualOrderForm', (catalog, initialItems) => {
     };
 });
 
+/**
+ * Admin confirmation dialog: any form with data-confirm="message" asks first
+ * in a proper modal (admin layout) instead of the browser's confirm().
+ */
+Alpine.store('confirmDialog', {
+    open: false,
+    message: '',
+    form: null,
+    submitter: null,
+
+    ask(form, submitter) {
+        this.form = form;
+        this.submitter = submitter;
+        this.message = form.dataset.confirm;
+        this.open = true;
+    },
+
+    accept() {
+        const { form, submitter } = this;
+        this.close();
+        form.dataset.confirmed = '1';
+        form.requestSubmit(submitter ?? undefined);
+    },
+
+    close() {
+        this.open = false;
+    },
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+
+    if (!(form instanceof HTMLFormElement) || !form.dataset.confirm) {
+        return;
+    }
+
+    if (form.dataset.confirmed) {
+        delete form.dataset.confirmed;
+        return;
+    }
+
+    event.preventDefault();
+    Alpine.store('confirmDialog').ask(form, event.submitter);
+});
+
 Alpine.start();
 
 async function initScrollAnimations() {

@@ -7,26 +7,35 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
 @endphp
 
 @section('content')
-<div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-    <h1 class="text-lg font-semibold">سفارش‌ها</h1>
-    <a href="{{ route('admin.orders.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">+ ثبت سفارش دستی</a>
-</div>
+<x-admin.page-header title="سفارش‌ها" description="سفارش‌های سایت و سفارش‌های ثبت‌شده توسط کارشناسان">
+    <x-slot:actions>
+        <x-admin.button :href="route('admin.orders.create')" icon="plus">ثبت سفارش دستی</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
-<div class="mb-6 flex flex-wrap gap-2 text-sm">
+<div class="mb-4 flex flex-wrap gap-1 border-b border-neutral-200 text-sm">
     <a href="{{ route('admin.orders.index') }}"
-       class="rounded px-3 py-1.5 {{ ! $status ? 'bg-neutral-900 text-white' : 'border border-neutral-300' }}">همه</a>
+       @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => ! $status, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status])>
+        همه <span class="text-xs text-neutral-400">{{ $statusCounts->sum() }}</span>
+    </a>
     @foreach ($statusLabels as $value => $label)
         <a href="{{ route('admin.orders.index', ['status' => $value]) }}"
-           class="rounded px-3 py-1.5 {{ $status === $value ? 'bg-neutral-900 text-white' : 'border border-neutral-300' }}">
-            {{ $label }}
+           @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => $status === $value, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status !== $value])>
+            {{ $label }} <span class="text-xs text-neutral-400">{{ $statusCounts[$value] ?? 0 }}</span>
         </a>
     @endforeach
 </div>
 
+<x-admin.filter-bar :action="route('admin.orders.index')" :keep="['status']" placeholder="شماره سفارش، نام، موبایل یا کد رهگیری…">
+    <x-admin.filter-select name="payment_status" label="پرداخت" :options="\App\Models\Order::PAYMENT_STATUS_LABELS" />
+    <x-admin.filter-select name="source" label="منبع" :options="[\App\Models\Order::SOURCE_WEBSITE => 'سایت', \App\Models\Order::SOURCE_MANUAL => 'ثبت دستی']" />
+    <x-admin.filter-select name="price_confirmation" label="تأیید قیمت" :options="['1' => 'منتظر تأیید قیمت']" />
+</x-admin.filter-bar>
+
 @if ($orders->isEmpty())
-    <p class="text-sm text-neutral-500">سفارشی ثبت نشده است.</p>
+    <x-admin.empty-state icon="shopping-bag">سفارشی با این مشخصات پیدا نشد.</x-admin.empty-state>
 @else
-    <div class="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+    <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right">
                 <tr>
@@ -41,8 +50,8 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
             </thead>
             <tbody class="divide-y divide-neutral-100">
                 @foreach ($orders as $order)
-                    <tr>
-                        <td class="px-4 py-3" dir="ltr">{{ $order->order_number }}</td>
+                    <tr class="hover:bg-neutral-50">
+                        <td class="px-4 py-3 font-medium" dir="ltr"><a href="{{ route('admin.orders.edit', $order) }}" class="hover:text-brand-accent-dark">{{ $order->order_number }}</a></td>
                         <td class="px-4 py-3">{{ ($order->customer_name ?? $order->customer?->name) ?? '—' }}</td>
                         <td class="px-4 py-3" dir="ltr">{{ \App\Support\Money::toman($order->total_rial) }}</td>
                         <td class="px-4 py-3">

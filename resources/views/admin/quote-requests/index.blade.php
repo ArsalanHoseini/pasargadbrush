@@ -7,23 +7,27 @@ $statusLabels = ['new' => 'جدید', 'contacted' => 'تماس گرفته شد',
 @endphp
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">درخواست‌های استعلام قیمت</h1>
+<x-admin.page-header title="درخواست‌های استعلام قیمت" description="درخواست‌های قیمت از فرم محصولات و صفحه تماس" />
 
-<div class="mb-6 flex gap-2 text-sm">
+<div class="mb-4 flex flex-wrap gap-1 border-b border-neutral-200 text-sm">
     <a href="{{ route('admin.quote-requests.index') }}"
-       class="rounded px-3 py-1.5 {{ ! $status ? 'bg-neutral-900 text-white' : 'border border-neutral-300' }}">همه</a>
+       @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => ! $status, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status])>
+        همه <span class="text-xs text-neutral-400">{{ $statusCounts->sum() }}</span>
+    </a>
     @foreach ($statusLabels as $value => $label)
         <a href="{{ route('admin.quote-requests.index', ['status' => $value]) }}"
-           class="rounded px-3 py-1.5 {{ $status === $value ? 'bg-neutral-900 text-white' : 'border border-neutral-300' }}">
-            {{ $label }}
+           @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => $status === $value, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status !== $value])>
+            {{ $label }} <span class="text-xs text-neutral-400">{{ $statusCounts[$value] ?? 0 }}</span>
         </a>
     @endforeach
 </div>
 
+<x-admin.filter-bar :action="route('admin.quote-requests.index')" :keep="['status']" placeholder="نام، موبایل، شرکت یا محصول…" />
+
 @if ($quoteRequests->isEmpty())
-    <p class="text-sm text-neutral-500">درخواستی ثبت نشده است.</p>
+    <x-admin.empty-state icon="inbox">{{ request()->hasAny(['q']) ? 'موردی با این فیلترها پیدا نشد.' : 'درخواستی ثبت نشده است.' }}</x-admin.empty-state>
 @else
-    <div class="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+    <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right">
                 <tr>

@@ -30,7 +30,7 @@
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.blog-categories.edit', $category) }}" class="text-neutral-600 hover:text-neutral-900">ویرایش</a>
                             <form method="POST" action="{{ route('admin.blog-categories.destroy', $category) }}" class="inline"
-                                  onsubmit="return confirm('حذف شود؟');">
+                                  data-confirm="حذف شود؟">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="mr-2 text-red-600 hover:text-red-800">حذف</button>
                             </form>

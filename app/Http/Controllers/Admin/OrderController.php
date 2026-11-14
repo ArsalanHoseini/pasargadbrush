@@ -28,15 +28,30 @@ class OrderController extends Controller
     public function index(Request $request): View
     {
         $status = $request->query('status');
+        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
 
         $orders = Order::query()
             ->with('customer')
             ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('order_number', 'like', "%{$search}%")
+                ->orWhere('customer_name', 'like', "%{$search}%")
+                ->orWhere('customer_phone', 'like', "%{$search}%")
+                ->orWhere('shipment_tracking_code', 'like', "%{$search}%")))
+            ->when($request->filled('payment_status'), fn ($query) => $query->where('payment_status', $request->query('payment_status')))
+            ->when($request->filled('source'), fn ($query) => $query->where('source', $request->query('source')))
+            ->when($request->boolean('price_confirmation'), fn ($query) => $query
+                ->where('requires_price_confirmation', true)
+                ->whereNotIn('status', ['cancelled', 'completed']))
             ->latest('placed_at')
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.orders.index', ['orders' => $orders, 'status' => $status]);
+        return view('admin.orders.index', [
+            'orders' => $orders,
+            'status' => $status,
+            'statusCounts' => Order::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
+        ]);
     }
 
     /**

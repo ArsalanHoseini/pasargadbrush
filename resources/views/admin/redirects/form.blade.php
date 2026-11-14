@@ -65,7 +65,7 @@
 </form>
 
 @if ($redirect->exists)
-    <form method="POST" action="{{ route('admin.redirects.destroy', $redirect) }}" class="mt-4" onsubmit="return confirm('این ریدایرکت حذف شود؟');">
+    <form method="POST" action="{{ route('admin.redirects.destroy', $redirect) }}" class="mt-4" data-confirm="این ریدایرکت حذف شود؟">
         @csrf
         @method('DELETE')
         <button type="submit" class="text-sm text-red-600 hover:underline">حذف این ریدایرکت</button>

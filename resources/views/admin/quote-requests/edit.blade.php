@@ -89,7 +89,7 @@
         </form>
 
         <form method="POST" action="{{ route('admin.quote-requests.destroy', $quoteRequest) }}" class="mt-4"
-              onsubmit="return confirm('این درخواست حذف شود؟');">
+              data-confirm="این درخواست حذف شود؟">
             @csrf @method('DELETE')
             <button type="submit" class="text-sm text-red-600 hover:text-red-800">حذف درخواست</button>
         </form>

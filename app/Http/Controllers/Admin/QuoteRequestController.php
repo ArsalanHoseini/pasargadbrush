@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuoteRequest;
+use App\Support\PersianDigits;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,10 +15,16 @@ class QuoteRequestController extends Controller
     public function index(Request $request): View
     {
         $status = $request->query('status');
+        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
 
         $quoteRequests = QuoteRequest::query()
             ->with('product')
             ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('company', 'like', "%{$search}%")
+                ->orWhereHas('product', fn ($query) => $query->where('name', 'like', "%{$search}%"))))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -25,6 +32,7 @@ class QuoteRequestController extends Controller
         return view('admin.quote-requests.index', [
             'quoteRequests' => $quoteRequests,
             'status' => $status,
+            'statusCounts' => QuoteRequest::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
         ]);
     }
 
