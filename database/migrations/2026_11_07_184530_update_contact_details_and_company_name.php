@@ -41,9 +41,16 @@ return new class extends Migration
                     continue;
                 }
 
-                DB::table($table)
-                    ->where($column, 'like', '%'.self::WRONG_NAME.'%')
-                    ->update([$column => DB::raw('REPLACE(`'.$column.'`, '.DB::getPdo()->quote(self::WRONG_NAME).', '.DB::getPdo()->quote(self::RIGHT_NAME).')')]);
+                // Imported texts sometimes use a no-break space between the words;
+                // REPLACE is byte-exact, so every spacing combination is replaced.
+                foreach ([[' ', ' '], [' ', "\u{00A0}"], ["\u{00A0}", ' '], ["\u{00A0}", "\u{00A0}"]] as [$first, $second]) {
+                    $wrong = 'برس'.$first.'صنعتی'.$second.'پاسارگاد';
+                    $right = 'برس'.$first.'صنعت'.$second.'پاسارگاد';
+
+                    DB::table($table)
+                        ->where($column, 'like', '%'.$wrong.'%')
+                        ->update([$column => DB::raw('REPLACE(`'.$column.'`, '.DB::getPdo()->quote($wrong).', '.DB::getPdo()->quote($right).')')]);
+                }
             }
         }
 

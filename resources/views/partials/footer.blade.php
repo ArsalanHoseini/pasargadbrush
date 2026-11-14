@@ -129,6 +129,10 @@
         <div class="border-t border-white/10">
             <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-white/80 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <p class="font-medium text-white">کیفیت، اعتماد، آینده پاک</p>
+                {{-- eNamad trust seal: markup kept exactly as issued by enamad.ir (its checker matches it). --}}
+                <div class="shrink-0 rounded-lg bg-white p-1 sm:order-last">
+                    <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8011554&Code=ksYMN1Y0FIDaq7iSC8d6uzQtTe4nIHqt'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8011554&Code=ksYMN1Y0FIDaq7iSC8d6uzQtTe4nIHqt' alt='' style='cursor:pointer' code='ksYMN1Y0FIDaq7iSC8d6uzQtTe4nIHqt'></a>
+                </div>
                 <p>© {{ persian_date(now(), 'y') }} {{ setting('company_legal_name') }} — <span dir="ltr">Pasargad Brush. All Rights Reserved</span></p>
             </div>
         </div>

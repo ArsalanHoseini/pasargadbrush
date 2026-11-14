@@ -39,6 +39,14 @@ class SiteChromeTest extends TestCase
             ->assertDontSee('tel:09174287445', false);
     }
 
+    public function test_footer_shows_the_enamad_trust_seal(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee("href='https://trustseal.enamad.ir/?id=8011554&Code=ksYMN1Y0FIDaq7iSC8d6uzQtTe4nIHqt'", false)
+            ->assertSee("code='ksYMN1Y0FIDaq7iSC8d6uzQtTe4nIHqt'", false);
+    }
+
     public function test_menus_skip_categories_without_active_products(): void
     {
         $withProducts = ProductCategory::create(['name' => 'برس ابزاری', 'slug' => 'tools', 'is_active' => true]);
@@ -69,7 +77,17 @@ class SiteChromeTest extends TestCase
             ->assertSee('aria-label="انواع برس"', false)
             ->assertSee(route('products.show', 'برس-سیلندری'), false)
             ->assertSee('images/brush-types/cylindrical.webp', false)
-            ->assertDontSee('images/brush-types/disc.webp', false);
+            ->assertDontSee('images/brush-types/disc.webp', false)
+            ->assertSeeInOrder(['تولیدکننده و فروشنده برس و فرچه صنعتی', 'aria-label="انواع برس"', 'چرا پاسارگاد برس؟'], false);
+    }
+
+    public function test_homepage_no_longer_shows_the_key_figures_section(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('تنوع محصول')
+            ->assertDontSee('قرارداد موفق')
+            ->assertDontSee('data-counter', false);
     }
 
     public function test_www_host_is_redirected_to_the_canonical_address(): void

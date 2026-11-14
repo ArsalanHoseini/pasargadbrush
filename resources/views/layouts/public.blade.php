@@ -19,7 +19,7 @@
     <link rel="preload" as="font" type="font/woff2" href="{{ Vite::asset('resources/fonts/Vazirmatn-Bold.woff2') }}" crossorigin>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen flex-col bg-white pb-16 text-neutral-900 antialiased md:pb-0">
+<body class="flex min-h-screen flex-col bg-white pb-16 text-justify text-neutral-900 antialiased md:pb-0">
     @include('partials.header')
 
     <main class="flex-1">

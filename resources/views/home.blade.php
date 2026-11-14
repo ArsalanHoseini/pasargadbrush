@@ -26,27 +26,6 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
 @endphp
 
 @section('content')
-{{-- Brush types strip — as on the previous WordPress homepage, right under the header (owner request 2026-11-07). --}}
-@if ($brushTypes)
-<section class="border-b border-neutral-100 bg-white" aria-label="انواع برس">
-    <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-        <ul class="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] sm:grid sm:grid-cols-6 sm:overflow-visible">
-            @foreach ($brushTypes as $type)
-                <li class="w-28 shrink-0 snap-start sm:w-auto">
-                    <a href="{{ route('products.show', $type['slug']) }}" class="group block text-center">
-                        <span class="mb-2 block aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-white transition group-hover:border-brand-accent">
-                            <img src="{{ asset('images/brush-types/'.$type['image']) }}" alt="" width="320" height="320"
-                                 class="h-full w-full object-contain transition duration-300 group-hover:scale-105">
-                        </span>
-                        <span class="text-xs font-medium text-neutral-800 group-hover:text-brand-accent-dark sm:text-sm">{{ $type['name'] }}</span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
-    </div>
-</section>
-@endif
-
 {{-- Hero --}}
 <section class="relative overflow-hidden bg-brand-charcoal-deep">
     <div class="bg-grid-industrial absolute inset-0 opacity-40"></div>
@@ -117,33 +96,26 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
     <div class="absolute inset-x-0 bottom-0 h-8 bg-white [clip-path:polygon(0_100%,100%_0,100%_100%)] sm:h-12"></div>
 </section>
 
-{{-- Real, sourced facts — see docs/DECISIONS.md --}}
-<section class="border-b border-neutral-100 bg-white py-12">
-    <div class="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 text-center sm:px-6 lg:grid-cols-4">
-        <div data-animate>
-            <p class="mb-1 text-3xl font-bold text-brand-accent-dark" dir="ltr">
-                <span data-counter="110" data-counter-suffix="+">۱۱۰+</span>
-            </p>
-            <p class="text-xs text-neutral-500">تنوع محصول</p>
-        </div>
-        <div data-animate>
-            <p class="mb-1 text-3xl font-bold text-brand-accent-dark" dir="ltr">
-                <span data-counter="1000" data-counter-suffix="+">۱۰۰۰+</span>
-            </p>
-            <p class="text-xs text-neutral-500">قرارداد موفق</p>
-        </div>
-        <div data-animate>
-            <p class="mb-1 text-3xl font-bold text-brand-accent-dark" dir="ltr">
-                <span data-counter="97" data-counter-suffix="٪">۹۷٪</span>
-            </p>
-            <p class="text-xs text-neutral-500">تضمین کیفیت</p>
-        </div>
-        <div data-animate>
-            <p class="mb-1 text-3xl font-bold text-brand-accent-dark">۱۳۷۴</p>
-            <p class="text-xs text-neutral-500">سال تأسیس</p>
-        </div>
+{{-- Brush types strip from the previous WordPress homepage, right below the hero (owner request 2026-11-07). --}}
+@if ($brushTypes)
+<section class="border-b border-neutral-100 bg-white" aria-label="انواع برس">
+    <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+        <ul class="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] sm:grid sm:grid-cols-6 sm:overflow-visible">
+            @foreach ($brushTypes as $type)
+                <li class="w-28 shrink-0 snap-start sm:w-auto">
+                    <a href="{{ route('products.show', $type['slug']) }}" class="group block text-center">
+                        <span class="mb-2 block aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-white transition group-hover:border-brand-accent">
+                            <img src="{{ asset('images/brush-types/'.$type['image']) }}" alt="" width="320" height="320"
+                                 class="h-full w-full object-contain transition duration-300 group-hover:scale-105">
+                        </span>
+                        <span class="text-xs font-medium text-neutral-800 group-hover:text-brand-accent-dark sm:text-sm">{{ $type['name'] }}</span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
     </div>
 </section>
+@endif
 
 {{-- Featured products --}}
 @if ($products->isNotEmpty())
