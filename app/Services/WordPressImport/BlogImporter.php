@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  */
 class BlogImporter
 {
-    public function __construct(private MediaCopier $mediaCopier) {}
+    public function __construct(private MediaCopier $mediaCopier, private PostBodyRepair $postBodyRepair) {}
 
     public function run(bool $commit): ImportResult
     {
@@ -72,6 +72,7 @@ class BlogImporter
         ]);
 
         $this->attachFeaturedImage($post, $wpPost->ID, $commit);
+        $this->repairBody($post);
 
         MigrationMapping::updateOrCreate(
             ['source_system' => 'wordpress', 'source_type' => 'post', 'source_id' => $wpPost->ID],
@@ -106,6 +107,26 @@ class BlogImporter
             ->whereIn('source_id', $termTaxonomyIds)
             ->whereNotNull('target_id')
             ->value('target_id');
+    }
+
+    /**
+     * Images inside the body are copied into the media library and
+     * «[caption]» shortcodes expanded, so the article never depends on the
+     * WordPress copy it came from.
+     */
+    private function repairBody(BlogPost $post): void
+    {
+        $uploadsPath = (string) config('wordpress_import.uploads_path');
+
+        if ($uploadsPath === '' || ! PostBodyRepair::needsRepair((string) $post->body)) {
+            return;
+        }
+
+        $repaired = $this->postBodyRepair->repair((string) $post->body, $uploadsPath, true, $post->title)['body'];
+
+        if ($repaired !== $post->body) {
+            $post->update(['body' => $repaired]);
+        }
     }
 
     private function attachFeaturedImage(BlogPost $post, int $wpPostId, bool $commit): void

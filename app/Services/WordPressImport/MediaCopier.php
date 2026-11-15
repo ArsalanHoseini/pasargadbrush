@@ -48,15 +48,65 @@ class MediaCopier
             return null;
         }
 
+        $media = $this->store($sourceFile, $altText);
+
+        MigrationMapping::updateOrCreate(
+            ['source_system' => 'wordpress', 'source_type' => 'attachment', 'source_id' => $wpAttachmentId],
+            ['target_type' => Media::class, 'target_id' => $media->id, 'status' => 'imported'],
+        );
+
+        return $media;
+    }
+
+    /**
+     * Copies a file from the WordPress uploads folder by its path there
+     * («2024/04/Picture1.jpg») — for images used inside post bodies, which
+     * often have no attachment row. Idempotent per path: the mapping row
+     * («upload», crc32 of the path, the path itself as source_url) makes a
+     * second call return the same Media.
+     */
+    public function copyUploadFile(string $uploadsPath, string $relativePath, bool $commit, ?string $altText = null): ?Media
+    {
+        $relativePath = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $relativePath), '/');
+        $sourceId = (int) sprintf('%u', crc32($relativePath));
+
+        $existing = MigrationMapping::query()
+            ->where('source_system', 'wordpress')
+            ->where('source_type', 'upload')
+            ->where('source_id', $sourceId)
+            ->where('source_url', $relativePath)
+            ->value('target_id');
+
+        if ($existing && ($media = Media::find($existing))) {
+            return $media;
+        }
+
+        $sourceFile = rtrim($uploadsPath, '\/').DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+
+        if (! $commit || ! is_file($sourceFile)) {
+            return null;
+        }
+
+        $media = $this->store($sourceFile, $altText);
+
+        MigrationMapping::updateOrCreate(
+            ['source_system' => 'wordpress', 'source_type' => 'upload', 'source_id' => $sourceId],
+            ['target_type' => Media::class, 'target_id' => $media->id, 'status' => 'imported', 'source_url' => $relativePath],
+        );
+
+        return $media;
+    }
+
+    private function store(string $sourceFile, ?string $altText): Media
+    {
         $extension = pathinfo($sourceFile, PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = Str::random(40).'.'.$extension;
-        $destinationPath = 'media/wp-import/'.$filename;
+        $destinationPath = 'media/wp-import/'.Str::random(40).'.'.strtolower($extension);
 
         Storage::disk('public')->put($destinationPath, file_get_contents($sourceFile));
 
         [$width, $height] = @getimagesize($sourceFile) ?: [null, null];
 
-        $media = Media::create([
+        return Media::create([
             'disk' => 'public',
             'path' => $destinationPath,
             'mime_type' => mime_content_type($sourceFile) ?: 'application/octet-stream',
@@ -65,12 +115,5 @@ class MediaCopier
             'height' => $height,
             'alt_text' => $altText,
         ]);
-
-        MigrationMapping::updateOrCreate(
-            ['source_system' => 'wordpress', 'source_type' => 'attachment', 'source_id' => $wpAttachmentId],
-            ['target_type' => Media::class, 'target_id' => $media->id, 'status' => 'imported'],
-        );
-
-        return $media;
     }
 }

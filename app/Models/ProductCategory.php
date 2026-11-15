@@ -42,6 +42,29 @@ class ProductCategory extends Model
     ];
 
     /**
+     * Top-level listable categories as plain arrays, cached for an hour (and
+     * forgotten on save): the header/footer menus and the homepage's JSON-LD
+     * catalog. Plain arrays, never models — see docs/DECISIONS.md.
+     *
+     * @return list<array{id: int, name: string, slug: string}>
+     */
+    public static function navigation(): array
+    {
+        return Cache::remember(
+            'nav.categories',
+            now()->addHour(),
+            fn () => static::query()
+                ->whereNull('parent_id')
+                ->listable()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+                ->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'slug' => $category->slug])
+                ->all(),
+        );
+    }
+
+    /**
      * Active categories that actually hold an active product — empty leftovers
      * of the WordPress import (e.g. «بدون دسته‌بندی», the Arabic «فرشاة الصناعی»)
      * stay out of menus and the sitemap.

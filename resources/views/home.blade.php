@@ -3,23 +3,14 @@
 @section('title', 'خرید برس و فرچه صنعتی | تولیدکننده مستقیم')
 @section('meta_description', 'برس پاسارگاد، تولیدکننده انواع برس و فرچه صنعتی از سال ۱۳۷۴: برس ابزاری، قالیشویی و نظافتی، هویج‌شویی و سورتینگ، نواری و درزگیر، صنایع غذایی. خرید برس و خرید فرچه سفارشی، مستقیم از کارخانه و بدون واسطه.')
 
-@push('structured-data')
-<script type="application/ld+json">
-{
-    "@@context": "https://schema.org",
-    "@@type": "Organization",
-    "name": {!! json_encode(setting('company_legal_name'), JSON_UNESCAPED_UNICODE) !!},
-    "url": {!! json_encode(url('/')) !!},
-    "logo": {!! json_encode(asset('images/logo.png')) !!},
-    "email": {!! json_encode(setting('contact_email')) !!},
-    "telephone": {!! json_encode(setting('contact_mobile')) !!},
-    "address": {
-        "@@type": "PostalAddress",
-        "streetAddress": {!! json_encode(setting('contact_address'), JSON_UNESCAPED_UNICODE) !!}
-    }
-}
-</script>
-@endpush
+@php
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('WebPage', route('home'), 'خرید برس و فرچه صنعتی | تولیدکننده مستقیم', \App\Support\SiteProfile::description(), extra: [
+            'mainEntity' => ['@id' => \App\Services\Seo\StructuredData::organizationId()],
+        ]),
+        \App\Services\Seo\StructuredData::catalog($catalogCategories),
+    );
+@endphp
 
 @php
 $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpty())->take(3)->values();
@@ -135,30 +126,22 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
 </section>
 @endif
 
-{{-- Capabilities --}}
-<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+{{-- Capabilities — the same cards /llms.txt and the schema read (config/site.php «highlights»). --}}
+<section id="why-us" class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
     <h2 data-animate class="mb-10 text-xl font-bold text-neutral-900">چرا پاسارگاد برس؟</h2>
     <div class="grid gap-6 sm:grid-cols-3">
-        <div data-animate class="relative rounded-lg border border-neutral-200 p-6 pt-10">
-            <span class="absolute right-6 top-4 text-3xl font-bold text-neutral-100 before:content-[attr(data-number)]" data-number="۰۱" aria-hidden="true"></span>
-            <h3 class="relative mb-2 font-medium text-neutral-900">ساخت سفارشی</h3>
-            <p class="relative text-sm text-neutral-500">محصولات بر اساس ابعاد، نوع تار و کاربرد دقیق شما تولید می‌شوند.</p>
-        </div>
-        <div data-animate class="relative rounded-lg border border-neutral-200 p-6 pt-10">
-            <span class="absolute right-6 top-4 text-3xl font-bold text-neutral-100 before:content-[attr(data-number)]" data-number="۰۲" aria-hidden="true"></span>
-            <h3 class="relative mb-2 font-medium text-neutral-900">تنوع کاربردی</h3>
-            <p class="relative text-sm text-neutral-500">از صنایع غذایی و نساجی تا نفت، پتروشیمی و قالیشویی.</p>
-        </div>
-        <div data-animate class="relative rounded-lg border border-neutral-200 p-6 pt-10">
-            <span class="absolute right-6 top-4 text-3xl font-bold text-neutral-100 before:content-[attr(data-number)]" data-number="۰۳" aria-hidden="true"></span>
-            <h3 class="relative mb-2 font-medium text-neutral-900">ارتباط مستقیم با تولیدکننده</h3>
-            <p class="relative text-sm text-neutral-500">مشاوره و استعلام قیمت بدون واسطه، مستقیم با تیم فنی.</p>
-        </div>
+        @foreach (config('site.highlights') as $highlight)
+            <div data-animate class="relative rounded-lg border border-neutral-200 p-6 pt-10">
+                <span class="absolute right-6 top-4 text-3xl font-bold text-neutral-100 before:content-[attr(data-number)]" data-number="{{ \App\Support\PersianDigits::toPersian(str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT)) }}" aria-hidden="true"></span>
+                <h3 class="relative mb-2 font-medium text-neutral-900">{{ $highlight['title'] }}</h3>
+                <p class="relative text-sm text-neutral-500">{{ $highlight['text'] }}</p>
+            </div>
+        @endforeach
     </div>
 </section>
 
 {{-- SEO/conversion text — real facts already sourced for the About Us page, see docs/DECISIONS.md --}}
-<section class="bg-brand-charcoal-deep py-16">
+<section id="about" class="bg-brand-charcoal-deep py-16">
     <div class="mx-auto max-w-2xl px-4 text-center sm:px-6">
         <h2 data-animate class="mb-4 text-lg font-bold text-white">خرید برس و فرچه صنعتی از برس پاسارگاد</h2>
         <p data-animate class="mb-7 leading-7 text-neutral-400">
@@ -173,7 +156,7 @@ $mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpt
 
 {{-- Articles --}}
 @if ($posts->isNotEmpty())
-<section class="bg-neutral-50 py-16">
+<section id="articles" class="bg-neutral-50 py-16">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
         <div data-animate class="mb-10 flex items-center justify-between">
             <h2 class="text-xl font-bold text-neutral-900">مقالات</h2>

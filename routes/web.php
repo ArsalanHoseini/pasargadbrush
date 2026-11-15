@@ -6,6 +6,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LlmsController;
 use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductCategoryController;
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
-Route::get('/llms.txt', [SitemapController::class, 'llms'])->name('llms');
+Route::get('/llms.txt', [LlmsController::class, 'index'])->name('llms');
+Route::get('/llms-full.txt', [LlmsController::class, 'full'])->name('llms.full');
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
 Route::post('/quote-requests', [QuoteRequestController::class, 'store'])
@@ -37,6 +39,8 @@ Route::get('/products/{product:slug}/customize', [ProductCustomizationController
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed');
 Route::get('/blog/tag/{tag:slug}', [BlogController::class, 'tag'])->name('blog.tag');
+// Before blog.show, which would otherwise take «slug.md» as a slug.
+Route::get('/blog/{post:slug}.md', [LlmsController::class, 'post'])->name('blog.markdown');
 Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::post('/blog/{post:slug}/comments', [CommentController::class, 'store'])
     ->middleware('throttle:5,1')

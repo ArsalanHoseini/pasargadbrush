@@ -3,13 +3,7 @@
      the «کیفیت، اعتماد، آینده پاک» strap line — plus the factory map. --}}
 @php
     $whatsappUrl = whatsapp_url(setting('contact_whatsapp'));
-    $socialLinks = array_filter([
-        'واتساپ' => $whatsappUrl,
-        'اینستاگرام' => setting('social_instagram_url'),
-        'تلگرام' => setting('social_telegram_url'),
-        'لینکدین' => setting('social_linkedin_url'),
-        'یوتیوب' => setting('social_youtube_url'),
-    ]);
+    $socialLinks = array_filter(['واتساپ' => $whatsappUrl]) + \App\Support\SiteProfile::socialLinks();
 @endphp
 <footer id="contact" class="relative isolate overflow-hidden bg-brand-charcoal-deep text-white">
     <img src="{{ asset('images/footer-bg.webp') }}"

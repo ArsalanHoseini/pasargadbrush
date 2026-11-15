@@ -4,6 +4,15 @@
 @section('meta_description', $category->meta_description ?? $category->name)
 @section('canonical', route('categories.show', $category))
 
+@php
+    $categoryUrl = route('categories.show', $category);
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('CollectionPage', $categoryUrl, $category->name, $category->meta_description ?: $category->description, hasBreadcrumb: true),
+        \App\Services\Seo\StructuredData::breadcrumbs($categoryUrl, [['صفحه اصلی', route('home')], [$category->name, $categoryUrl]]),
+    );
+@endphp
+
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
     <nav class="mb-4 text-xs text-neutral-500" aria-label="مسیر صفحه">

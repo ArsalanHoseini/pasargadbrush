@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -40,6 +41,8 @@ class HomeController extends Controller
                 ->latest('published_at')
                 ->limit(3)
                 ->get(),
+            // The catalog in the page's JSON-LD (Organization «hasOfferCatalog»).
+            'catalogCategories' => ProductCategory::navigation(),
         ]);
     }
 

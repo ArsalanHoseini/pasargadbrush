@@ -5,9 +5,10 @@ namespace App\Providers;
 use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\Cart\CartResolver;
+use App\Services\Seo\SchemaGraph;
+use App\Services\Seo\SeoCache;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -23,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SmsSender::class, fn () => match (config('services.sms.driver')) {
             default => new LogSmsSender,
         });
+
+        // One JSON-LD graph per request, filled by the views and printed by the layout.
+        $this->app->scoped(SchemaGraph::class);
     }
 
     /**
@@ -41,22 +45,11 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Saving content in the admin refreshes /llms.txt, /llms-full.txt and the .md copies.
+        SeoCache::watchModels();
+
         View::composer(['partials.header', 'partials.footer'], function ($view) {
-            // Cache plain arrays, not Eloquent models/Collections — caching
-            // objects is fragile across this app's cache-driver (de)serialization
-            // boundary (see docs/DECISIONS.md).
-            $categories = Cache::remember(
-                'nav.categories',
-                now()->addHour(),
-                fn () => ProductCategory::query()
-                    ->whereNull('parent_id')
-                    ->listable()
-                    ->orderBy('sort_order')
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'slug'])
-                    ->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'slug' => $category->slug])
-                    ->all(),
-            );
+            $categories = ProductCategory::navigation();
 
             $view->with('navCategories', $categories);
         });

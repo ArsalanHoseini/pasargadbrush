@@ -2,30 +2,27 @@
 
 @section('title', $product->meta_title ?? $product->name)
 @section('meta_description', $product->meta_description ?? \Illuminate\Support\Str::limit(strip_tags($product->short_description ?: ($product->description ?? '')), 150))
-@section('canonical', url()->current())
+@section('canonical', route('products.show', $product->slug))
+@if ($product->images->isNotEmpty())
+    @section('og_image', $product->images->first()->url())
+@endif
 
-@push('structured-data')
-<script type="application/ld+json">
-{
-    "@@context": "https://schema.org",
-    "@@type": "Product",
-    "name": {!! json_encode($product->name, JSON_UNESCAPED_UNICODE) !!},
-    "sku": {!! json_encode($product->sku) !!},
-    @if ($product->images->isNotEmpty())
-    "image": {!! json_encode($product->images->first()->url()) !!},
-    @endif
-    "description": {!! json_encode(strip_tags($product->description ?? ''), JSON_UNESCAPED_UNICODE) !!}
-    @if ($product->type === 'priced' && $product->variants->isNotEmpty())
-    ,"offers": {
-        "@@type": "AggregateOffer",
-        "priceCurrency": "IRR",
-        "lowPrice": {{ $product->variants->min('price_rial') }},
-        "highPrice": {{ $product->variants->max('price_rial') }}
-    }
-    @endif
-}
-</script>
-@endpush
+@php
+    $productUrl = route('products.show', $product->slug);
+    $productCrumbs = array_values(array_filter([
+        ['صفحه اصلی', route('home')],
+        $product->primaryCategory ? [$product->primaryCategory->name, route('categories.show', $product->primaryCategory)] : null,
+        [$product->name, $productUrl],
+    ]));
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('ItemPage', $productUrl, $product->meta_title ?: $product->name, $product->meta_description, hasBreadcrumb: true, extra: [
+            'mainEntity' => ['@id' => $productUrl.'#product'],
+        ]),
+        \App\Services\Seo\StructuredData::breadcrumbs($productUrl, $productCrumbs),
+        \App\Services\Seo\StructuredData::product($product),
+    );
+@endphp
 
 @php
     $isPriced = $product->type === 'priced';

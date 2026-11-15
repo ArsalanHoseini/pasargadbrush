@@ -100,19 +100,4 @@ class SiteChromeTest extends TestCase
 
         $this->get('https://pasargadbrush.com/blog')->assertOk();
     }
-
-    public function test_llms_txt_maps_the_catalog_for_ai_agents(): void
-    {
-        $category = ProductCategory::create(['name' => 'برس صنعتی', 'slug' => 'industrial', 'is_active' => true]);
-        Product::create(['sku' => 'P1', 'slug' => 'disc', 'name' => 'برس دیسکی', 'type' => 'quote', 'is_active' => true, 'primary_category_id' => $category->id]);
-        Product::create(['sku' => 'P2', 'slug' => 'gone', 'name' => 'محصول خاموش', 'type' => 'quote', 'is_active' => false]);
-
-        $this->get('/llms.txt')
-            ->assertOk()
-            ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
-            ->assertSee('# شرکت برس صنعت پاسارگاد', false)
-            ->assertSee('- [برس صنعتی]('.route('categories.show', 'industrial').')', false)
-            ->assertSee('- [برس دیسکی]('.route('products.show', 'disc').')', false)
-            ->assertDontSee('محصول خاموش');
-    }
 }

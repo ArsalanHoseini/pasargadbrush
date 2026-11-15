@@ -28,6 +28,11 @@
     <url>
         <loc>{{ route('blog.show', $post->slug) }}</loc>
         <lastmod>{{ $post->updated_at?->toAtomString() }}</lastmod>
+@foreach ($post->featuredImage as $image)
+        <image:image>
+            <image:loc>{{ $image->url() }}</image:loc>
+        </image:image>
+@endforeach
     </url>
 @endforeach
 @foreach ($pages as $page)

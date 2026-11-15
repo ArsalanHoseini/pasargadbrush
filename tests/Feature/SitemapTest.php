@@ -51,7 +51,54 @@ class SitemapTest extends TestCase
             ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
             ->assertSee('Sitemap: '.route('sitemap'), false)
             ->assertSee('Disallow: /admin', false)
-            ->assertSee('Disallow: /checkout', false);
+            ->assertSee('Disallow: /checkout', false)
+            ->assertSee('Allow: /llms.txt', false)
+            ->assertSee('Allow: /llms-full.txt', false);
+    }
+
+    public function test_robots_txt_names_ai_crawlers_and_repeats_private_paths_in_every_group(): void
+    {
+        $robots = $this->get('/robots.txt')->getContent();
+        $groups = preg_split('/
+\s*
+/', trim($robots));
+        $agentGroups = array_values(array_filter($groups, fn (string $group) => str_contains($group, 'User-agent:')));
+
+        $this->assertCount(3, $agentGroups, 'Everyone, AI assistants/search, AI training.');
+
+        foreach ($agentGroups as $group) {
+            foreach (config('site.private_paths') as $path) {
+                $this->assertStringContainsString("Disallow: {$path}
+", $group.'
+');
+            }
+        }
+
+        foreach (['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'PerplexityBot', 'GPTBot', 'ClaudeBot', 'Google-Extended', 'CCBot', 'Bytespider'] as $agent) {
+            $this->assertStringContainsString("User-agent: {$agent}
+", $robots);
+        }
+    }
+
+    public function test_a_blocked_ai_crawler_gets_disallow_all_and_leaves_its_allow_group(): void
+    {
+        config(['site.ai_crawlers.blocked' => ['GPTBot']]);
+
+        $robots = $this->get('/robots.txt')->getContent();
+
+        $this->assertSame(1, substr_count($robots, 'User-agent: GPTBot'));
+        $this->assertStringContainsString('User-agent: GPTBot
+Disallow: /
+', $robots);
+    }
+
+    public function test_sitemap_lists_article_cover_images(): void
+    {
+        $post = BlogPost::create(['title' => 'مقاله', 'slug' => 'published-post', 'body' => 'x', 'status' => 'published', 'published_at' => now()->subDay()]);
+        $cover = Media::create(['disk' => 'public', 'path' => 'media/cover.jpg', 'mime_type' => 'image/jpeg', 'size' => 1]);
+        $post->featuredImage()->attach($cover->id, ['role' => 'featured']);
+
+        $this->get('/sitemap.xml')->assertSee('<image:loc>'.$cover->url().'</image:loc>', false);
     }
 
     public function test_private_pages_are_marked_noindex(): void

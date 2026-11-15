@@ -17,6 +17,35 @@ class WordPressContent
      * shows it already has its title as the one <h1>.
      * Already-paragraphed content is returned unchanged (safe to re-run).
      */
+    /**
+     * Classic WordPress «[caption id=… align=…]<img …> text[/caption]» as a
+     * <figure> with a <figcaption> — WordPress expanded the shortcode on
+     * display, so stored content still has it. Shortcodes are plain text,
+     * not markup, so a pattern is the right tool; the <img> is kept as-is.
+     * Content without the shortcode is returned unchanged (safe to re-run).
+     */
+    public static function expandCaptions(string $content): string
+    {
+        return preg_replace_callback(
+            '/\[caption[^\]]*\](.*?)\[\/caption\]/su',
+            function (array $match): string {
+                $inner = trim($match[1]);
+                $imageEnd = strrpos($inner, '>');
+
+                if ($imageEnd === false) {
+                    return $inner;
+                }
+
+                $caption = trim(substr($inner, $imageEnd + 1));
+
+                return '<figure>'.substr($inner, 0, $imageEnd + 1)
+                    .($caption !== '' ? '<figcaption>'.$caption.'</figcaption>' : '')
+                    .'</figure>';
+            },
+            $content,
+        ) ?? $content;
+    }
+
     public static function toHtml(string $content): string
     {
         $content = preg_replace(['/<h1(\b[^>]*)>/i', '/<\/h1>/i'], ['<h2$1>', '</h2>'], $content) ?? $content;

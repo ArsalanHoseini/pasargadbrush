@@ -4,6 +4,17 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-15 — GEO: llms.txt, Markdown articles, AI crawlers, one JSON-LD graph
+
+- **Fixed facts live in `config/site.php`, contact details stay in the admin settings.** Both are read through `SiteProfile`, so the pages, the schema and the llms files always say the same thing. Only facts already on the site were used. Opening hours, a Gregorian founding date (۱۳۷۴ spans 1995–96), warranty terms and an FAQ are left out until the owner confirms them.
+- **`league/html-to-markdown`** (owner approved the dependency) does the conversion. The HTML is tidied with DOMDocument first, never regex on markup. A WordPress shortcode is plain text, so a pattern is used for `[caption]`.
+- **Cache by version number, not tags.** The `database` cache store can't tag. Model `saved`/`deleted` events bump `seo.version`, which every key includes, and the TTL is 1 hour so a deploy shows up soon even without `cache:clear`. View-count increments fire only `updated`, so they don't flush.
+- **One `@graph` per page through a scoped `SchemaGraph`.** Views add nodes and the layout prints them after the Organization and WebSite, which appear once and are referenced by `@id`. The homepage catalog is a merge node on the Organization `@id` (`hasOfferCatalog`), built from the cached `ProductCategory::navigation()`, so the homepage gets no extra query (see 2026-10 decision).
+- **Imported article bodies are repaired by a `wp:` command, not a migration.** The fix needs the WordPress uploads folder, which a plain `migrate` on the server can't assume. Images are matched by file path in the uploads folder, not by attachment row, because most body images had none and some sat in another month folder. The original is used instead of a WordPress-resized copy, and links are root-relative so the same body works on every host.
+- **AI crawlers are all allowed** (answer/search and training) in their own robots groups. Each group repeats the private paths, because a named bot ignores `*`. To block one, move it to `site.ai_crawlers.blocked`.
+
+---
+
 ## 2026-11-07 — Owner's correction list (11 items) + PageSpeed work
 
 - **Data changes ship as a migration** (`update_contact_details_and_company_name`): phone 09122787949 everywhere (also WhatsApp), Bale 09174287445, address «تخت جمشید، …», Instagram, Google Maps embed + `?cid=` link, and «برس صنعتی پاسارگاد» → «برس صنعت پاسارگاد» in settings/products/posts/pages/alts. Runs with a plain `migrate` on any existing DB; a fresh DB (no settings) is left to `SettingsSeeder`, which has the same values. Note: `contact_mobile` is also where new-order SMS goes, so admin SMS now go to 09122787949 (owner said "all numbers").

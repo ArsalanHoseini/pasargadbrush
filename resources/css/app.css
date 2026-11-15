@@ -80,6 +80,22 @@
     margin-block: 1em;
 }
 
+/* WordPress «[caption]» images, stored as <figure> (wp:repair-post-bodies). */
+.article-content :where(figure) {
+    margin-block: 1.5em;
+    text-align: center;
+}
+
+.article-content :where(figure img) {
+    margin-inline: auto;
+    margin-bottom: 0.5em;
+}
+
+.article-content :where(figcaption) {
+    font-size: 0.75rem;
+    color: var(--color-neutral-500);
+}
+
 html {
     scroll-behavior: smooth;
 }

@@ -3,6 +3,31 @@
 @section('title', isset($tag) ? 'مقالات با برچسب «'.$tag->name.'»' : 'مقالات')
 @section('meta_description', 'مقالات و راهنمای فنی برس و فرچه صنعتی')
 
+@php
+    $listingUrl = isset($tag) ? route('blog.tag', $tag) : route('blog.index');
+    $listingName = isset($tag) ? 'مقالات با برچسب «'.$tag->name.'»' : 'مقالات';
+    $listingCrumbs = [['صفحه اصلی', route('home')], ['مقالات', route('blog.index')]];
+
+    if (isset($tag)) {
+        $listingCrumbs[] = [$listingName, $listingUrl];
+    }
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('CollectionPage', $listingUrl, $listingName, 'مقالات و راهنمای فنی برس و فرچه صنعتی', hasBreadcrumb: true, extra: [
+            'mainEntity' => [
+                '@type' => 'ItemList',
+                'itemListElement' => collect([$featured ?? null, ...$posts->items()])->filter()->values()->map(fn ($listedPost, $index) => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => route('blog.show', $listedPost->slug),
+                    'name' => $listedPost->title,
+                ])->all(),
+            ],
+        ]),
+        \App\Services\Seo\StructuredData::breadcrumbs($listingUrl, $listingCrumbs),
+    );
+@endphp
+
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
     <div class="mb-8 flex items-center justify-between">

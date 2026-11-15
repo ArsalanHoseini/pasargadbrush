@@ -7,7 +7,6 @@ use App\Models\BlogPost;
 use App\Models\MigrationMapping;
 use App\Services\WordPressImport\BlogCategoryImporter;
 use App\Services\WordPressImport\BlogImporter;
-use App\Services\WordPressImport\MediaCopier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -53,7 +52,7 @@ class BlogImporterTest extends TestCase
         $this->wp('term_relationships')->insert(['object_id' => 300, 'term_taxonomy_id' => 10]);
         $this->wp('term_taxonomy')->insert(['term_taxonomy_id' => 10, 'term_id' => 1, 'taxonomy' => 'category']);
 
-        $result = (new BlogImporter(app(MediaCopier::class)))->run(commit: true);
+        $result = app(BlogImporter::class)->run(commit: true);
 
         $this->assertSame(1, $result->imported);
         $post = BlogPost::first();
@@ -72,7 +71,7 @@ class BlogImporterTest extends TestCase
         ]);
         $this->wp('icl_translations')->insert(['element_id' => 301, 'element_type' => 'post_post', 'language_code' => 'fa']);
 
-        $result = (new BlogImporter(app(MediaCopier::class)))->run(commit: true);
+        $result = app(BlogImporter::class)->run(commit: true);
 
         $this->assertSame(0, $result->total());
         $this->assertSame(0, BlogPost::count());

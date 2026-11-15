@@ -10,8 +10,8 @@ use App\Models\Tag;
 use Illuminate\Http\Response;
 
 /**
- * /sitemap.xml (with product images, for Google Images) and a robots.txt
- * that points to it. Only public, indexable pages are listed — never cart,
+ * /sitemap.xml (with product and article cover images, for Google Images)
+ * and a robots.txt that points to it. Only public, indexable pages are listed — never cart,
  * checkout, account, search or admin.
  */
 class SitemapController extends Controller
@@ -28,7 +28,7 @@ class SitemapController extends Controller
             ->view('sitemap.index', [
                 'categories' => ProductCategory::query()->listable()->get(['slug', 'updated_at']),
                 'products' => $products,
-                'posts' => BlogPost::query()->published()->latest('published_at')->get(['slug', 'updated_at']),
+                'posts' => BlogPost::query()->with('featuredImage')->published()->latest('published_at')->get(['id', 'slug', 'updated_at']),
                 'pages' => Page::query()->where('status', 'published')->get(['slug', 'updated_at']),
                 'tags' => Tag::query()->whereHas('posts', fn ($query) => $query->published())->get(['slug', 'updated_at']),
                 'latestUpdate' => collect([$products->max('updated_at'), BlogPost::query()->published()->max('updated_at')])->filter()->max(),
@@ -37,62 +37,55 @@ class SitemapController extends Controller
     }
 
     /**
-     * /llms.txt (llmstxt.org): a plain Markdown map of the site for AI agents —
-     * PageSpeed's "Agentic Browsing" check looks for it.
+     * One group for everyone, then explicit groups for AI assistants/search
+     * and AI training crawlers (config/site.php «ai_crawlers»). A crawler that
+     * finds a group naming it ignores the «*» group, so every group repeats
+     * the private paths. Crawlers listed as «blocked» get «Disallow: /».
      */
-    public function llms(): Response
-    {
-        $lines = [
-            '# '.(setting('company_legal_name') ?: 'برس صنعت پاسارگاد'),
-            '',
-            '> تولیدکننده انواع برس و فرچه صنعتی، نظافتی و سفارشی در ایران از سال ۱۳۷۴ (Pasargad Brush — industrial brush manufacturer, Iran). خرید مستقیم از کارخانه؛ قیمت محصولات سفارشی پس از ثبت ابعاد اعلام می‌شود.',
-            '',
-            '- تلفن: '.setting('contact_mobile'),
-            '- ایمیل: '.setting('contact_email'),
-            '- آدرس: '.setting('contact_address'),
-            '',
-            '## دسته‌بندی محصولات',
-            '',
-        ];
-
-        foreach (ProductCategory::query()->listable()->orderBy('sort_order')->orderBy('name')->get(['name', 'slug']) as $category) {
-            $lines[] = "- [{$category->name}](".route('categories.show', $category).')';
-        }
-
-        $lines = [...$lines, '', '## محصولات', ''];
-
-        foreach (Product::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['name', 'slug']) as $product) {
-            $lines[] = "- [{$product->name}](".route('products.show', $product).')';
-        }
-
-        $lines = [
-            ...$lines,
-            '',
-            '## صفحات',
-            '',
-            '- [درباره ما]('.route('pages.show', 'about-us').')',
-            '- [تماس با ما]('.route('pages.show', 'contact-us').')',
-            '- [مقالات]('.route('blog.index').')',
-            '- [نقشه سایت]('.route('sitemap').')',
-        ];
-
-        return response(implode("\n", $lines)."\n")->header('Content-Type', 'text/plain; charset=UTF-8');
-    }
-
     public function robots(): Response
     {
+        $crawlers = config('site.ai_crawlers');
+        $blocked = $crawlers['blocked'];
+
         $lines = [
-            'User-agent: *',
-            'Disallow: /admin',
-            'Disallow: /account',
-            'Disallow: /login',
-            'Disallow: /cart',
-            'Disallow: /checkout',
-            'Disallow: /order-tracking',
+            '# پاسارگاد برس — '.route('home'),
+            '# Machine-readable summary for AI assistants: '.route('llms').' and '.route('llms.full'),
             '',
-            'Sitemap: '.route('sitemap'),
+            ...$this->group(['*']),
+            '# AI assistants and AI search: fetch pages to answer a question',
+            ...$this->group(array_values(array_diff($crawlers['answer'], $blocked))),
+            '# AI model training',
+            ...$this->group(array_values(array_diff($crawlers['training'], $blocked))),
         ];
 
-        return response(implode("\n", $lines)."\n")->header('Content-Type', 'text/plain; charset=UTF-8');
+        if ($blocked) {
+            $lines = [...$lines, '# Blocked', ...array_map(fn (string $agent) => 'User-agent: '.$agent, $blocked), 'Disallow: /', ''];
+        }
+
+        $lines[] = 'Sitemap: '.route('sitemap');
+
+        return response(implode('
+', $lines).'
+')->header('Content-Type', 'text/plain; charset=UTF-8');
+    }
+
+    /**
+     * @param  list<string>  $userAgents
+     * @return list<string>
+     */
+    private function group(array $userAgents): array
+    {
+        if ($userAgents === []) {
+            return [];
+        }
+
+        return [
+            ...array_map(fn (string $agent) => 'User-agent: '.$agent, $userAgents),
+            'Allow: /',
+            'Allow: /llms.txt',
+            'Allow: /llms-full.txt',
+            ...array_map(fn (string $path) => 'Disallow: '.$path, config('site.private_paths')),
+            '',
+        ];
     }
 }
