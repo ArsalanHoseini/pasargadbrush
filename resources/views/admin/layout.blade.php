@@ -119,7 +119,7 @@
     </div>
 
     {{-- Toasts --}}
-    <div class="pointer-events-none fixed bottom-4 left-4 z-50 flex w-full max-w-sm flex-col gap-2 px-4 sm:px-0">
+    <div class="pointer-events-none fixed left-4 top-20 z-50 flex w-full max-w-sm flex-col gap-2 px-4 sm:px-0">
         @if (session('status'))
             <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show" x-transition
                  role="status"
@@ -143,6 +143,8 @@
             </div>
         @endif
     </div>
+
+    <x-admin.media-library-modal />
 
     {{-- Confirmation dialog for forms marked with data-confirm --}}
     <div x-data x-cloak x-show="$store.confirmDialog.open" x-transition.opacity

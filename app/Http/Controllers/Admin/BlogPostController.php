@@ -85,8 +85,7 @@ class BlogPostController extends Controller
         return view('admin.blog-posts.form', [
             'post' => $post,
             'categories' => BlogCategory::query()->orderBy('name')->get(),
-            'media' => Media::query()->latest()->limit(60)->get(),
-            'currentFeaturedId' => $post->exists ? $post->featuredImage->first()?->id : null,
+            'featuredImageItems' => $this->featuredImageItems($post),
             'currentTags' => $post->exists ? $post->tags->pluck('name')->implode('، ') : '',
         ]);
     }
@@ -115,6 +114,19 @@ class BlogPostController extends Controller
         });
 
         $post->tags()->sync($tagIds);
+    }
+
+    /**
+     * The featured image for the picker: the one just submitted (after a
+     * validation error) or the post's current one.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function featuredImageItems(BlogPost $post): array
+    {
+        $mediaId = session()->hasOldInput() ? (int) old('featured_media_id') : $post->featuredImage->first()?->id;
+
+        return $mediaId ? Media::query()->whereKey($mediaId)->get()->map->toPickerArray()->all() : [];
     }
 
     private function syncFeaturedImage(BlogPost $post, ?int $mediaId): void

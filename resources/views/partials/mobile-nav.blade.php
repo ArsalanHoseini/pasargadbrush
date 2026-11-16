@@ -9,9 +9,20 @@
             @foreach ($navCategories as $category)
                 <li><a href="{{ route('categories.show', $category['slug']) }}" class="block py-3 text-sm text-neutral-700">{{ $category['name'] }}</a></li>
             @endforeach
-            <li><a href="{{ route('blog.index') }}" class="block py-3 text-sm text-neutral-700">مقالات</a></li>
-            <li><a href="{{ route('pages.show', 'about-us') }}" class="block py-3 text-sm text-neutral-700">درباره ما</a></li>
-            <li><a href="{{ route('pages.show', 'contact-us') }}" class="block py-3 text-sm text-neutral-700">تماس با ما</a></li>
+            {{-- The rest of the header menu (/admin/menus), minus home (it has its own tab) and the categories dropdown (listed above). --}}
+            @foreach ($headerMenu as $menuItem)
+                @continue($menuItem['type'] === \App\Models\MenuItem::TYPE_CATEGORIES || $menuItem['path'] === '/')
+                <li>
+                    <a href="{{ $menuItem['url'] }}" @if ($menuItem['open_in_new_tab']) target="_blank" rel="noopener" @endif class="block py-3 text-sm text-neutral-700">{{ $menuItem['label'] }}</a>
+                    @if ($menuItem['children'] !== [])
+                        <ul class="mb-2 border-r-2 border-neutral-100 pr-3">
+                            @foreach ($menuItem['children'] as $child)
+                                <li><a href="{{ $child['url'] }}" @if ($child['open_in_new_tab']) target="_blank" rel="noopener" @endif class="block py-2 text-sm text-neutral-600">{{ $child['label'] }}</a></li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </li>
+            @endforeach
         </ul>
     </div>
 

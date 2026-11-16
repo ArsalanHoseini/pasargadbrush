@@ -16,12 +16,12 @@ $inputClass = 'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm foc
 
     <div class="grid gap-5 sm:grid-cols-2">
         <div>
-            <label for="name" class="mb-1 block text-sm font-medium">نام</label>
+            <label for="name" class="admin-label">نام</label>
             <input id="name" name="name" value="{{ old('name', $user->name) }}" required maxlength="100" class="{{ $inputClass }}">
             @error('name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>
-            <label for="email" class="mb-1 block text-sm font-medium">ایمیل (برای ورود)</label>
+            <label for="email" class="admin-label">ایمیل (برای ورود)</label>
             <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required dir="ltr" class="{{ $inputClass }}">
             @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
@@ -48,13 +48,13 @@ $inputClass = 'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm foc
 
     <div class="grid gap-5 sm:grid-cols-2">
         <div>
-            <label for="password" class="mb-1 block text-sm font-medium">رمز عبور{{ $user->exists ? ' جدید' : '' }}</label>
+            <label for="password" class="admin-label">رمز عبور{{ $user->exists ? ' جدید' : '' }}</label>
             <input id="password" name="password" type="password" autocomplete="new-password" dir="ltr" @required(! $user->exists) minlength="8" class="{{ $inputClass }}">
             <p class="mt-1 text-xs text-neutral-500">{{ $user->exists ? 'برای تغییر ندادن، خالی بگذارید.' : 'حداقل ۸ کاراکتر.' }}</p>
             @error('password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>
-            <label for="password_confirmation" class="mb-1 block text-sm font-medium">تکرار رمز عبور</label>
+            <label for="password_confirmation" class="admin-label">تکرار رمز عبور</label>
             <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" dir="ltr" class="{{ $inputClass }}">
         </div>
     </div>

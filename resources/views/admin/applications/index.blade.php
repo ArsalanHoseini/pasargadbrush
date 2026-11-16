@@ -8,7 +8,7 @@
         <h1 class="text-lg font-semibold">کاربردها</h1>
         <p class="text-xs text-neutral-500">کاربردها (مثلاً «شستشوی میوه») یک بار اینجا تعریف می‌شوند و در صفحه‌ی ویرایش هر محصول انتخاب می‌شوند.</p>
     </div>
-    <a href="{{ route('admin.applications.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">+ کاربرد جدید</a>
+    <a href="{{ route('admin.applications.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">+ کاربرد جدید</a>
 </div>
 
 @if ($applications->isEmpty())

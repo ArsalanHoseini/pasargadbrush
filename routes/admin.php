@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ConversationController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProductCategoryController;
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
 
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+    Route::patch('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 
     Route::resource('categories', ProductCategoryController::class)
@@ -72,6 +74,10 @@ Route::middleware(['auth', 'admin.staff'])->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::resource('pages', PageController::class)->except('show');
+
+    Route::redirect('/menus', '/admin/menus/header')->name('menus.index');
+    Route::get('/menus/{location}', [MenuController::class, 'edit'])->name('menus.edit');
+    Route::put('/menus/{location}', [MenuController::class, 'update'])->name('menus.update');
 
     /*
      * Admins only: sales, customers, messages, reports, settings, staff

@@ -109,6 +109,6 @@
     <x-admin.bulk-bar :action="route('admin.products.bulk')" :actions="['activate' => 'فعال کردن', 'deactivate' => 'غیرفعال کردن', 'delete' => 'حذف']" />
 </div>
 
-    <div class="mt-6">{{ $products->links() }}</div>
+    <x-admin.pagination :paginator="$products" />
 @endif
 @endsection

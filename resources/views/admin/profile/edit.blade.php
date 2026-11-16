@@ -14,12 +14,12 @@ $inputClass = 'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm foc
         @csrf @method('PUT')
         <h2 class="font-semibold">مشخصات</h2>
         <div>
-            <label for="name" class="mb-1 block text-sm font-medium">نام</label>
+            <label for="name" class="admin-label">نام</label>
             <input id="name" name="name" value="{{ old('name', $user->name) }}" required maxlength="100" class="{{ $inputClass }}">
             @error('name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>
-            <label for="email" class="mb-1 block text-sm font-medium">ایمیل (برای ورود)</label>
+            <label for="email" class="admin-label">ایمیل (برای ورود)</label>
             <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required dir="ltr" class="{{ $inputClass }}">
             @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
@@ -30,17 +30,17 @@ $inputClass = 'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm foc
         @csrf @method('PUT')
         <h2 class="font-semibold">تغییر رمز عبور</h2>
         <div>
-            <label for="current_password" class="mb-1 block text-sm font-medium">رمز عبور فعلی</label>
+            <label for="current_password" class="admin-label">رمز عبور فعلی</label>
             <input id="current_password" name="current_password" type="password" required autocomplete="current-password" dir="ltr" class="{{ $inputClass }}">
             @error('current_password', 'password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>
-            <label for="password" class="mb-1 block text-sm font-medium">رمز عبور جدید</label>
+            <label for="password" class="admin-label">رمز عبور جدید</label>
             <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" dir="ltr" class="{{ $inputClass }}">
             @error('password', 'password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>
-            <label for="password_confirmation" class="mb-1 block text-sm font-medium">تکرار رمز عبور جدید</label>
+            <label for="password_confirmation" class="admin-label">تکرار رمز عبور جدید</label>
             <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password" dir="ltr" class="{{ $inputClass }}">
         </div>
         <x-admin.button>تغییر رمز عبور</x-admin.button>

@@ -18,20 +18,14 @@
     تغییر این تنظیمات فقط روی سفارش‌های جدید اثر دارد؛ سفارش‌های قبلی با همان روشی که ثبت شده‌اند باقی می‌مانند.
 </p>
 
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
 <form method="POST" action="{{ route('admin.shipping.update') }}" class="max-w-2xl space-y-6"
       x-data="{ method: @js(old('shipping_method', $method->value)) }">
     @csrf
     @method('PUT')
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">روش محاسبه هزینه ارسال</h2>
         <div class="space-y-3">
             @foreach (ShippingMethod::cases() as $case)
@@ -47,26 +41,26 @@
         </div>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6" x-show="method === @js(ShippingMethod::Flat->value)" x-cloak>
+    <div class="admin-card p-6" x-show="method === @js(ShippingMethod::Flat->value)" x-cloak>
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مبلغ ثابت</h2>
         <div class="space-y-4">
             <div>
-                <label for="flat_rate_toman" class="mb-1 block text-sm font-medium">هزینه ارسال هر سفارش (تومان)</label>
+                <label for="flat_rate_toman" class="admin-label">هزینه ارسال هر سفارش (تومان)</label>
                 <input id="flat_rate_toman" name="flat_rate_toman" type="number" min="1" dir="ltr"
                        value="{{ old('flat_rate_toman', $flatRateToman) }}"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
             </div>
             <div>
-                <label for="free_threshold_toman" class="mb-1 block text-sm font-medium">ارسال رایگان برای خریدهای بالای (تومان) — اختیاری</label>
+                <label for="free_threshold_toman" class="admin-label">ارسال رایگان برای خریدهای بالای (تومان) — اختیاری</label>
                 <input id="free_threshold_toman" name="free_threshold_toman" type="number" min="1" dir="ltr"
                        value="{{ old('free_threshold_toman', $freeThresholdToman) }}"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
                 <p class="mt-1 text-xs text-neutral-500">خالی بگذارید تا ارسال رایگان نداشته باشید.</p>
             </div>
         </div>
     </div>
 
-    <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+    <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
         ذخیره تنظیمات ارسال
     </button>
 </form>

@@ -69,6 +69,6 @@ $statusLabels = \App\Http\Controllers\Admin\QuoteRequestController::STATUS_LABEL
         :actions="collect($statusLabels)->mapWithKeys(fn ($label, $value) => ['status:'.$value => 'وضعیت: '.$label])->put('delete', 'حذف')->all()" />
 </div>
 
-    <div class="mt-6">{{ $quoteRequests->links() }}</div>
+    <x-admin.pagination :paginator="$quoteRequests" />
 @endif
 @endsection

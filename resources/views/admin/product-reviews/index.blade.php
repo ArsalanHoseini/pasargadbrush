@@ -79,6 +79,6 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
     <x-admin.bulk-bar :action="route('admin.product-reviews.bulk')" :actions="['approve' => 'تأیید', 'spam' => 'اسپم', 'delete' => 'حذف']" />
 </div>
 
-    <div class="mt-6">{{ $reviews->links() }}</div>
+    <x-admin.pagination :paginator="$reviews" />
 @endif
 @endsection

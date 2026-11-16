@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\MenuItem;
 use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\Cart\CartResolver;
@@ -52,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
             $categories = ProductCategory::navigation();
 
             $view->with('navCategories', $categories);
+            $view->with('headerMenu', MenuItem::forDisplay('header'));
+            $view->with('footerMenu', MenuItem::forDisplay('footer'));
         });
 
         View::composer('partials.header', function ($view) {

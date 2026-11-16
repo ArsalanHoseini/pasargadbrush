@@ -557,3 +557,15 @@ Each channel has its own try/catch + `Log::warning` (same resilience rule as quo
 - Logins and catalog/settings/staff changes are now written to `audit_logs` alongside order changes.
 
 **Why:** Customer contact details and sales figures stay with the owner's team, while content writers can still do their whole job. One gate keeps the rule in a single place if the owner wants to move an area later.
+
+## 2026-11-16 — Editable site menus and the admin media picker
+
+**Decision:**
+- Header and footer «quick links» come from a `menu_items` table (two levels), edited at `/admin/menus`. The «محصولات» dropdown is a special item type that keeps listing product categories automatically.
+- Site links are stored as paths (`/blog`) and rendered as full URLs on the current root, so they survive a domain change.
+- Menus are open to editors too (they're content, like pages).
+- Images for products, articles and the editor are chosen in one shared media library modal (paged JSON from the existing media routes), not from a grid of the latest uploads.
+- No new dependencies: the editor stays Quill, the picker and menu editor are Alpine.
+
+**Why:** The owner couldn't change the menu without a developer, and the old forms only showed the newest 60–90 images, so older selected images were invisible. Paths instead of absolute URLs keep menus portable between local, staging and production.
+

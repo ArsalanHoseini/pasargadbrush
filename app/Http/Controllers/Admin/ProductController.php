@@ -159,9 +159,8 @@ class ProductController extends Controller
         return view('admin.products.form', [
             'product' => $product,
             'categories' => ProductCategory::query()->orderBy('name')->get(),
-            'media' => Media::query()->latest()->limit(90)->get(),
+            'galleryItems' => $this->galleryItems($product),
             'selectedCategoryIds' => $product->exists ? $product->categories->pluck('id')->all() : [],
-            'selectedImageIds' => $product->exists ? $product->images->pluck('id')->all() : [],
             'variants' => $product->exists ? $product->variants()->orderBy('sort_order')->get() : collect(),
             'dimensionFields' => $product->exists ? $product->dimensionFields : collect(),
             'highlights' => $product->exists ? $product->highlights()->with('image')->get() : collect(),
@@ -201,6 +200,24 @@ class ProductController extends Controller
     private function syncCategories(Product $product, array $categoryIds): void
     {
         $product->categories()->sync($categoryIds);
+    }
+
+    /**
+     * The gallery for the media picker, in order: what was just submitted
+     * (after a validation error) or the product's saved images.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function galleryItems(Product $product): array
+    {
+        if (session()->hasOldInput()) {
+            $ids = array_map('intval', (array) old('image_ids', []));
+            $media = Media::query()->whereKey($ids)->get()->keyBy('id');
+
+            return collect($ids)->map(fn (int $id) => $media->get($id)?->toPickerArray())->filter()->values()->all();
+        }
+
+        return $product->exists ? $product->images->map->toPickerArray()->values()->all() : [];
     }
 
     /** @param array<int, int|string> $imageIds */

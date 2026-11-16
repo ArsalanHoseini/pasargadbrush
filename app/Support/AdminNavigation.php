@@ -42,6 +42,7 @@ class AdminNavigation
                 ['label' => 'دسته‌بندی بلاگ', 'route' => 'admin.blog-categories.index', 'active' => 'admin.blog-categories.*', 'icon' => 'tag', 'badge' => 0],
                 ['label' => 'دیدگاه‌ها', 'route' => 'admin.comments.index', 'active' => 'admin.comments.*', 'icon' => 'chat-bubble', 'badge' => $badges['comments']],
                 ['label' => 'صفحات ثابت', 'route' => 'admin.pages.index', 'active' => 'admin.pages.*', 'icon' => 'document', 'badge' => 0],
+                ['label' => 'منوهای سایت', 'route' => 'admin.menus.index', 'active' => 'admin.menus.*', 'icon' => 'menu', 'badge' => 0],
                 ['label' => 'کتابخانه مدیا', 'route' => 'admin.media.index', 'active' => 'admin.media.*', 'icon' => 'photo', 'badge' => 0],
             ]],
             ['label' => 'تنظیمات', 'items' => [

@@ -47,13 +47,7 @@
     </div>
 @endif
 
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
 <form method="POST" action="{{ route('admin.orders.store') }}" class="max-w-4xl space-y-6"
       x-data="manualOrderForm(@js($catalog), @js(array_values($initialItems)))">
@@ -62,23 +56,23 @@
         <input type="hidden" name="quote_request_id" value="{{ $quoteRequest->id }}">
     @endif
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مشتری</h2>
         <div class="grid gap-3 sm:grid-cols-3">
             <div>
-                <label for="name" class="mb-1 block text-sm font-medium">نام و نام خانوادگی / شرکت</label>
+                <label for="name" class="admin-label">نام و نام خانوادگی / شرکت</label>
                 <input id="name" name="name" value="{{ old('name', $prefill['name']) }}" required
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
             </div>
             <div>
-                <label for="phone" class="mb-1 block text-sm font-medium">شماره موبایل</label>
+                <label for="phone" class="admin-label">شماره موبایل</label>
                 <input id="phone" name="phone" type="tel" value="{{ old('phone', $prefill['phone']) }}" required dir="ltr"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
             </div>
             <div>
-                <label for="email" class="mb-1 block text-sm font-medium">ایمیل (اختیاری)</label>
+                <label for="email" class="admin-label">ایمیل (اختیاری)</label>
                 <input id="email" name="email" type="email" value="{{ old('email', $prefill['email']) }}" dir="ltr"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
             </div>
         </div>
         <p class="mt-2 text-xs text-neutral-500">
@@ -86,21 +80,21 @@
         </p>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">آدرس ارسال</h2>
         <div class="grid gap-3 sm:grid-cols-3">
             <input name="province" placeholder="استان" value="{{ old('province') }}" required aria-label="استان"
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
+                   class="admin-input">
             <input name="city" placeholder="شهر" value="{{ old('city') }}" required aria-label="شهر"
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
+                   class="admin-input">
             <input name="postal_code" placeholder="کد پستی (اختیاری)" value="{{ old('postal_code') }}" dir="ltr" aria-label="کد پستی"
-                   class="rounded border border-neutral-300 px-3 py-2 text-sm">
+                   class="admin-input">
         </div>
         <textarea name="address_line" rows="2" placeholder="آدرس کامل" required aria-label="آدرس کامل"
-                  class="mt-3 w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('address_line') }}</textarea>
+                  class="mt-3 admin-input">{{ old('address_line') }}</textarea>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-sm font-medium text-neutral-500">اقلام سفارش</h2>
             <button type="button" @click="addItem()" class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
@@ -120,7 +114,7 @@
                         <div class="min-w-56 flex-1">
                             <label class="mb-1 block text-xs text-neutral-500">محصول</label>
                             <select :name="`items[${index}][product_id]`" x-model="item.product_id" @change="productChanged(item)" required
-                                    class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                                    class="admin-input admin-input-sm">
                                 <option value="">— انتخاب محصول —</option>
                                 @foreach ($products as $product)
                                     <option value="{{ $product->id }}">
@@ -132,7 +126,7 @@
                         <div class="w-48" x-show="variantsOf(item).length > 0">
                             <label class="mb-1 block text-xs text-neutral-500">تنوع (اختیاری)</label>
                             <select :name="`items[${index}][product_variant_id]`" x-model="item.product_variant_id" @change="variantChanged(item)"
-                                    class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                                    class="admin-input admin-input-sm">
                                 <option value="">— بدون تنوع —</option>
                                 <template x-for="variant in variantsOf(item)" :key="variant.id">
                                     <option :value="variant.id" x-text="`${variant.label} — ${toman(variant.price_toman)}`"
@@ -143,19 +137,19 @@
                         <div class="w-24">
                             <label class="mb-1 block text-xs text-neutral-500">تعداد</label>
                             <input type="number" min="1" :name="`items[${index}][quantity]`" x-model="item.quantity" required dir="ltr"
-                                   class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                                   class="admin-input admin-input-sm">
                         </div>
                         <div class="w-36">
                             <label class="mb-1 block text-xs text-neutral-500">قیمت واحد (تومان)</label>
                             <input type="number" min="0" :name="`items[${index}][unit_price_toman]`" x-model="item.unit_price_toman" required dir="ltr"
-                                   class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                                   class="admin-input admin-input-sm">
                         </div>
                     </div>
 
                     <div>
                         <label class="mb-1 block text-xs text-neutral-500">عنوان ردیف در فاکتور (اختیاری — خالی بماند تا نام محصول استفاده شود)</label>
                         <input :name="`items[${index}][name]`" x-model="item.name"
-                               class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                               class="admin-input admin-input-sm">
                     </div>
 
                     <template x-if="fieldsOf(item).length > 0">
@@ -195,7 +189,7 @@
                             </div>
                             <textarea :name="`items[${index}][customization_notes]`" x-model="item.customization_notes" rows="2"
                                       placeholder="توضیحات ساخت (اختیاری)" aria-label="توضیحات ساخت"
-                                      class="mt-3 w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"></textarea>
+                                      class="mt-3 admin-input admin-input-sm"></textarea>
                         </div>
                     </template>
 
@@ -207,34 +201,34 @@
         <p class="mt-4 border-t border-neutral-100 pt-3 text-left text-sm font-bold" x-text="`جمع کالاها: ${toman(subtotal())}`"></p>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6" x-data="{ shippingMethod: @js(old('shipping_method', $defaultShippingMethod->value)) }">
+    <div class="admin-card p-6" x-data="{ shippingMethod: @js(old('shipping_method', $defaultShippingMethod->value)) }">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">ارسال، وضعیت و پرداخت</h2>
         <div class="grid gap-3 sm:grid-cols-2">
             <div>
-                <label for="shipping_method" class="mb-1 block text-sm font-medium">روش ارسال</label>
-                <select id="shipping_method" name="shipping_method" x-model="shippingMethod" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label for="shipping_method" class="admin-label">روش ارسال</label>
+                <select id="shipping_method" name="shipping_method" x-model="shippingMethod" class="admin-input">
                     @foreach (ShippingMethod::cases() as $case)
                         <option value="{{ $case->value }}">{{ $case->label() }}</option>
                     @endforeach
                 </select>
             </div>
             <div x-show="shippingMethod !== @js(ShippingMethod::CashOnDelivery->value)">
-                <label for="shipping_cost_toman" class="mb-1 block text-sm font-medium">هزینه ارسال (تومان)</label>
+                <label for="shipping_cost_toman" class="admin-label">هزینه ارسال (تومان)</label>
                 <input id="shipping_cost_toman" name="shipping_cost_toman" type="number" min="0" dir="ltr"
                        value="{{ old('shipping_cost_toman') }}" placeholder="خالی = هنوز مشخص نیست"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
             </div>
             <div>
-                <label for="status" class="mb-1 block text-sm font-medium">وضعیت سفارش</label>
-                <select id="status" name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label for="status" class="admin-label">وضعیت سفارش</label>
+                <select id="status" name="status" class="admin-input">
                     @foreach (StoreManualOrderRequest::INITIAL_STATUSES as $value)
                         <option value="{{ $value }}" @selected(old('status', 'confirmed') === $value)>{{ Order::STATUS_LABELS[$value] }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label for="payment_status" class="mb-1 block text-sm font-medium">وضعیت پرداخت</label>
-                <select id="payment_status" name="payment_status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label for="payment_status" class="admin-label">وضعیت پرداخت</label>
+                <select id="payment_status" name="payment_status" class="admin-input">
                     @foreach (Order::PAYMENT_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected(old('payment_status', 'unpaid') === $value)>{{ $label }}</option>
                     @endforeach
@@ -242,8 +236,8 @@
             </div>
         </div>
         <div class="mt-3">
-            <label for="notes" class="mb-1 block text-sm font-medium">یادداشت داخلی</label>
-            <textarea id="notes" name="notes" rows="2" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('notes', $prefill['notes']) }}</textarea>
+            <label for="notes" class="admin-label">یادداشت داخلی</label>
+            <textarea id="notes" name="notes" rows="2" class="admin-input">{{ old('notes', $prefill['notes']) }}</textarea>
         </div>
         <label class="mt-4 flex items-center gap-2 text-sm">
             <input type="hidden" name="notify_customer" value="0">

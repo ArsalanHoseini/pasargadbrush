@@ -51,6 +51,6 @@
         </table>
     </div>
 
-    <div class="mt-6">{{ $customers->links() }}</div>
+    <x-admin.pagination :paginator="$customers" />
 @endif
 @endsection

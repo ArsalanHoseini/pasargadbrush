@@ -94,6 +94,6 @@ $statusLabels = \App\Models\Order::STATUS_LABELS;
     </x-admin.bulk-bar>
 </div>
 
-    <div class="mt-6">{{ $orders->links() }}</div>
+    <x-admin.pagination :paginator="$orders" />
 @endif
 @endsection

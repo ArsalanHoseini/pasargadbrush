@@ -40,4 +40,24 @@ class Media extends Model
     {
         return app(ImageThumbnailer::class)->url($this, $width);
     }
+
+    /**
+     * What the admin media picker needs to show and submit this image.
+     *
+     * @return array{id: int, url: string, thumb: string, alt: string, name: string, width: int|null, height: int|null, size_kb: int, usage_count: int}
+     */
+    public function toPickerArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'url' => $this->url(),
+            'thumb' => $this->thumbnailUrl(480),
+            'alt' => (string) $this->alt_text,
+            'name' => basename($this->path),
+            'width' => $this->width,
+            'height' => $this->height,
+            'size_kb' => (int) round(((int) $this->size) / 1024),
+            'usage_count' => (int) ($this->usage_count ?? 0),
+        ];
+    }
 }

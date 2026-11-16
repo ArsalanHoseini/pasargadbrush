@@ -77,11 +77,14 @@
                 <h3 class="mb-2 font-semibold">دسترسی سریع</h3>
                 <span class="mb-5 block h-0.5 w-10 bg-brand-gold"></span>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="{{ route('home') }}" class="hover:text-brand-gold">صفحه اصلی</a></li>
-                    <li><a href="{{ route('blog.index') }}" class="hover:text-brand-gold">مقالات</a></li>
-                    <li><a href="{{ route('pages.show', 'about-us') }}" class="hover:text-brand-gold">درباره ما</a></li>
-                    <li><a href="{{ route('pages.show', 'contact-us') }}" class="hover:text-brand-gold">تماس با ما</a></li>
-                    <li><a href="{{ route('orders.track.create') }}" class="hover:text-brand-gold">پیگیری سفارش</a></li>
+                    {{-- Editable at /admin/menus (footer). --}}
+                    @foreach ($footerMenu as $menuItem)
+                        @continue($menuItem['type'] !== \App\Models\MenuItem::TYPE_LINK)
+                        <li><a href="{{ $menuItem['url'] }}" @if ($menuItem['open_in_new_tab']) target="_blank" rel="noopener" @endif class="hover:text-brand-gold">{{ $menuItem['label'] }}</a></li>
+                        @foreach ($menuItem['children'] as $child)
+                            <li class="pr-3"><a href="{{ $child['url'] }}" @if ($child['open_in_new_tab']) target="_blank" rel="noopener" @endif class="hover:text-brand-gold">{{ $child['label'] }}</a></li>
+                        @endforeach
+                    @endforeach
                 </ul>
 
                 @if ($socialLinks)

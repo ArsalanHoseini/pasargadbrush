@@ -22,17 +22,11 @@
     </x-slot:actions>
 </x-admin.page-header>
 
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
 <div class="grid gap-6 lg:grid-cols-2">
     <div class="space-y-6">
-        <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="admin-card p-6">
             <h2 class="mb-4 text-sm font-medium text-neutral-500">مشتری</h2>
             <dl class="space-y-2 text-sm">
                 <div><dt class="text-neutral-500">نام</dt><dd class="font-medium">{{ $order->customer_name ?? $order->customer?->name }}</dd></div>
@@ -52,7 +46,7 @@
         </div>
 
         @if ($order->shippingAddress)
-            <div class="rounded-lg border border-neutral-200 bg-white p-6">
+            <div class="admin-card p-6">
                 <h2 class="mb-4 text-sm font-medium text-neutral-500">آدرس ارسال</h2>
                 <p class="text-sm">{{ $order->shippingAddress->province }}، {{ $order->shippingAddress->city }}</p>
                 <p class="text-sm text-neutral-600">{{ $order->shippingAddress->address_line }}</p>
@@ -62,7 +56,7 @@
             </div>
         @endif
 
-        <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="admin-card p-6">
             <h2 class="mb-4 text-sm font-medium text-neutral-500">اقلام سفارش</h2>
             <ul class="divide-y divide-neutral-100 text-sm">
                 @foreach ($order->items as $item)
@@ -95,7 +89,7 @@
         </div>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مدیریت سفارش</h2>
         <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="space-y-4">
             @csrf
@@ -122,8 +116,8 @@
             @endif
 
             <div>
-                <label class="mb-1 block text-sm font-medium">وضعیت سفارش</label>
-                <select name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label class="admin-label">وضعیت سفارش</label>
+                <select name="status" class="admin-input">
                     @foreach (\App\Models\Order::STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                     @endforeach
@@ -132,26 +126,26 @@
 
             @if ($shipping->method !== \App\Services\Checkout\ShippingMethod::CashOnDelivery)
                 <div>
-                    <label class="mb-1 block text-sm font-medium">هزینه ارسال (تومان)</label>
+                    <label class="admin-label">هزینه ارسال (تومان)</label>
                     <input name="shipping_cost_toman" type="number" min="0" dir="ltr"
                            value="{{ old('shipping_cost_toman', $order->shipping_cost_rial > 0 ? intdiv($order->shipping_cost_rial, 10) : '') }}"
-                           class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                           class="admin-input">
                     <p class="mt-1 text-xs text-neutral-500">جمع کل سفارش بر اساس این مبلغ دوباره محاسبه می‌شود.</p>
                 </div>
             @endif
 
             <div>
-                <label class="mb-1 block text-sm font-medium">کد رهگیری مرسوله</label>
+                <label class="admin-label">کد رهگیری مرسوله</label>
                 <input name="shipment_tracking_code" value="{{ old('shipment_tracking_code', $order->shipment_tracking_code) }}" dir="ltr"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
                 <p class="mt-1 text-xs text-neutral-500">
                     کد رهگیری پست یا باربری — در صفحه‌ی پیگیری سفارش به مشتری نمایش داده می‌شود.
                 </p>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">وضعیت پرداخت</label>
-                <select name="payment_status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label class="admin-label">وضعیت پرداخت</label>
+                <select name="payment_status" class="admin-input">
                     @foreach (\App\Models\Order::PAYMENT_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->payment_status === $value)>{{ $label }}</option>
                     @endforeach
@@ -162,8 +156,8 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">توضیحات سفارش</label>
-                <textarea name="notes" rows="4" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('notes', $order->notes) }}</textarea>
+                <label class="admin-label">توضیحات سفارش</label>
+                <textarea name="notes" rows="4" class="admin-input">{{ old('notes', $order->notes) }}</textarea>
             </div>
 
             <label class="flex items-start gap-2 rounded border border-neutral-200 bg-neutral-50 p-3 text-sm">
@@ -178,7 +172,7 @@
                 </span>
             </label>
 
-            <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
                 ذخیره
             </button>
         </form>

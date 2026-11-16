@@ -4,29 +4,44 @@
             <img src="{{ asset('images/logo.webp') }}" alt="برس صنعت پاسارگاد" width="386" height="109" class="h-11 w-auto" fetchpriority="high">
         </a>
 
+        {{-- Editable at /admin/menus (header). --}}
         <nav class="hidden items-center gap-6 text-sm font-medium md:flex" aria-label="ناوبری اصلی">
-            <a href="{{ route('home') }}" class="whitespace-nowrap text-neutral-700 hover:text-neutral-950">صفحه اصلی</a>
-
-            <div class="group relative">
-                <button type="button" class="flex items-center gap-1 text-neutral-700 hover:text-neutral-950">
-                    محصولات
-                    <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-                <div class="invisible absolute right-0 top-full z-10 w-64 rounded-lg border border-neutral-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                    @foreach ($navCategories as $category)
-                        <a href="{{ route('categories.show', $category['slug']) }}"
-                           class="block rounded px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950">
-                            {{ $category['name'] }}
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-
-            <a href="{{ route('blog.index') }}" class="text-neutral-700 hover:text-neutral-950">مقالات</a>
-            <a href="{{ route('pages.show', 'about-us') }}" class="whitespace-nowrap text-neutral-700 hover:text-neutral-950">درباره ما</a>
-            <a href="{{ route('pages.show', 'contact-us') }}" class="whitespace-nowrap text-neutral-700 hover:text-neutral-950">تماس با ما</a>
+            @foreach ($headerMenu as $menuItem)
+                @php
+                    $isCategoriesItem = $menuItem['type'] === \App\Models\MenuItem::TYPE_CATEGORIES;
+                    $dropdown = $isCategoriesItem
+                        ? array_map(fn ($category) => ['label' => $category['name'], 'url' => route('categories.show', $category['slug']), 'open_in_new_tab' => false], $navCategories)
+                        : $menuItem['children'];
+                @endphp
+                @if ($isCategoriesItem || $dropdown !== [])
+                    <div class="group relative">
+                        @if ($menuItem['url'])
+                            <a href="{{ $menuItem['url'] }}" @if ($menuItem['open_in_new_tab']) target="_blank" rel="noopener" @endif
+                               class="flex items-center gap-1 whitespace-nowrap text-neutral-700 hover:text-neutral-950">
+                                {{ $menuItem['label'] }}
+                                <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                        @else
+                            <button type="button" class="flex items-center gap-1 whitespace-nowrap text-neutral-700 hover:text-neutral-950">
+                                {{ $menuItem['label'] }}
+                                <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        @endif
+                        <div class="invisible absolute right-0 top-full z-10 w-64 rounded-lg border border-neutral-200 bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                            @foreach ($dropdown as $link)
+                                <a href="{{ $link['url'] }}" @if ($link['open_in_new_tab']) target="_blank" rel="noopener" @endif
+                                   class="block rounded px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950">
+                                    {{ $link['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ $menuItem['url'] }}" @if ($menuItem['open_in_new_tab']) target="_blank" rel="noopener" @endif
+                       @if (\App\Models\MenuItem::isCurrentUrl($menuItem['path'])) aria-current="page" @endif
+                       class="whitespace-nowrap text-neutral-700 hover:text-neutral-950">{{ $menuItem['label'] }}</a>
+                @endif
+            @endforeach
         </nav>
 
         <form method="GET" action="{{ route('search.index') }}" class="hidden max-w-xs grow lg:flex" role="search">

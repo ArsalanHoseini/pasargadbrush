@@ -3,7 +3,7 @@
 @section('title', 'پیام‌های مشتریان')
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">پیام‌های مشتریان</h1>
+<h1 class="mb-6 text-xl font-bold text-neutral-900">پیام‌های مشتریان</h1>
 
 <div class="mb-6 flex flex-wrap gap-2 text-sm">
     <a href="{{ route('admin.conversations.index') }}"
@@ -51,6 +51,6 @@
             </tbody>
         </table>
     </div>
-    <div class="mt-6">{{ $conversations->links() }}</div>
+    <x-admin.pagination :paginator="$conversations" />
 @endif
 @endsection

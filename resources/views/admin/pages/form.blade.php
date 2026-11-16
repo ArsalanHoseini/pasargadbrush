@@ -3,73 +3,73 @@
 @section('title', $page->exists ? 'ویرایش صفحه' : 'صفحه جدید')
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">{{ $page->exists ? 'ویرایش صفحه' : 'صفحه جدید' }}</h1>
+<x-admin.page-header :title="$page->exists ? 'ویرایش صفحه' : 'صفحه جدید'" :description="$page->exists ? $page->title : null">
+    <x-slot:actions>
+        <x-admin.button variant="secondary" :href="route('admin.pages.index')">بازگشت به صفحات</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
-<form method="POST"
-      action="{{ $page->exists ? route('admin.pages.update', $page) : route('admin.pages.store') }}"
-      class="max-w-2xl space-y-4 rounded-lg border border-neutral-200 bg-white p-6">
+<form method="POST" action="{{ $page->exists ? route('admin.pages.update', $page) : route('admin.pages.store') }}">
     @csrf
     @if ($page->exists) @method('PUT') @endif
 
-    <div>
-        <label class="mb-1 block text-sm font-medium">عنوان</label>
-        <input name="title" value="{{ old('title', $page->title) }}" required
-               class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-    </div>
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="min-w-0 space-y-6 lg:col-span-2">
+            <div class="admin-card">
+                <div class="admin-card-body">
+                    <x-admin.counted-field name="title" label="عنوان صفحه (H1)" :value="old('title', $page->title)" :min="10" :max="70" required />
 
-    <div>
-        <label class="mb-1 block text-sm font-medium">نامک (slug) — خالی بگذارید تا خودکار ساخته شود</label>
-        <input name="slug" value="{{ old('slug', $page->slug) }}" dir="ltr"
-               class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-    </div>
+                    <div>
+                        <label for="field-slug" class="admin-label">نامک (آدرس صفحه)</label>
+                        <div class="flex items-stretch overflow-hidden rounded-lg border border-neutral-300 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20" dir="ltr">
+                            <span class="flex items-center bg-neutral-50 px-3 text-xs text-neutral-500">{{ url('page') }}/</span>
+                            <input id="field-slug" name="slug" value="{{ old('slug', $page->slug) }}" class="w-full border-0 px-3 py-2 text-sm focus:outline-none" placeholder="auto">
+                        </div>
+                        <p class="admin-hint">خالی بگذارید تا از روی عنوان ساخته شود.</p>
+                    </div>
+                </div>
+            </div>
 
-    <div class="flex gap-4">
-        <div class="flex-1">
-            <label class="mb-1 block text-sm font-medium">قالب</label>
-            <select name="template" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                <option value="default" @selected(old('template', $page->template ?? 'default') === 'default')>معمولی</option>
-                <option value="about" @selected(old('template', $page->template) === 'about')>درباره ما</option>
-                <option value="contact" @selected(old('template', $page->template) === 'contact')>تماس با ما (نمایش اطلاعات تماس و فرم)</option>
-            </select>
+            <div class="admin-card">
+                <div class="admin-card-header"><h2 class="admin-card-title">متن صفحه</h2></div>
+                <div class="p-5">
+                    <x-rich-text-editor name="body" :value="old('body', $page->body)" />
+                    <p class="admin-hint">برای قالب «تماس با ما» این متن به‌صورت مقدمه، بالای اطلاعات تماس (که خودکار از تنظیمات سایت خوانده می‌شود) نمایش داده می‌شود.</p>
+                </div>
+            </div>
+
+            <x-admin.seo-card :meta-title="old('meta_title', $page->meta_title)" :meta-description="old('meta_description', $page->meta_description)"
+                              :url-prefix="url('page').'/'" :slug="$page->slug" />
         </div>
-        <div class="flex-1">
-            <label class="mb-1 block text-sm font-medium">وضعیت</label>
-            <select name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                <option value="draft" @selected(old('status', $page->status ?? 'draft') === 'draft')>پیش‌نویس</option>
-                <option value="published" @selected(old('status', $page->status) === 'published')>منتشرشده</option>
-            </select>
+
+        <div class="space-y-6">
+            <div class="admin-card">
+                <div class="admin-card-header"><h2 class="admin-card-title">انتشار</h2></div>
+                <div class="admin-card-body">
+                    <div>
+                        <label for="field-status" class="admin-label">وضعیت</label>
+                        <select id="field-status" name="status" class="admin-input">
+                            <option value="draft" @selected(old('status', $page->status ?? 'draft') === 'draft')>پیش‌نویس</option>
+                            <option value="published" @selected(old('status', $page->status) === 'published')>منتشرشده</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="field-template" class="admin-label">قالب</label>
+                        <select id="field-template" name="template" class="admin-input">
+                            <option value="default" @selected(old('template', $page->template ?? 'default') === 'default')>معمولی</option>
+                            <option value="about" @selected(old('template', $page->template) === 'about')>درباره ما</option>
+                            <option value="contact" @selected(old('template', $page->template) === 'contact')>تماس با ما (اطلاعات تماس و فرم)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div>
-        <label class="mb-1 block text-sm font-medium">متن صفحه</label>
-        <textarea name="body" rows="14" required
-                  class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('body', $page->body) }}</textarea>
-        <p class="mt-1 text-xs text-neutral-500">
-            برای قالب «تماس با ما» این متن به‌صورت مقدمه، بالای اطلاعات تماس (که خودکار از تنظیمات سایت خوانده می‌شود) نمایش داده می‌شود.
-        </p>
-    </div>
-
-    <div class="border-t border-neutral-100 pt-4">
-        <p class="mb-2 text-sm font-medium text-neutral-500">SEO (اختیاری)</p>
-        <div class="space-y-3">
-            <input name="meta_title" value="{{ old('meta_title', $page->meta_title) }}" placeholder="عنوان متا"
-                   class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-            <textarea name="meta_description" rows="2" placeholder="توضیحات متا"
-                      class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('meta_description', $page->meta_description) }}</textarea>
-        </div>
-    </div>
-
-    <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
-        ذخیره
-    </button>
+    <x-admin.save-bar :cancel="route('admin.pages.index')"
+                      :view="$page->exists && $page->status === 'published' ? route('pages.show', $page) : null"
+                      :label="$page->exists ? 'ذخیره تغییرات' : 'ایجاد صفحه'" />
 </form>
 @endsection

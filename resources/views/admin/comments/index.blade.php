@@ -73,6 +73,6 @@ $statusLabels = ['pending' => 'در انتظار تأیید', 'approved' => 'ت�
     <x-admin.bulk-bar :action="route('admin.comments.bulk')" :actions="['approve' => 'تأیید', 'spam' => 'اسپم', 'delete' => 'حذف']" />
 </div>
 
-    <div class="mt-6">{{ $comments->links() }}</div>
+    <x-admin.pagination :paginator="$comments" />
 @endif
 @endsection

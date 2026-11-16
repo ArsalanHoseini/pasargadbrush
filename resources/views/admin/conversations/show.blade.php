@@ -46,7 +46,7 @@
           class="mt-6 space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
         @csrf
         @include('conversations.partials.compose', ['placeholder' => 'پاسخ به مشتری…'])
-        <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">ارسال پاسخ</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">ارسال پاسخ</button>
         <p class="text-xs text-neutral-500">مشتری با پیامک (و ایمیل، اگر ثبت کرده باشد) از پاسخ مطلع می‌شود.</p>
     </form>
 </div>
