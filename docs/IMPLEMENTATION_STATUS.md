@@ -338,6 +338,14 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Toasts moved to the top so they don't cover the sticky save bar.
 - 14 new tests (`Admin/MenuManagementTest`, 6 in `Admin/MediaUploadTest`). Full suite 481/481 passing. Checked in the browser on a SQLite copy: product create with gallery + editor image + H2, media picker pages/selection, media library pagination, menu edit → public header dropdown.
 
+**Homepage UI/UX and hero refresh (completed locally, 2026-11-17)**
+- Kept the existing homepage structure, routes, header, product data and section order. The hero now leads with the customer's production need («برس صنعتی، دقیقاً برای خط تولید شما») and keeps the established orange/charcoal identity.
+- Rebuilt the hero's visual hierarchy with clearer primary/secondary actions, three concise trust facts, stronger focus states and a responsive real-product mosaic. Industrial product names are preferred for the hero without changing featured-product data or hiding products from the catalog.
+- Improved the existing brush-type strip as an explicit quick-start path, with a heading, mobile swipe cue, mandatory scroll snapping and clearer hover/focus feedback.
+- No generated or stock imagery was added; all product photography remains the site's real catalog media.
+- Ran `npm run build`, `vendor/bin/pint --dirty --format agent`, and the focused public-homepage tests: 15 tests / 53 assertions passing (`PublicSiteTest`, `SiteChromeTest`).
+- Browser-checked the live local page on desktop and at 390×844: hero CTAs, product imagery, mobile bottom navigation and the horizontal brush picker render correctly; no unwanted horizontal overflow and no browser console errors.
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

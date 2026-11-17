@@ -46,6 +46,15 @@
     background-size: 28px 28px;
 }
 
+/* Homepage hero: warm light suggests the workshop without replacing real
+   product photography with a decorative stock image. */
+.hero-industrial {
+    background:
+        radial-gradient(circle at 78% 18%, rgb(255 119 0 / 14%), transparent 31rem),
+        radial-gradient(circle at 15% 85%, rgb(255 192 50 / 7%), transparent 25rem),
+        linear-gradient(145deg, #181818 0%, #0d0d0d 58%, #15120f 100%);
+}
+
 /* ---------- Admin panel form primitives ---------- */
 @layer components {
     .admin-card {
