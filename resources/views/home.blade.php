@@ -13,20 +13,7 @@
 @endphp
 
 @php
-$heroProductKeywords = ['سیلندری', 'دیسکی', 'سورتینگ', 'صنایع'];
-$mosaicProducts = $products
-    ->filter(fn ($product) => $product->images->isNotEmpty())
-    ->sortBy(function ($product) use ($heroProductKeywords) {
-        foreach ($heroProductKeywords as $priority => $keyword) {
-            if (str_contains($product->name, $keyword)) {
-                return $priority;
-            }
-        }
-
-        return count($heroProductKeywords);
-    })
-    ->take(3)
-    ->values();
+$mosaicProducts = $products->filter(fn ($product) => $product->images->isNotEmpty())->take(3)->values();
 @endphp
 
 @section('content')
