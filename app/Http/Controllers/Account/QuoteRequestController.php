@@ -40,6 +40,7 @@ class QuoteRequestController extends Controller
             'quoteRequests' => self::visibleTo($request->user('customer'))
                 ->with('product', 'order', 'conversation')
                 ->latest()
+                ->latest('id')
                 ->paginate(15),
         ]);
     }

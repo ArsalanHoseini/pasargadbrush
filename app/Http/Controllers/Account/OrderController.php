@@ -15,7 +15,7 @@ class OrderController extends Controller
     public function index(Request $request): View
     {
         return view('account.orders.index', [
-            'orders' => $request->user('customer')->orders()->latest('placed_at')->paginate(15),
+            'orders' => $request->user('customer')->orders()->latest('placed_at')->latest('id')->paginate(15),
         ]);
     }
 

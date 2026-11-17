@@ -22,6 +22,7 @@ class ProductCategoryController extends Controller
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
+            ->orderBy('id')
             ->paginate(20)
             ->withQueryString();
 

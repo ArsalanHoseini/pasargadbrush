@@ -46,6 +46,7 @@ class ProductController extends Controller
                 ->whereNotNull('stock_quantity')
                 ->where('stock_quantity', '<=', DashboardMetrics::LOW_STOCK_THRESHOLD)))
             ->latest()
+            ->latest('id')
             ->paginate(20)
             ->withQueryString();
 

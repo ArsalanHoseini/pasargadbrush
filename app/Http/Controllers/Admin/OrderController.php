@@ -149,7 +149,8 @@ class OrderController extends Controller
                 ->whereNotIn('status', ['cancelled', 'completed']))
             ->when($from, fn ($query) => $query->where('placed_at', '>=', $from))
             ->when($to, fn ($query) => $query->where('placed_at', '<', $to->modify('+1 day')))
-            ->latest('placed_at');
+            ->latest('placed_at')
+            ->latest('id');
     }
 
     /**

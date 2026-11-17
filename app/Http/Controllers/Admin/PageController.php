@@ -21,6 +21,7 @@ class PageController extends Controller
                 ->where('title', 'like', "%{$search}%")
                 ->orWhere('slug', 'like', "%{$search}%")))
             ->orderBy('title')
+            ->orderBy('id')
             ->paginate(20)
             ->withQueryString();
 

@@ -23,6 +23,7 @@ class BlogController extends Controller
             ->published()
             ->when($featured, fn ($query) => $query->where('id', '!=', $featured->id))
             ->latest('published_at')
+            ->latest('id')
             ->paginate(12);
 
         return view('blog.index', ['posts' => $posts, 'featured' => $featured]);
@@ -34,6 +35,7 @@ class BlogController extends Controller
             ->with(['featuredImage', 'category', 'tags'])
             ->published()
             ->latest('published_at')
+            ->latest('id')
             ->paginate(12);
 
         return view('blog.index', ['posts' => $posts, 'featured' => null, 'tag' => $tag]);

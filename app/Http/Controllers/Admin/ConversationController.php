@@ -35,6 +35,7 @@ class ConversationController extends Controller
                 ->when($status, fn ($query) => $query->where('status', $status))
                 ->orderByRaw("case when status = 'open' then 0 else 1 end")
                 ->latest('last_message_at')
+                ->latest('id')
                 ->paginate(20)
                 ->withQueryString(),
         ]);

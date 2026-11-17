@@ -346,6 +346,12 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Ran `npm run build`, `vendor/bin/pint --dirty --format agent`, and the focused public-homepage tests: 15 tests / 53 assertions passing (`PublicSiteTest`, `SiteChromeTest`).
 - Browser-checked the live local page on desktop and at 390×844: hero CTAs, product imagery, mobile bottom navigation and the horizontal brush picker render correctly; no unwanted horizontal overflow and no browser console errors.
 
+**Pagination + filter fix (completed locally, 2026-11-17)**
+- Root cause: paginated lists sorted only by non-unique columns (`created_at`, `published_at`, `name`, `sort_order`…). Imported products share a handful of `created_at` values (55 products / 7 distinct), so MySQL returned ties in a different order per page — with the «استعلامی» filter, 46 rows across pages held only 38 unique products (repeats and missing items).
+- Added a unique `id` tie-breaker to every paginated list (admin products, categories, blog posts/categories, pages, orders, customers, quote requests, comments, reviews, conversations, redirects; public category, search and blog; customer account lists).
+- Admin order / quote-request status tabs now keep the search, date and payment filters (and reset to page 1) instead of dropping them.
+- Tests: 2 new regression tests in `AdminListFilterTest` (fail before the fix); full suite 483 tests passing; Pint clean.
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

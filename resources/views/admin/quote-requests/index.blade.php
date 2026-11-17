@@ -14,12 +14,12 @@ $statusLabels = \App\Http\Controllers\Admin\QuoteRequestController::STATUS_LABEL
 </x-admin.page-header>
 
 <div class="mb-4 flex flex-wrap gap-1 border-b border-neutral-200 text-sm">
-    <a href="{{ route('admin.quote-requests.index') }}"
+    <a href="{{ route('admin.quote-requests.index', request()->except(['page', 'status'])) }}"
        @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => ! $status, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status])>
         همه <span class="text-xs text-neutral-400">{{ $statusCounts->sum() }}</span>
     </a>
     @foreach ($statusLabels as $value => $label)
-        <a href="{{ route('admin.quote-requests.index', ['status' => $value]) }}"
+        <a href="{{ route('admin.quote-requests.index', ['status' => $value, ...request()->except(['page', 'status'])]) }}"
            @class(['-mb-px border-b-2 px-3 py-2', 'border-brand-accent font-medium text-neutral-900' => $status === $value, 'border-transparent text-neutral-500 hover:text-neutral-900' => $status !== $value])>
             {{ $label }} <span class="text-xs text-neutral-400">{{ $statusCounts[$value] ?? 0 }}</span>
         </a>

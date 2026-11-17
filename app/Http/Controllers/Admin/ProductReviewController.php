@@ -25,6 +25,7 @@ class ProductReviewController extends Controller
                 ->with('product')
                 ->when($status !== 'all', fn ($query) => $query->where('status', $status))
                 ->latest()
+                ->latest('id')
                 ->paginate(20)
                 ->withQueryString(),
         ]);

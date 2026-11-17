@@ -35,6 +35,9 @@ class ProductCategoryController extends Controller
             default => $query->orderBy('sort_order')->latest('published_at'),
         };
 
+        // A unique tie-breaker keeps page boundaries stable when sort values repeat.
+        $query->latest('id');
+
         $products = $query->paginate(12)->withQueryString();
 
         return view('categories.show', [

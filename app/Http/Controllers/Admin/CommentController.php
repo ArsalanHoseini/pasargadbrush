@@ -20,6 +20,7 @@ class CommentController extends Controller
             ->with('post')
             ->when($status !== 'all', fn ($query) => $query->where('status', $status))
             ->latest()
+            ->latest('id')
             ->paginate(20)
             ->withQueryString();
 

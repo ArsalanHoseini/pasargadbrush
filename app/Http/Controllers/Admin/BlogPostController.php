@@ -25,6 +25,7 @@ class BlogPostController extends Controller
             ->when($request->filled('category'), fn ($query) => $query->where('blog_category_id', $request->integer('category')))
             ->when(in_array($request->query('status'), ['published', 'draft'], true), fn ($query) => $query->where('status', $request->query('status')))
             ->latest('published_at')
+            ->latest('id')
             ->paginate(20)
             ->withQueryString();
 

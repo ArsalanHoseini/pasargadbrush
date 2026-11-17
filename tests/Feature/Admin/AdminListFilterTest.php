@@ -73,6 +73,33 @@ class AdminListFilterTest extends TestCase
         $this->get(route('admin.products.index', ['stock' => 'low']))->assertSee('برس قیمت‌دار')->assertDontSee('برس استعلامی');
     }
 
+    public function test_filtered_product_pages_do_not_overlap_when_created_at_ties(): void
+    {
+        $createdAt = now()->subDay();
+        foreach (range(1, 25) as $number) {
+            Product::create(['sku' => "Q-{$number}", 'slug' => "q{$number}", 'name' => "برس-شماره-{$number}-پایان", 'type' => 'quote', 'is_active' => true])
+                ->forceFill(['created_at' => $createdAt])->saveQuietly();
+        }
+
+        $this->actingAs($this->staff());
+
+        $firstPage = $this->get(route('admin.products.index', ['type' => 'quote']))->viewData('products');
+        $secondPage = $this->get(route('admin.products.index', ['type' => 'quote', 'page' => 2]))->viewData('products');
+
+        $this->assertSame(range(25, 6), $firstPage->pluck('sku')->map(fn (string $sku) => (int) substr($sku, 2))->all());
+        $this->assertSame(range(5, 1), $secondPage->pluck('sku')->map(fn (string $sku) => (int) substr($sku, 2))->all());
+        $this->assertStringContainsString('type=quote', $firstPage->nextPageUrl());
+    }
+
+    public function test_order_status_tabs_keep_the_other_filters(): void
+    {
+        $this->order('PB-1');
+
+        $this->actingAs($this->staff())->get(route('admin.orders.index', ['q' => 'PB', 'payment_status' => 'paid', 'page' => 2]))
+            ->assertSee(e(route('admin.orders.index', ['status' => 'pending', 'q' => 'PB', 'payment_status' => 'paid'])), false)
+            ->assertSee(e(route('admin.orders.index', ['q' => 'PB', 'payment_status' => 'paid'])), false);
+    }
+
     public function test_product_filters_with_no_match_show_a_filtered_empty_state(): void
     {
         $this->actingAs($this->staff())->get(route('admin.products.index', ['q' => 'هیچ']))

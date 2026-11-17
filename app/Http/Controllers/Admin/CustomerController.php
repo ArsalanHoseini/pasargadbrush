@@ -79,6 +79,7 @@ class CustomerController extends Controller
             ->when($request->query('has_orders') === 'no', fn ($query) => $query->doesntHave('orders'))
             ->when($from, fn ($query) => $query->where('created_at', '>=', $from))
             ->when($to, fn ($query) => $query->where('created_at', '<', $to->modify('+1 day')))
-            ->latest();
+            ->latest()
+            ->latest('id');
     }
 }

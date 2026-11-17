@@ -45,6 +45,7 @@ class SearchController extends Controller
                 }
             })
             ->orderBy('name')
+            ->orderBy('id')
             ->paginate(12);
 
         return $matchAll && $results->total() === 0 && count($words) > 1 ? null : $results;
