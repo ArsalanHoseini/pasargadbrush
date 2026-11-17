@@ -10,6 +10,7 @@ use App\Services\Seo\SchemaGraph;
 use App\Services\Seo\SeoCache;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -35,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Persian digits and RTL order for every ->links(); the stock view is LTR and follows OS dark mode.
+        Paginator::defaultView('partials.pagination');
+
         // Sales, customers, settings, users, reports and the activity log are
         // admin-only; editors keep the catalog and content.
         Gate::define('admin', fn (User $user): bool => $user->isAdmin());

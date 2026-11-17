@@ -351,6 +351,8 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 - Added a unique `id` tie-breaker to every paginated list (admin products, categories, blog posts/categories, pages, orders, customers, quote requests, comments, reviews, conversations, redirects; public category, search and blog; customer account lists).
 - Admin order / quote-request status tabs now keep the search, date and payment filters (and reset to page 1) instead of dropping them.
 - Tests: 2 new regression tests in `AdminListFilterTest` (fail before the fix); full suite 483 tests passing; Pint clean.
+- Follow-up audit: walked every page of 48 paginated list/filter combinations against the local MySQL data (public category/search/blog, all admin lists with filters) — no duplicates, no missing rows, filters kept in page links. Added `PaginationTest` for blog tag pages and customer order pages (no local data to crawl).
+- Public and account pagination used Laravel's stock view (LTR order, Latin digits, followed OS dark mode, literal `&raquo;` in labels). The admin's Persian pagination markup now lives in `partials/pagination.blade.php`, registered as `Paginator::defaultView`; `<x-admin.pagination>` wraps it. Browser-checked on desktop and 375px: RTL order, Persian digits, query string kept, no overflow. Full suite 485 tests passing.
 
 ## Next concrete step
 
