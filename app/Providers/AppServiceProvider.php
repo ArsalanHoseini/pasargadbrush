@@ -2,11 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\MenuItem;
 use App\Models\ProductCategory;
+use App\Models\User;
 use App\Services\Cart\CartResolver;
+use App\Services\Seo\SchemaGraph;
+use App\Services\Seo\SeoCache;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SmsSender::class, fn () => match (config('services.sms.driver')) {
             default => new LogSmsSender,
         });
+
+        // One JSON-LD graph per request, filled by the views and printed by the layout.
+        $this->app->scoped(SchemaGraph::class);
     }
 
     /**
@@ -27,24 +36,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Persian digits and RTL order for every ->links(); the stock view is LTR and follows OS dark mode.
+        Paginator::defaultView('partials.pagination');
+
+        // Sales, customers, settings, users, reports and the activity log are
+        // admin-only; editors keep the catalog and content.
+        Gate::define('admin', fn (User $user): bool => $user->isAdmin());
+
+        // Every generated link and canonical tag names the one real address
+        // (https, no www), however the request arrived — see RedirectToCanonicalHost.
+        if ($this->app->isProduction()) {
+            URL::forceRootUrl(config('app.url'));
+            URL::forceScheme('https');
+        }
+
+        // Saving content in the admin refreshes /llms.txt, /llms-full.txt and the .md copies.
+        SeoCache::watchModels();
+
         View::composer(['partials.header', 'partials.footer'], function ($view) {
-            // Cache plain arrays, not Eloquent models/Collections — caching
-            // objects is fragile across this app's cache-driver (de)serialization
-            // boundary (see docs/DECISIONS.md).
-            $categories = Cache::remember(
-                'nav.categories',
-                now()->addHour(),
-                fn () => ProductCategory::query()
-                    ->whereNull('parent_id')
-                    ->where('is_active', true)
-                    ->orderBy('sort_order')
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'slug'])
-                    ->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'slug' => $category->slug])
-                    ->all(),
-            );
+            $categories = ProductCategory::navigation();
 
             $view->with('navCategories', $categories);
+            $view->with('headerMenu', MenuItem::forDisplay('header'));
+            $view->with('footerMenu', MenuItem::forDisplay('footer'));
         });
 
         View::composer('partials.header', function ($view) {

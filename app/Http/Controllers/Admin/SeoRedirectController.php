@@ -32,6 +32,7 @@ class SeoRedirectController extends Controller
                 ->when($source, fn ($query) => $query->where('source', $source))
                 ->orderByDesc('hits_count')
                 ->orderBy('from_path')
+                ->orderBy('id')
                 ->paginate(50)
                 ->withQueryString(),
             'totals' => SeoRedirect::query()->selectRaw('source, count(*) as total, sum(hits_count) as hits')->groupBy('source')->get()->keyBy('source'),

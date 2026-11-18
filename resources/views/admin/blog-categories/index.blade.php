@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-6 flex items-center justify-between">
     <h1 class="text-lg font-semibold">دسته‌بندی بلاگ</h1>
-    <a href="{{ route('admin.blog-categories.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+    <a href="{{ route('admin.blog-categories.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
         دسته جدید
     </a>
 </div>
@@ -30,7 +30,7 @@
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.blog-categories.edit', $category) }}" class="text-neutral-600 hover:text-neutral-900">ویرایش</a>
                             <form method="POST" action="{{ route('admin.blog-categories.destroy', $category) }}" class="inline"
-                                  onsubmit="return confirm('حذف شود؟');">
+                                  data-confirm="حذف شود؟">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="mr-2 text-red-600 hover:text-red-800">حذف</button>
                             </form>
@@ -41,6 +41,6 @@
         </table>
     </div>
 
-    <div class="mt-6">{{ $categories->links() }}</div>
+    <x-admin.pagination :paginator="$categories" />
 @endif
 @endsection

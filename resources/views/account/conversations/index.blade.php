@@ -5,7 +5,7 @@
 @section('account-content')
 <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <h1 class="text-xl font-bold text-neutral-900">پیام‌ها</h1>
-    <a href="{{ route('account.conversations.create') }}" class="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-dark">+ پیام جدید به کارشناس</a>
+    <a href="{{ route('account.conversations.create') }}" class="rounded-full bg-brand-accent-dark px-5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-darker">+ پیام جدید به کارشناس</a>
 </div>
 
 @forelse ($conversations as $conversation)

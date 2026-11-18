@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,10 @@ class SettingController extends Controller
         'contact_landline' => ['تلفن ثابت', 'تماس', 'nullable|string|max:50'],
         'contact_email' => ['ایمیل', 'تماس', 'nullable|email|max:255'],
         'contact_address' => ['آدرس', 'تماس', 'nullable|string|max:500'],
+        'contact_whatsapp' => ['واتساپ (شماره موبایل)', 'تماس', 'nullable|string|max:50'],
+        'contact_bale' => ['بله (شماره موبایل)', 'تماس', 'nullable|string|max:50'],
+        'map_embed_url' => ['نشانی embed نقشه گوگل (src داخل iframe)', 'نقشه', 'nullable|url|starts_with:https://www.google.com/maps/embed|max:2000'],
+        'map_link_url' => ['لینک باز شدن موقعیت در گوگل‌مپ', 'نقشه', 'nullable|url|max:500'],
         'social_instagram_url' => ['اینستاگرام', 'شبکه‌های اجتماعی', 'nullable|url|max:255'],
         'social_telegram_url' => ['تلگرام', 'شبکه‌های اجتماعی', 'nullable|url|max:255'],
         'social_linkedin_url' => ['لینکدین', 'شبکه‌های اجتماعی', 'nullable|url|max:255'],
@@ -56,6 +61,8 @@ class SettingController extends Controller
                 ['value' => $value !== null ? trim($value) : null, 'group' => self::FIELDS[$key][1]],
             );
         }
+
+        AuditLog::record('settings.updated');
 
         return redirect()->route('admin.settings.edit')->with('status', 'تنظیمات ذخیره شد.');
     }

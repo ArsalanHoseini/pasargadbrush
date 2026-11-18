@@ -7,7 +7,7 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
 @endphp
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">نظرات محصولات</h1>
+<x-admin.page-header title="نظرات محصولات" />
 
 <div class="mb-6 flex gap-2 text-sm">
     <a href="{{ route('admin.product-reviews.index', ['status' => 'all']) }}"
@@ -23,11 +23,15 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
 @if ($reviews->isEmpty())
     <p class="text-sm text-neutral-500">نظری ثبت نشده است.</p>
 @else
+<div x-data="bulkSelection">
+    <label class="mb-3 flex items-center gap-2 text-sm text-neutral-600"><x-admin.bulk-select-all /> انتخاب همه‌ی این صفحه</label>
     <div class="space-y-4">
         @foreach ($reviews as $review)
             <div class="rounded-lg border border-neutral-200 p-4 {{ $review->status === 'pending' ? 'bg-amber-50' : 'bg-white' }}">
                 <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500">
-                    <span>
+                    <span class="flex items-center gap-2">
+                        <x-admin.bulk-checkbox :value="$review->id" :label="'انتخاب '.$review->author_name" />
+                        <span>
                         <strong class="text-neutral-800">{{ $review->author_name }}</strong>
                         @if ($review->customer_id)
                             (مشتری دارای حساب)
@@ -41,6 +45,7 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
                         @if ($review->rating)
                             — <span aria-label="{{ $review->rating }} از ۵">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
                         @endif
+                        </span>
                     </span>
                     <span>{{ persian_date($review->created_at, \App\Support\PersianDate::COMPACT) }} — {{ $statusLabels[$review->status] }}</span>
                 </div>
@@ -61,7 +66,7 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
                         </form>
                     @endif
                     <form method="POST" action="{{ route('admin.product-reviews.destroy', $review) }}"
-                          onsubmit="return confirm('حذف این نظر قطعی است. ادامه می‌دهید؟');">
+                          data-confirm="حذف این نظر قطعی است. ادامه می‌دهید؟">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-red-700 hover:underline">حذف</button>
@@ -71,6 +76,9 @@ $statusLabels = \App\Models\ProductReview::STATUS_LABELS;
         @endforeach
     </div>
 
-    <div class="mt-6">{{ $reviews->links() }}</div>
+    <x-admin.bulk-bar :action="route('admin.product-reviews.bulk')" :actions="['approve' => 'تأیید', 'spam' => 'اسپم', 'delete' => 'حذف']" />
+</div>
+
+    <x-admin.pagination :paginator="$reviews" />
 @endif
 @endsection

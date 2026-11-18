@@ -10,15 +10,29 @@ use App\Models\Media;
 use App\Models\Tag;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BlogPostController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $posts = BlogPost::query()->with('category')->latest('published_at')->paginate(20);
+        $search = trim((string) $request->query('q', ''));
 
-        return view('admin.blog-posts.index', ['posts' => $posts]);
+        $posts = BlogPost::query()
+            ->with('category')
+            ->when($search !== '', fn ($query) => $query->where('title', 'like', "%{$search}%"))
+            ->when($request->filled('category'), fn ($query) => $query->where('blog_category_id', $request->integer('category')))
+            ->when(in_array($request->query('status'), ['published', 'draft'], true), fn ($query) => $query->where('status', $request->query('status')))
+            ->latest('published_at')
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.blog-posts.index', [
+            'posts' => $posts,
+            'categoryOptions' => BlogCategory::orderBy('name')->pluck('name', 'id'),
+        ]);
     }
 
     public function create(): View
@@ -72,8 +86,7 @@ class BlogPostController extends Controller
         return view('admin.blog-posts.form', [
             'post' => $post,
             'categories' => BlogCategory::query()->orderBy('name')->get(),
-            'media' => Media::query()->latest()->limit(60)->get(),
-            'currentFeaturedId' => $post->exists ? $post->featuredImage->first()?->id : null,
+            'featuredImageItems' => $this->featuredImageItems($post),
             'currentTags' => $post->exists ? $post->tags->pluck('name')->implode('، ') : '',
         ]);
     }
@@ -102,6 +115,19 @@ class BlogPostController extends Controller
         });
 
         $post->tags()->sync($tagIds);
+    }
+
+    /**
+     * The featured image for the picker: the one just submitted (after a
+     * validation error) or the post's current one.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function featuredImageItems(BlogPost $post): array
+    {
+        $mediaId = session()->hasOldInput() ? (int) old('featured_media_id') : $post->featuredImage->first()?->id;
+
+        return $mediaId ? Media::query()->whereKey($mediaId)->get()->map->toPickerArray()->all() : [];
     }
 
     private function syncFeaturedImage(BlogPost $post, ?int $mediaId): void

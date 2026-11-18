@@ -46,7 +46,7 @@
                 <li class="flex flex-1 flex-col items-center text-center" @if ($index === $currentStepIndex) aria-current="step" @endif>
                     <span @class([
                         'mb-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold',
-                        'bg-brand-accent text-white' => $isReached,
+                        'bg-brand-accent-dark text-white' => $isReached,
                         'bg-neutral-100 text-neutral-400' => ! $isReached,
                     ])>{{ $index + 1 }}</span>
                     <span @class([

@@ -3,17 +3,21 @@
 @section('title', 'مقالات بلاگ')
 
 @section('content')
-<div class="mb-6 flex items-center justify-between">
-    <h1 class="text-lg font-semibold">مقالات بلاگ</h1>
-    <a href="{{ route('admin.blog-posts.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
-        مقاله جدید
-    </a>
-</div>
+<x-admin.page-header title="مقالات بلاگ" :description="$posts->total().' مقاله'">
+    <x-slot:actions>
+        <x-admin.button :href="route('admin.blog-posts.create')" icon="plus">مقاله جدید</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
+
+<x-admin.filter-bar :action="route('admin.blog-posts.index')" placeholder="عنوان مقاله…">
+    <x-admin.filter-select name="category" label="دسته" :options="$categoryOptions" />
+    <x-admin.filter-select name="status" label="وضعیت" :options="['published' => 'منتشرشده', 'draft' => 'پیش‌نویس']" />
+</x-admin.filter-bar>
 
 @if ($posts->isEmpty())
-    <p class="text-sm text-neutral-500">هنوز هیچ مقاله‌ای ثبت نشده است.</p>
+    <x-admin.empty-state icon="document-text">{{ request()->hasAny(['q', 'category', 'status']) ? 'موردی با این فیلترها پیدا نشد.' : 'هنوز هیچ مقاله‌ای ثبت نشده است.' }}</x-admin.empty-state>
 @else
-    <div class="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+    <div class="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table class="w-full text-sm">
             <thead class="border-b border-neutral-200 bg-neutral-50 text-right">
                 <tr>
@@ -40,7 +44,7 @@
                         <td class="px-4 py-3 text-left">
                             <a href="{{ route('admin.blog-posts.edit', $post) }}" class="text-neutral-600 hover:text-neutral-900">ویرایش</a>
                             <form method="POST" action="{{ route('admin.blog-posts.destroy', $post) }}" class="inline"
-                                  onsubmit="return confirm('حذف شود؟');">
+                                  data-confirm="حذف شود؟">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="mr-2 text-red-600 hover:text-red-800">حذف</button>
                             </form>
@@ -51,6 +55,6 @@
         </table>
     </div>
 
-    <div class="mt-6">{{ $posts->links() }}</div>
+    <x-admin.pagination :paginator="$posts" />
 @endif
 @endsection

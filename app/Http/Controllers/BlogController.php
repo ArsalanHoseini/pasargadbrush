@@ -23,6 +23,7 @@ class BlogController extends Controller
             ->published()
             ->when($featured, fn ($query) => $query->where('id', '!=', $featured->id))
             ->latest('published_at')
+            ->latest('id')
             ->paginate(12);
 
         return view('blog.index', ['posts' => $posts, 'featured' => $featured]);
@@ -34,6 +35,7 @@ class BlogController extends Controller
             ->with(['featuredImage', 'category', 'tags'])
             ->published()
             ->latest('published_at')
+            ->latest('id')
             ->paginate(12);
 
         return view('blog.index', ['posts' => $posts, 'featured' => null, 'tag' => $tag]);
@@ -43,7 +45,10 @@ class BlogController extends Controller
     {
         abort_unless($post->status === 'published' && $post->published_at?->lte(now()), 404);
 
-        $post->increment('view_count');
+        // A view is not an edit: bypass Eloquent so updated_at (the sitemap's
+        // lastmod and the article's dateModified) is left alone.
+        BlogPost::query()->whereKey($post->id)->toBase()->increment('view_count');
+        $post->view_count++;
 
         $related = BlogPost::query()
             ->with('featuredImage')
@@ -54,7 +59,7 @@ class BlogController extends Controller
             ->get();
 
         return view('blog.show', [
-            'post' => $post->load(['featuredImage', 'category', 'tags', 'approvedComments']),
+            'post' => $post->load(['featuredImage', 'category', 'tags', 'author', 'approvedComments']),
             'related' => $related,
         ]);
     }

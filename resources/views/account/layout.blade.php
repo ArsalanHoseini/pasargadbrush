@@ -27,7 +27,7 @@
                            'bg-neutral-900 text-white' => request()->routeIs($item['match']),
                            'text-neutral-700 hover:bg-neutral-100' => ! request()->routeIs($item['match']),
                        ])
-                       @if (request()->routeIs($item['match'])) aria-current="page" @endif>{{ $item['label'] }}@if (! empty($item['badge']))<span class="mr-1 rounded-full bg-brand-accent px-1.5 py-0.5 text-xs text-white">{{ $item['badge'] }}<span class="sr-only"> پیام خوانده‌نشده</span></span>@endif</a>
+                       @if (request()->routeIs($item['match'])) aria-current="page" @endif>{{ $item['label'] }}@if (! empty($item['badge']))<span class="mr-1 rounded-full bg-brand-accent-dark px-1.5 py-0.5 text-xs text-white">{{ $item['badge'] }}<span class="sr-only"> پیام خوانده‌نشده</span></span>@endif</a>
                 @endforeach
                 <form method="POST" action="{{ route('account.logout') }}" class="shrink-0">
                     @csrf

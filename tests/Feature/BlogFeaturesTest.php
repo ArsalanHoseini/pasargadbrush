@@ -35,6 +35,21 @@ class BlogFeaturesTest extends TestCase
         $this->assertSame(2, $post->refresh()->view_count);
     }
 
+    public function test_a_view_does_not_change_the_articles_last_modified_date(): void
+    {
+        $post = BlogPost::create([
+            'title' => 'مقاله', 'slug' => 'article', 'body' => 'متن', 'status' => 'published',
+            'published_at' => now()->subDays(2),
+        ]);
+        $modified = $post->updated_at->toIso8601String();
+
+        $this->travel(1)->day();
+        $this->get(route('blog.show', $post))->assertOk();
+
+        $this->assertSame($modified, $post->refresh()->updated_at->toIso8601String());
+        $this->assertSame(1, $post->view_count);
+    }
+
     public function test_a_post_scheduled_for_the_future_is_not_publicly_visible(): void
     {
         $post = BlogPost::create([

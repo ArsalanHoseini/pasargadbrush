@@ -114,7 +114,7 @@
             @endif
         </p>
 
-        <button type="submit" class="w-full rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+        <button type="submit" class="w-full rounded-full bg-brand-accent-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-darker">
             ثبت سفارش
         </button>
     </form>

@@ -1,4 +1,4 @@
-*.log
+﻿*.log
 .DS_Store
 .env
 .env.backup
@@ -26,8 +26,64 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Raw WordPress migration source material (DB dumps, media, price lists) —
+# Raw WordPress migration source material (DB dumps, media, price lists) â€”
 # large/sensitive, never committed. Processed data lives in the real app DB.
 /docs/*.sql
 /docs/uploads/
 /docs/*.pdf
+
+# ---- added by publish-projects.ps1 ----
+node_modules/
+vendor/
+.next/
+.next-build/
+dist/
+build/
+out/
+.pnpm-store/
+.gradle/
+.kotlin/
+.idea/
+.vscode/
+.claude/
+.cursor/
+.zcode/
+.agents/
+.env
+.env.*
+!.env.example
+*.sql
+!**/migrations/**/*.sql
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.bz2
+*.keystore
+*.jks
+keystore/
+keystore.properties
+local.properties
+*.pem
+*.p12
+*.pfx
+.htpasswd
+.mcp.json
+auth.json
+*pass*.txt
+*.log
+storage/logs/
+storage/framework/
+.phpunit.result.cache
+.phpunit.cache/
+*.tsbuildinfo
+*.db
+*.sqlite
+uploads/
+desktop.ini
+folderico-*.ico
+Thumbs.db
+.DS_Store
+*.bak
+/newpasargadbrush/

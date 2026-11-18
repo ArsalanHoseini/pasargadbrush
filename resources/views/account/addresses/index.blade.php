@@ -5,7 +5,7 @@
 @section('account-content')
 <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <h1 class="text-xl font-bold text-neutral-900">آدرس‌ها</h1>
-    <a href="{{ route('account.addresses.create') }}" class="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-dark">+ آدرس جدید</a>
+    <a href="{{ route('account.addresses.create') }}" class="rounded-full bg-brand-accent-dark px-5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-darker">+ آدرس جدید</a>
 </div>
 
 <p class="mb-4 text-xs text-neutral-500">

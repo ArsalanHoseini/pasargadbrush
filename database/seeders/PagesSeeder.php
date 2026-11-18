@@ -48,7 +48,7 @@ class PagesSeeder extends Seeder
     private function aboutUsBody(): string
     {
         $groupPhoto = $this->copyRealImage('pasargadbrush-group2-1024x739-1.jpg', 'کارخانه و تیم پاسارگاد برس');
-        $productPhoto = $this->copyRealImage('بق-min-3.png', 'محصولات برس صنعتی پاسارگاد');
+        $productPhoto = $this->copyRealImage('بق-min-3.png', 'محصولات برس صنعت پاسارگاد');
 
         return <<<HTML
 <p>شرکت برس صنعت پاسارگاد (P.B.C) در سال ۱۳۷۴ فعالیت خود را در قالب تولید انواع برس‌های صنعتی شروع کرد. این کارخانه در زمینی به مساحت ۳۳۰۰ متر مربع و زیربنای ۱۵۰۰ متر مربع در منطقه پارسه بنا نهاده شد.</p>

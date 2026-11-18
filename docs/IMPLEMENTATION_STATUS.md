@@ -247,6 +247,113 @@ Everything from Phase 2 onward: database schema, auth/authorization, design syst
 **Persian dates everywhere + Tehran timezone (completed, 2026-11-01)**
 - `persian_date()` helper used for every human-facing date; app timezone switched to `Asia/Tehran` (fixes imported WordPress times reading 3½ h late). 6 new tests (`PersianDatesTest`). Full suite 333/333 passing. Verified on the real blog page (imported posts show e.g. «۳۰ تیر ۱۴۰۳» with `+03:30` ISO in `datetime`). **Not checked in a browser:** logging into the local admin with the seeder's default password failed (the local password was evidently changed), so the form's client-side behavior (fields appearing per product, live totals) is verified only by reading the code, not interactively. Full suite 176/176 passing. Verified in a real browser (desktop + mobile) with a temporary ASCII-data order, deleted afterwards (DB back to 0 orders/customers/addresses).
 
+**Owner's correction list + PageSpeed (completed locally, 2026-11-07)**
+- All 11 items + brush-types strip (below the hero) + missing articles; the key-figures section (۱۱۰+ …) was removed at the owner's request; see `docs/DECISIONS.md`. Migration `update_contact_details_and_company_name` and `wp:import-unregistered-products --commit`, `wp:set-homepage-featured-products --commit`, `media:thumbnails` — all run locally.
+- eNamad trust seal added to the footer's bottom bar (2026-11-14), markup kept exactly as issued by enamad.ir.
+- 12 new tests (`SiteChromeTest`, `ImageThumbnailTest`, `Unit/WordPressContentTest`), `SitemapTest` updated. Full suite 346/346 passing. Checked in a real browser (desktop + mobile): header/logo, strip, grid, footer + map, bottom bar sheets, an imported product page, old URL → 301 to the product, `/llms.txt`.
+- **Production steps:** deploy code + `npm run build`, `php artisan migrate`, bring the 13 products to production (the server has no WordPress DB — copy the local rows/media, or run the import where the WP dump is available), `php artisan wp:set-homepage-featured-products --commit`, `php artisan media:thumbnails`, `php artisan cache:clear`. Then re-run PageSpeed and submit the sitemap in Search Console. Not measured with Lighthouse yet (PSI API quota exhausted).
+
+**Admin redesign — phase 1: layout, dashboard, search, filters (completed locally, 2026-11-14)**
+- New admin shell: grouped right-hand sidebar with icons, active page and waiting-count badges (`App\Support\AdminNavigation`), breadcrumb, top-bar global search, «مشاهده سایت», mobile slide-in menu, toasts for `status`/`error`/validation, and a confirmation modal (`data-confirm` on any form, Alpine store in `resources/js/app.js`) replacing all 13 browser `confirm()` calls.
+- Shared Blade components in `resources/views/components/admin/`: `icon`, `page-header`, `button`, `filter-bar`, `filter-select`, `empty-state`.
+- Dashboard (`App\Services\Admin\DashboardMetrics`): sales today / 7 / 30 days vs the previous period, 30-day bar chart with tooltips, «نیاز به اقدام» list (price confirmation, pending orders, unanswered messages, new quotes, low stock ≤ 5, pending reviews/comments), top 5 products, recent orders/quotes, catalog summary.
+- `/admin/search` (`Admin\SearchController`): orders, products, customers, quote requests; Persian digits normalized; an exact order number opens that order.
+- Search + filters: orders (text, payment, source, awaiting price confirmation; status tabs with counts), products (text incl. variant SKU, category, type, status, low stock; list now shows thumbnail, price range, stock), customers (text, has orders; list shows total spent and join date), quote requests (text; tab counts), blog posts (text, category, status), pages, product categories.
+- 29 new tests (`Admin/DashboardTest`, `Admin/AdminSearchTest`, `Admin/AdminListFilterTest`, `Admin/AdminLayoutTest`). Full suite 369/369 passing.
+- Checked in a real browser against a throwaway SQLite copy with ASCII sample data (local MySQL was down): dashboard numbers/chart, product low-stock filter, confirmation dialog blocks deletion, search redirect, filter-bar keeps the status tab, mobile menu with no horizontal scroll. Screenshots weren't possible (app window hidden), and the dialog's close animation couldn't be observed for the same reason.
+- Phase 2 followed; see the next entry.
+
+**Admin redesign — phase 2: bulk actions, export, date filters, order page (completed locally, 2026-11-14)**
+- Shamsi date-range filter (`PersianDate::parse`, `x-admin.filter-date-range`; dates that can't be read are ignored and marked red) on orders (placed date), customers (join date) and quote requests.
+- CSV export for Excel (`App\Support\CsvExport`, UTF-8 BOM) of orders, customers and quote requests. The export follows the list's current filters across all pages, and amounts are plain Toman numbers.
+- Bulk actions (`x-admin.bulk-*` components, Alpine `bulkSelection`, confirmation dialog). Every bulk change to an order is written to `audit_logs`.
+  - Orders: status confirmed / processing / shipped / completed, or mark as paid, with optional customer notification. Cancelled orders are skipped, and cancelling stays on the order page because of stock.
+  - Products: activate / deactivate / delete. Products already used in orders are never deleted.
+  - Quote requests: change status or delete.
+  - Reviews and comments: approve / spam / delete.
+- Order page:
+  - The header has message, invoice and shipping-label actions.
+  - A «تاریخچه و یادداشت‌های داخلی» timeline (`App\Services\Admin\OrderTimeline`) is built from `audit_logs`, with signed internal notes (`order.note`, never shown to customers).
+  - The old notes field is now labelled «توضیحات سفارش».
+- Printable invoice (A4) and shipping label (A6) at `/admin/orders/{order}/print/{invoice|label}`. Unconfirmed prices print as «پیش‌فاکتور».
+- Customer profile:
+  - Stats: orders, total spent, average order, last order and unpaid count, all excluding cancelled orders.
+  - An orders table with status and payment, plus the customer's quote requests.
+  - tel/mailto links for phone and email.
+- 24 new tests (`Admin/AdminBulkActionsTest`, `Admin/AdminExportTest`, `Admin/OrderPageTest`, `Admin/CustomerProfileTest`, plus 2 in `Unit/PersianDateTest`). Full suite 393/393 passing.
+- Browser-checked on the throwaway SQLite copy:
+  - Row and select-all selection feed the bulk form.
+  - The confirmation dialog intercepts the bulk form.
+  - The bulk update runs and reports the skipped rows.
+  - The invoice and timeline render without console errors.
+  - Not checked: the pane was hidden, so there are no screenshots and the bar's fade-in could not be watched.
+- **Not done in this phase:** the tabbed / two-column product form. The form is large, and restructuring it without the owner reviewing the layout is risky.
+- Phase 3 followed; see the next entry.
+
+**Admin redesign — phase 3: staff roles, accounts, activity log, sales report (completed locally, 2026-11-14)**
+- **Roles are now enforced** (owner chose "catalog + content" for editors).
+  - Editors manage: products, categories, applications, product reviews, blog posts and categories, comments, static pages and media.
+  - Admin-only, via the `admin` gate and `can:admin` on a route group: orders, customers, quote requests, conversations, reports, settings, shipping, redirects, WordPress import, users and the activity log.
+  - The sidebar, dashboard and search hide admin-only parts from editors: no sales figures, and search returns products only.
+- **Staff accounts** (`/admin/users`, `Admin\UserController`): create, edit or delete staff, choose the role, and set a password (min 8, confirmed; left blank on edit, it stays unchanged).
+  - An admin can't demote or delete themself, and the last admin is always kept.
+  - The list shows each user's last activity.
+- **«حساب من»** (`/admin/profile`, linked from the sidebar user box): every staff member can edit their own name and email, and change their password with the current one.
+- **Activity log** (`/admin/activity`): every `audit_logs` row in Persian (`App\Services\Admin\ActivityDescriptions`), with who, when, a link to what was touched, and a short detail. Filters: user, area and Shamsi date range.
+  - Newly recorded actions: logins, product create/update/delete and bulk actions, bulk actions on quote requests, reviews and comments, site and shipping settings saves, user and profile changes.
+  - Helper: `AuditLog::record()`.
+- **Sales report** (`/admin/reports`, `App\Services\Admin\SalesReport`):
+  - Presets: 30 days, this or last Shamsi month, 3 months, this Shamsi year. A custom Shamsi range is also available.
+  - Summary: revenue, paid revenue, orders, cancelled count, average order, items sold.
+  - Breakdowns: Shamsi monthly bars, top products, and orders by status, source and province.
+  - CSV export of sales by product.
+  - New helpers: `PersianDate::startOfMonth()` and `startOfYear()`.
+- 46 new tests (`Admin/StaffRolesTest`, `UserManagementTest`, `StaffProfileTest`, `ActivityLogTest`, `SalesReportTest`, plus 1 in `Unit/PersianDateTest`). Full suite 439/439 passing.
+- Checked on the throwaway SQLite copy: the report, users, activity and profile pages load for an admin, and the report figures and Shamsi months match the sample data. Not checked: the pane couldn't open the pages directly, so there are no screenshots.
+- **Still open from the original list:** the tabbed / two-column product form (waiting for the owner to see the current layout).
+
+**GEO / AI-readable site: llms.txt, Markdown articles, AI crawlers, JSON-LD graph (completed locally, 2026-11-15)**
+- **One source of facts:** `config/site.php` (names, descriptions fa/en, facts and industries from About Us, homepage highlights, buying steps, private paths, AI crawler lists) read through `App\Support\SiteProfile`, together with the admin settings for contact/social. The homepage «چرا پاسارگاد برس؟» cards and the footer's social links now read from it too.
+- **`/llms.txt` and `/llms-full.txt`** (`LlmsController`, `App\Services\Seo\LlmsDocuments`): `text/markdown; charset=utf-8`, `Cache-Control: public, max-age=3600`. The full file has a guide for models, key facts, price table (Persian digits), buying steps, catalog by category, contact, the About/Contact pages and up to 50 full articles (`site.llms_full_post_limit`). Every database read is rescued.
+- **`/blog/{slug}.md`**: frontmatter + body via `league/html-to-markdown` 5.2 (new dependency, owner approved) with DOM pre-processing in `App\Services\Seo\HtmlToMarkdown` (WordPress `[caption]`, `<p>` in `<li>`, nested bold, YouTube iframes, absolute URLs, alt fallback, soft hyphens → ZWNJ). Sends `Link: <html url>; rel="canonical"`. 404 for drafts/scheduled/missing.
+- **Cache:** `SeoCache` caches these outputs for 1 hour under a version number that any save/delete of posts, pages, products, variants, categories, tags or settings bumps (the database cache store has no tags).
+- **robots.txt:** explicit groups for AI answer/search bots and AI training bots, each repeating the private paths; `blocked` list in `config/site.php` gives `Disallow: /`.
+- **JSON-LD:** one `@graph` per page (`SchemaGraph`, `StructuredData`): Organization + WebSite once in the layout, then WebPage/ItemPage/AboutPage/ContactPage/CollectionPage, BreadcrumbList, BlogPosting (wordCount, timeRequired, encoding → .md) and Product (IRR offers only for fixed-price products). `JSON_HEX_TAG` keeps `</script>` out.
+- **Head:** title never repeats the site name, full Open Graph (`og:url`, `og:image`, `og:locale`, article times/tags), `<link rel="alternate" type="text/markdown">` to both llms files and, on articles, to the `.md`.
+- **Article page:** full visible breadcrumb (with category), category in the meta line, Persian digits, cover alt falls back to the title.
+- **Sitemap:** article cover images. **Bug fixed:** a page view bumped the article's `updated_at` (so lastmod/dateModified meant "last viewed"); the counter now bypasses Eloquent.
+- 24 new tests (`Unit/HtmlToMarkdownTest`, `LlmsTest`, `StructuredDataTest`, 4 in `SitemapTest`, 1 in `BlogFeaturesTest`); the old llms test in `SiteChromeTest` is replaced. Full suite 463/463 passing. Checked live on `php artisan serve` with curl (status, content types, headers, Persian slugs incl. `؟`, redirects, every homepage link) and the article page in the browser.
+- **Article bodies repaired (2026-11-15):** `php artisan wp:repair-post-bodies [--commit] [--uploads=…]` (`PostBodyRepair`, `MediaCopier::copyUploadFile`). It copied the 74 images used inside 24 imported articles from the WordPress copy into the media library and pointed the bodies at root-relative `/storage/media/wp-import/…`. These bodies pointed at `http://localhost/pasargadbrush/wp-content/…`, because the importer had only copied featured images. Resized copies were swapped for the original file. The command also turned `[caption]` shortcodes in 6 articles into `<figure>`/`<figcaption>`, which now have CSS. `updated_at` was kept. It is idempotent: the mapping `source_type = upload` makes a re-run copy nothing. `BlogImporter` now does the same on import. Ran locally with `--uploads=C:/laragon/www/pasargadbrush/wp-content/uploads`. `docs/uploads/uploads` (WP_UPLOADS_PATH) lacks 55 of those files. Result: all 74 return 200; the bodies were backed up beforehand. 4 new tests (`WordPressImport/PostBodyRepairTest`); full suite 467/467.
+  - **Deploy:** the copied files live in `storage/app/public/media/wp-import`, so they must ship with the database, the same as the other imported media. If production data is imported fresh, run the command there against the WordPress uploads folder.
+- **Not done (needs the owner / data):** two articles keep WordPress demo slugs (`new-post-for-clever-people`, `this-post-looks-beautiful-…`); two products are both named «برس آب بند نیروگاه». No FAQ exists, so no FAQPage schema.
+
+**Admin UX corrections: content forms, media picker, editable site menus (completed locally, 2026-11-16)**
+- **Owner feedback:** product/article forms were unstyled, headings couldn't be chosen, no character guidance, featured image and gallery couldn't be seen; media upload was confusing and its pages couldn't be browsed; the site menu couldn't be customized.
+- **Shared admin form styles** in `resources/css/app.css` (`admin-card`, `admin-input`, `admin-label`, `admin-hint`, …) and components `x-admin.counted-field` (live character count against a recommended range), `x-admin.seo-card` (meta title/description with counters and a Google-style preview), `x-admin.save-bar` (sticky save/cancel/view-on-site), `x-admin.form-errors`, `x-admin.pagination` (Persian numbered pages; replaces `->links()` on every admin list). Smaller forms (categories, users, settings, …) restyled with the same classes.
+- **Product, article and static-page forms** rebuilt as two columns (content + sidebar for publishing, images, categories). Product description and page body now use the rich editor (both were already rendered as HTML).
+- **Editor (Quill):** H1–H4 with Persian labels, strike, colours, alignment, RTL direction, quote; images are picked from the media library (no base64); live word/character/heading counts with a warning when H1 is used in the body. Fixed a bug where Quill broke inside Alpine's reactive proxy.
+- **Media picker modal** (`x-admin.media-library-modal`, `Alpine.store('mediaLibrary')`): browse with pages and search, upload by drag-and-drop with progress, pick one or many. Used for article featured image, product gallery (ordered, first = main image) and editor images. The forms no longer list only the latest 60/90 images.
+- **Media library page:** drag-and-drop multi-upload with per-file progress, search, «unused» filter, usage count per image, inline alt-text editing (`PATCH admin/media/{media}`), copy URL. `GET admin/media` and `POST admin/media` answer JSON for the picker.
+- **Editable menus** (`menu_items` table, `MenuItem`, `Admin\MenuController`, `/admin/menus/{header|footer}`): add/remove/reorder links, one level of submenus, quick-add from pages and product categories, a «products» dropdown item that lists categories automatically, open-in-new-tab. The migration seeds the links that were hard-coded, so the site looks the same until edited. Header, mobile sheet and footer quick links read from it (cached, cleared on save). Available to editors as well as admins.
+- Toasts moved to the top so they don't cover the sticky save bar.
+- 14 new tests (`Admin/MenuManagementTest`, 6 in `Admin/MediaUploadTest`). Full suite 481/481 passing. Checked in the browser on a SQLite copy: product create with gallery + editor image + H2, media picker pages/selection, media library pagination, menu edit → public header dropdown.
+
+**Homepage UI/UX and hero refresh (completed locally, 2026-11-17)**
+- Kept the existing homepage structure, routes, header, product data and section order. The hero now leads with the customer's production need («برس صنعتی، دقیقاً برای خط تولید شما») and keeps the established orange/charcoal identity.
+- Rebuilt the hero's visual hierarchy with clearer primary/secondary actions, three concise trust facts, stronger focus states and a responsive real-product mosaic. Industrial product names are preferred for the hero without changing featured-product data or hiding products from the catalog.
+- Improved the existing brush-type strip as an explicit quick-start path, with a heading, mobile swipe cue, mandatory scroll snapping and clearer hover/focus feedback.
+- No generated or stock imagery was added; all product photography remains the site's real catalog media.
+- Ran `npm run build`, `vendor/bin/pint --dirty --format agent`, and the focused public-homepage tests: 15 tests / 53 assertions passing (`PublicSiteTest`, `SiteChromeTest`).
+- Browser-checked the live local page on desktop and at 390×844: hero CTAs, product imagery, mobile bottom navigation and the horizontal brush picker render correctly; no unwanted horizontal overflow and no browser console errors.
+
+**Pagination + filter fix (completed locally, 2026-11-17)**
+- Root cause: paginated lists sorted only by non-unique columns (`created_at`, `published_at`, `name`, `sort_order`…). Imported products share a handful of `created_at` values (55 products / 7 distinct), so MySQL returned ties in a different order per page — with the «استعلامی» filter, 46 rows across pages held only 38 unique products (repeats and missing items).
+- Added a unique `id` tie-breaker to every paginated list (admin products, categories, blog posts/categories, pages, orders, customers, quote requests, comments, reviews, conversations, redirects; public category, search and blog; customer account lists).
+- Admin order / quote-request status tabs now keep the search, date and payment filters (and reset to page 1) instead of dropping them.
+- Tests: 2 new regression tests in `AdminListFilterTest` (fail before the fix); full suite 483 tests passing; Pint clean.
+- Follow-up audit: walked every page of 48 paginated list/filter combinations against the local MySQL data (public category/search/blog, all admin lists with filters) — no duplicates, no missing rows, filters kept in page links. Added `PaginationTest` for blog tag pages and customer order pages (no local data to crawl).
+- Public and account pagination used Laravel's stock view (LTR order, Latin digits, followed OS dark mode, literal `&raquo;` in labels). The admin's Persian pagination markup now lives in `partials/pagination.blade.php`, registered as `Paginator::defaultView`; `<x-admin.pagination>` wraps it. Browser-checked on desktop and 375px: RTL order, Persian digits, query string kept, no overflow. Full suite 485 tests passing.
+
 ## Next concrete step
 
 Next dashboard feature to pick, per the owner's "add the rest one by one" instruction — candidates: rich text editor reused on static pages, a landing-page builder (referencing `D:\Utab\LMS\lead-automation`'s feature concept, not its DDD architecture), or something else the owner prioritizes. Also still awaiting the owner's answer on the 2 hard-deleted-on-live products (deactivate to match, or keep). Other remaining gaps, none blocking: landline phone number and social media URLs (owner can add via `/admin/settings`, or tell me), real SMTP credentials for production email delivery, real Zarinpal merchant credentials + shipping-rate rules.

@@ -30,6 +30,20 @@ class User extends Authenticatable
         ];
     }
 
+    public const ROLE_LABELS = [
+        'admin' => 'مدیر',
+        'editor' => 'ویرایشگر',
+    ];
+
+    public function roleLabel(): string
+    {
+        return self::ROLE_LABELS[$this->role] ?? $this->role;
+    }
+
+    /**
+     * Admins see everything; editors manage the catalog and content only
+     * (see docs/DECISIONS.md, 2026-11-14 — staff roles).
+     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

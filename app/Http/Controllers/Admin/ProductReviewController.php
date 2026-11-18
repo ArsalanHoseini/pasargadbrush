@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\ProductReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -23,6 +25,7 @@ class ProductReviewController extends Controller
                 ->with('product')
                 ->when($status !== 'all', fn ($query) => $query->where('status', $status))
                 ->latest()
+                ->latest('id')
                 ->paginate(20)
                 ->withQueryString(),
         ]);
@@ -47,5 +50,32 @@ class ProductReviewController extends Controller
         $productReview->delete();
 
         return back()->with('status', 'نظر حذف شد.');
+    }
+
+    /**
+     * Approve, mark as spam or delete several reviews at once.
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['approve', 'spam', 'delete'])],
+        ], ['ids.required' => 'هیچ موردی انتخاب نشده است.']);
+
+        $selected = ProductReview::query()->whereKey($data['ids']);
+        AuditLog::record('review.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
+
+        $count = match ($data['action']) {
+            'approve' => $selected->update(['status' => 'approved']),
+            'spam' => $selected->update(['status' => 'spam']),
+            'delete' => $selected->delete(),
+        };
+
+        return back()->with('status', $count.' نظر '.match ($data['action']) {
+            'approve' => 'تأیید شد.',
+            'spam' => 'به عنوان اسپم علامت‌گذاری شد.',
+            'delete' => 'حذف شد.',
+        });
     }
 }

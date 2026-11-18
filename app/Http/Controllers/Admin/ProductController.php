@@ -6,28 +6,54 @@ use App\Actions\Media\StoreUploadedMedia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\Application;
+use App\Models\AuditLog;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductDimensionField;
 use App\Models\ProductVariant;
+use App\Services\Admin\DashboardMetrics;
+use App\Support\PersianDigits;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
     public function __construct(private StoreUploadedMedia $mediaUploader) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $products = Product::query()
-            ->with('primaryCategory')
-            ->latest()
-            ->paginate(20);
+        $search = trim(PersianDigits::toLatin((string) $request->query('q', '')));
+        $categoryId = $request->integer('category');
 
-        return view('admin.products.index', ['products' => $products]);
+        $products = Product::query()
+            ->with(['primaryCategory', 'images', 'variants'])
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhereHas('variants', fn ($query) => $query->where('sku', 'like', "%{$search}%"))))
+            ->when($categoryId, fn ($query) => $query->where(fn ($query) => $query
+                ->where('primary_category_id', $categoryId)
+                ->orWhereHas('categories', fn ($query) => $query->whereKey($categoryId))))
+            ->when(in_array($request->query('type'), ['priced', 'quote'], true), fn ($query) => $query->where('type', $request->query('type')))
+            ->when($request->query('status') === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($request->query('status') === 'inactive', fn ($query) => $query->where('is_active', false))
+            ->when($request->query('stock') === 'low', fn ($query) => $query->whereHas('variants', fn ($query) => $query
+                ->whereNotNull('stock_quantity')
+                ->where('stock_quantity', '<=', DashboardMetrics::LOW_STOCK_THRESHOLD)))
+            ->latest()
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.products.index', [
+            'products' => $products,
+            'categoryOptions' => ProductCategory::orderBy('name')->pluck('name', 'id'),
+        ]);
     }
 
     public function create(): View
@@ -52,6 +78,8 @@ class ProductController extends Controller
 
             return $product;
         });
+
+        AuditLog::record('product.created', $product, ['name' => $product->name]);
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول ایجاد شد.');
     }
@@ -82,6 +110,8 @@ class ProductController extends Controller
             $product->applications()->sync($request->input('application_ids', []));
         });
 
+        AuditLog::record('product.updated', $product, ['name' => $product->name]);
+
         return redirect()->route('admin.products.edit', $product)->with('status', 'محصول به‌روزرسانی شد.');
     }
 
@@ -91,9 +121,38 @@ class ProductController extends Controller
             return redirect()->route('admin.products.index')->with('status', 'این محصول در سفارش‌ها استفاده شده و قابل حذف نیست.');
         }
 
+        AuditLog::record('product.deleted', $product, ['name' => $product->name]);
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('status', 'محصول حذف شد.');
+    }
+
+    /**
+     * Activate, deactivate or delete several products. Products already
+     * used in orders are never deleted (same rule as the single delete).
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['activate', 'deactivate', 'delete'])],
+        ], ['ids.required' => 'هیچ محصولی انتخاب نشده است.']);
+
+        $selected = Product::query()->whereKey($data['ids']);
+        AuditLog::record('product.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
+
+        if ($data['action'] !== 'delete') {
+            $count = $selected->update(['is_active' => $data['action'] === 'activate']);
+
+            return back()->with('status', $count.' محصول '.($data['action'] === 'activate' ? 'فعال' : 'غیرفعال').' شد.');
+        }
+
+        $deletable = $selected->doesntHave('orderItems')->get();
+        $deletable->each->delete();
+        $kept = count($data['ids']) - $deletable->count();
+
+        return back()->with('status', $deletable->count().' محصول حذف شد'.($kept > 0 ? ' ('.$kept.' محصول در سفارش‌ها استفاده شده و حذف نشد).' : '.'));
     }
 
     private function form(Product $product): View
@@ -101,9 +160,8 @@ class ProductController extends Controller
         return view('admin.products.form', [
             'product' => $product,
             'categories' => ProductCategory::query()->orderBy('name')->get(),
-            'media' => Media::query()->latest()->limit(90)->get(),
+            'galleryItems' => $this->galleryItems($product),
             'selectedCategoryIds' => $product->exists ? $product->categories->pluck('id')->all() : [],
-            'selectedImageIds' => $product->exists ? $product->images->pluck('id')->all() : [],
             'variants' => $product->exists ? $product->variants()->orderBy('sort_order')->get() : collect(),
             'dimensionFields' => $product->exists ? $product->dimensionFields : collect(),
             'highlights' => $product->exists ? $product->highlights()->with('image')->get() : collect(),
@@ -143,6 +201,24 @@ class ProductController extends Controller
     private function syncCategories(Product $product, array $categoryIds): void
     {
         $product->categories()->sync($categoryIds);
+    }
+
+    /**
+     * The gallery for the media picker, in order: what was just submitted
+     * (after a validation error) or the product's saved images.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function galleryItems(Product $product): array
+    {
+        if (session()->hasOldInput()) {
+            $ids = array_map('intval', (array) old('image_ids', []));
+            $media = Media::query()->whereKey($ids)->get()->keyBy('id');
+
+            return collect($ids)->map(fn (int $id) => $media->get($id)?->toPickerArray())->filter()->values()->all();
+        }
+
+        return $product->exists ? $product->images->map->toPickerArray()->values()->all() : [];
     }
 
     /** @param array<int, int|string> $imageIds */

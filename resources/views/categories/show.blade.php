@@ -4,6 +4,15 @@
 @section('meta_description', $category->meta_description ?? $category->name)
 @section('canonical', route('categories.show', $category))
 
+@php
+    $categoryUrl = route('categories.show', $category);
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('CollectionPage', $categoryUrl, $category->name, $category->meta_description ?: $category->description, hasBreadcrumb: true),
+        \App\Services\Seo\StructuredData::breadcrumbs($categoryUrl, [['صفحه اصلی', route('home')], [$category->name, $categoryUrl]]),
+    );
+@endphp
+
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
     <nav class="mb-4 text-xs text-neutral-500" aria-label="مسیر صفحه">
@@ -43,19 +52,9 @@
     @else
         <p class="mb-6 text-xs text-neutral-500">{{ $products->total() }} محصول</p>
 
-        <div class="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
             @foreach ($products as $product)
-                <a href="{{ route('products.show', $product) }}" class="group rounded-lg border border-neutral-200 bg-white p-3 transition hover:shadow-md">
-                    <div class="mb-3 aspect-square overflow-hidden rounded bg-neutral-100">
-                        @if ($product->images->isNotEmpty())
-                            <img src="{{ $product->images->first()->url() }}" alt="{{ $product->name }}"
-                                 class="h-full w-full object-cover transition group-hover:scale-105" loading="lazy">
-                        @else
-                            <div class="flex h-full w-full items-center justify-center text-xs text-neutral-400">بدون تصویر</div>
-                        @endif
-                    </div>
-                    <h2 class="text-sm font-medium text-neutral-900 group-hover:text-brand-accent-dark">{{ $product->name }}</h2>
-                </a>
+                @include('partials.product-card', ['product' => $product, 'headingTag' => 'h2'])
             @endforeach
         </div>
 

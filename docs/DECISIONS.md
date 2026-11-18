@@ -4,6 +4,27 @@ Newest first. Each entry: decision, reasoning, alternatives considered, date.
 
 ---
 
+## 2026-11-15 — GEO: llms.txt, Markdown articles, AI crawlers, one JSON-LD graph
+
+- **Fixed facts live in `config/site.php`, contact details stay in the admin settings.** Both are read through `SiteProfile`, so the pages, the schema and the llms files always say the same thing. Only facts already on the site were used. Opening hours, a Gregorian founding date (۱۳۷۴ spans 1995–96), warranty terms and an FAQ are left out until the owner confirms them.
+- **`league/html-to-markdown`** (owner approved the dependency) does the conversion. The HTML is tidied with DOMDocument first, never regex on markup. A WordPress shortcode is plain text, so a pattern is used for `[caption]`.
+- **Cache by version number, not tags.** The `database` cache store can't tag. Model `saved`/`deleted` events bump `seo.version`, which every key includes, and the TTL is 1 hour so a deploy shows up soon even without `cache:clear`. View-count increments fire only `updated`, so they don't flush.
+- **One `@graph` per page through a scoped `SchemaGraph`.** Views add nodes and the layout prints them after the Organization and WebSite, which appear once and are referenced by `@id`. The homepage catalog is a merge node on the Organization `@id` (`hasOfferCatalog`), built from the cached `ProductCategory::navigation()`, so the homepage gets no extra query (see 2026-10 decision).
+- **Imported article bodies are repaired by a `wp:` command, not a migration.** The fix needs the WordPress uploads folder, which a plain `migrate` on the server can't assume. Images are matched by file path in the uploads folder, not by attachment row, because most body images had none and some sat in another month folder. The original is used instead of a WordPress-resized copy, and links are root-relative so the same body works on every host.
+- **AI crawlers are all allowed** (answer/search and training) in their own robots groups. Each group repeats the private paths, because a named bot ignores `*`. To block one, move it to `site.ai_crawlers.blocked`.
+
+---
+
+## 2026-11-07 — Owner's correction list (11 items) + PageSpeed work
+
+- **Data changes ship as a migration** (`update_contact_details_and_company_name`): phone 09122787949 everywhere (also WhatsApp), Bale 09174287445, address «تخت جمشید، …», Instagram, Google Maps embed + `?cid=` link, and «برس صنعتی پاسارگاد» → «برس صنعت پاسارگاد» in settings/products/posts/pages/alts. Runs with a plain `migrate` on any existing DB; a fresh DB (no settings) is left to `SettingsSeeder`, which has the same values. Note: `contact_mobile` is also where new-order SMS goes, so admin SMS now go to 09122787949 (owner said "all numbers").
+- **13 missing products** were the owner's newest WordPress articles (2026-09-21…26), not registered in WPML — same glitch as برس اسب/اسپیندل. `wp:import-unregistered-products` imports them with full text, photos and the original slug, picks the closest existing category (their WP categories were never migrated), and repoints their old `/product/{slug}` redirects (which fell back to category pages). Classic-editor text had no `<p>` — `WordPressContent::toHtml()` adds them and demotes the content's own `<h1>`; also applied to برس اسب/اسپیندل. 8 of them added to the homepage list (24 cards = full rows at 2/3/4 columns).
+- **Menus/sitemap only list categories with an active product** (`ProductCategory::listable()`), which hides the empty «بدون دسته‌بندی» and the Arabic «فرشاة الصناعی» without deleting them.
+- **The old `public/images/logo.png` was the WordPress theme's «XFACTORY» placeholder** (white text, invisible on the white header). Replaced with the real logo from WordPress (`site_logo` #30640) + favicon.
+- **Footer** rebuilt from the old Elementor template as HTML (the old mobile footer was one image with baked-in text). The map iframe is lazy and covered by a link to Google Maps, so a click opens the location there.
+- **Mobile**: there was no menu or search at all below `md`. Added a fixed bottom bar (home, products sheet, search sheet, cart, account).
+- **PageSpeed**: listing/gallery images use GD-made WebP copies (`ImageThumbnailer`, widths 480/960, made on first use or `php artisan media:thumbnails`; no package); hero no longer waits for GSAP to fade in (Speed Index); fonts 4 → 2 files, preloaded; width/height on images; white-on-orange buttons and orange small text darkened to pass WCAG contrast (`brand-accent-dark` #b85300); `/llms.txt`; 1-year `Expires` in `.htaccess`; `www.` → 301 to APP_URL and, in production, all URLs/canonicals forced to APP_URL over https. http→https is not forced in the app (proxy headers behind WCDN are unverified) — turn on the CDN/host's "force HTTPS".
+
 ## 2026-11-01 — Persian (Shamsi) dates site-wide; app timezone Asia/Tehran
 
 - Every human-facing date (blog list/article/comments, all admin tables, the quote/order/review/conversation pages, footer year) now goes through one helper, `persian_date($date, PersianDate::DATE|DATETIME|COMPACT|COMPACT_DATE)`, built on intl's Persian calendar. Machine-facing dates stay Gregorian/ISO on purpose: RSS `pubDate`, sitemap `lastmod`, `<time datetime>` attributes, order numbers.
@@ -501,3 +522,50 @@ Each channel has its own try/catch + `Log::warning` (same resilience rule as quo
 **Decision:** Added `laravel/boost` as a dev dependency and ran `php artisan boost:install`, per the instructions the Laravel 13 skeleton itself ships in `AGENTS.md`.
 
 **Why:** Official Laravel tooling for AI-assisted development (generates app-aware agent guidelines/tools); dev-only, no production impact.
+
+---
+
+## 2026-11-14 — Admin dashboard figures and confirmation pattern
+
+**Decision:** Dashboard sales count every order that isn't cancelled (paid or not), by `placed_at` in Tehran time; the change badge compares against the equal-length period right before. Low stock means a tracked variant (`stock_quantity` not null) at or below 5. Destructive admin forms use `data-confirm="…"`, handled by one Alpine store and a modal in the admin layout, instead of inline `confirm()`. The chart is plain HTML/CSS bars, so no chart library was added.
+
+**Why:** Most orders here are confirmed before payment (quote/price-confirmation flow), so "paid only" would hide real sales. One confirmation pattern keeps every delete consistent and accessible without new dependencies.
+
+## 2026-11-14 — Admin bulk actions, exports and internal notes
+
+**Decision:**
+- Bulk order actions only move orders forward (confirmed → completed, or "paid").
+- Cancelled orders are skipped by bulk actions. Cancelling and un-cancelling stay on the single order page, because those release or reserve stock.
+- Customer notification on a bulk status change is opt-in (off by default).
+- Exports are CSV with a UTF-8 BOM rather than .xlsx, and amounts are whole Toman numbers.
+- Internal order notes are `audit_logs` rows (`action = order.note`), so the order timeline needs no new table.
+- Admin date filters take Shamsi dates typed like `۱۴۰۵/۰۸/۰۱` and convert them with PHP's intl calendar.
+
+**Why:**
+- Stock and notification side effects must stay deliberate.
+- CSV opens directly in Excel, while an .xlsx writer would be a new dependency.
+- Reusing `audit_logs` keeps who did what, and the notes, in one history.
+- A Shamsi date-picker library would also be a new dependency, and typed dates with validation cover the need.
+
+## 2026-11-14 — Staff roles
+
+**Decision:** The owner chose "catalog + content" for editors.
+- Editors manage products, categories, applications, product reviews, the blog, comments, static pages and media.
+- Admin-only: orders, customers, quote requests, customer messages, reports, settings, shipping, redirects, WordPress import, staff accounts and the activity log.
+- Enforced with one `admin` gate on a route group (`can:admin`). The sidebar, dashboard and search hide what an editor can't open.
+- An admin can't demote or delete themself, and the last admin is never removed.
+- Logins and catalog/settings/staff changes are now written to `audit_logs` alongside order changes.
+
+**Why:** Customer contact details and sales figures stay with the owner's team, while content writers can still do their whole job. One gate keeps the rule in a single place if the owner wants to move an area later.
+
+## 2026-11-16 — Editable site menus and the admin media picker
+
+**Decision:**
+- Header and footer «quick links» come from a `menu_items` table (two levels), edited at `/admin/menus`. The «محصولات» dropdown is a special item type that keeps listing product categories automatically.
+- Site links are stored as paths (`/blog`) and rendered as full URLs on the current root, so they survive a domain change.
+- Menus are open to editors too (they're content, like pages).
+- Images for products, articles and the editor are chosen in one shared media library modal (paged JSON from the existing media routes), not from a grid of the latest uploads.
+- No new dependencies: the editor stays Quill, the picker and menu editor are Alpine.
+
+**Why:** The owner couldn't change the menu without a developer, and the old forms only showed the newest 60–90 images, so older selected images were invisible. Paths instead of absolute URLs keep menus portable between local, staging and production.
+

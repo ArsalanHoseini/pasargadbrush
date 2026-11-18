@@ -1,8 +1,26 @@
 @extends('layouts.public')
 
 @section('title', $page->meta_title ?? $page->title)
-@section('meta_description', $page->meta_description ?? \Illuminate\Support\Str::limit(strip_tags($page->body), 150))
+@section('meta_description', $page->meta_description ?: \Illuminate\Support\Str::limit(\Illuminate\Support\Str::squish(html_entity_decode(strip_tags($page->body))), 150))
 @section('canonical', route('pages.show', $page))
+
+@php
+    $pageUrl = route('pages.show', $page);
+    // about-us / the contact template get their specific schema.org page type.
+    $pageType = match (true) {
+        $page->template === 'contact' => 'ContactPage',
+        $page->slug === 'about-us' => 'AboutPage',
+        default => 'WebPage',
+    };
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage($pageType, $pageUrl, $page->meta_title ?: $page->title, $page->meta_description, hasBreadcrumb: true, extra: array_filter([
+            'mainEntity' => $pageType === 'WebPage' ? null : ['@id' => \App\Services\Seo\StructuredData::organizationId()],
+            'dateModified' => $page->updated_at?->toIso8601String(),
+        ])),
+        \App\Services\Seo\StructuredData::breadcrumbs($pageUrl, [['صفحه اصلی', route('home')], [$page->title, $pageUrl]]),
+    );
+@endphp
 
 @section('content')
 <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">

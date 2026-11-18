@@ -3,19 +3,17 @@
 @section('title', $product->exists ? 'ویرایش محصول' : 'محصول جدید')
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">{{ $product->exists ? 'ویرایش محصول' : 'محصول جدید' }}</h1>
+<x-admin.page-header :title="$product->exists ? 'ویرایش محصول' : 'محصول جدید'"
+                     :description="$product->exists ? $product->name : 'اطلاعات، تصاویر، قیمت و سئوی محصول را وارد کنید.'">
+    <x-slot:actions>
+        <x-admin.button variant="secondary" :href="route('admin.products.index')">بازگشت به محصولات</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
 <form method="POST"
       action="{{ $product->exists ? route('admin.products.update', $product) : route('admin.products.store') }}"
-      class="max-w-3xl space-y-6"
       enctype="multipart/form-data"
       x-data="{
           type: '{{ old('type', $product->type ?? 'quote') }}',
@@ -42,107 +40,46 @@
     @csrf
     @if ($product->exists) @method('PUT') @endif
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6 space-y-4">
-        <div class="flex gap-4">
-            <div class="flex-1">
-                <label class="mb-1 block text-sm font-medium">نام محصول</label>
-                <input name="name" value="{{ old('name', $product->name) }}" required
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-            </div>
-            <div class="w-40">
-                <label class="mb-1 block text-sm font-medium">SKU</label>
-                <input name="sku" value="{{ old('sku', $product->sku) }}" dir="ltr" required
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-            </div>
-        </div>
+    <div class="grid gap-6 lg:grid-cols-3">
+    {{-- Main column --}}
+    <div class="min-w-0 space-y-6 lg:col-span-2">
 
-        <div>
-            <label class="mb-1 block text-sm font-medium">نامک (slug) — خالی بگذارید تا خودکار ساخته شود</label>
-            <input name="slug" value="{{ old('slug', $product->slug) }}" dir="ltr"
-                   class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-        </div>
-
-        <div class="flex gap-4">
-            <div class="flex-1">
-                <label class="mb-1 block text-sm font-medium">دسته اصلی</label>
-                <select name="primary_category_id" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                    <option value="">— انتخاب کنید —</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" @selected((int) old('primary_category_id', $product->primary_category_id) === $category->id)>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
+    <div class="admin-card">
+        <div class="admin-card-header"><h2 class="admin-card-title">اطلاعات اصلی</h2></div>
+        <div class="admin-card-body">
+            <div class="grid gap-4 sm:grid-cols-[1fr_10rem]">
+                <x-admin.counted-field name="name" label="نام محصول (H1)" :value="old('name', $product->name)" :min="10" :max="70" required
+                                       hint="نام محصول تیتر اصلی (H1) صفحه‌ی محصول است." />
+                <div>
+                    <label for="field-sku" class="admin-label">کد کالا (SKU) <span class="text-red-600">*</span></label>
+                    <input id="field-sku" name="sku" value="{{ old('sku', $product->sku) }}" dir="ltr" required class="admin-input">
+                </div>
             </div>
-            <div class="flex-1">
-                <label class="mb-1 block text-sm font-medium">دسته‌های دیگر (اختیاری، چندتایی)</label>
-                <select name="category_ids[]" multiple class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" @selected(in_array($category->id, old('category_ids', $selectedCategoryIds)))>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
 
-        <div>
-            <label class="mb-1 block text-sm font-medium">نوع فروش</label>
-            <div class="flex gap-4 text-sm">
-                <label class="flex items-center gap-2">
-                    <input type="radio" name="type" value="quote" x-model="type">
-                    استعلامی (بدون قیمت — درخواست قیمت)
-                </label>
-                <label class="flex items-center gap-2">
-                    <input type="radio" name="type" value="priced" x-model="type">
-                    قیمت‌دار (با تنوع و قیمت مشخص)
-                </label>
+            <div>
+                <label for="field-slug" class="admin-label">نامک (آدرس صفحه)</label>
+                <div class="flex items-stretch overflow-hidden rounded-lg border border-neutral-300 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20" dir="ltr">
+                    <span class="flex items-center bg-neutral-50 px-3 text-xs text-neutral-500">{{ url('products') }}/</span>
+                    <input id="field-slug" name="slug" value="{{ old('slug', $product->slug) }}" class="w-full border-0 px-3 py-2 text-sm focus:outline-none" placeholder="auto">
+                </div>
+                <p class="admin-hint">خالی بگذارید تا از روی نام ساخته شود.</p>
             </div>
-        </div>
 
-        <div>
-            <label class="mb-1 block text-sm font-medium">توضیح کوتاه</label>
-            <textarea name="short_description" rows="2" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('short_description', $product->short_description) }}</textarea>
-        </div>
+            <x-admin.counted-field name="short_description" label="توضیح کوتاه" :value="old('short_description', $product->short_description)" :min="80" :max="300" textarea :rows="3"
+                                   hint="زیر نام محصول و در کارت‌ها نمایش داده می‌شود." />
 
-        <div>
-            <label class="mb-1 block text-sm font-medium">توضیحات کامل</label>
-            <textarea name="description" rows="6" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('description', $product->description) }}</textarea>
-        </div>
-
-        <div class="flex gap-4">
-            <div class="flex-1">
-                <label class="mb-1 block text-sm font-medium">وضعیت موجودی (اختیاری)</label>
-                <select name="stock_status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-                    <option value="">— نامشخص —</option>
-                    <option value="in_stock" @selected(old('stock_status', $product->stock_status) === 'in_stock')>موجود</option>
-                    <option value="out_of_stock" @selected(old('stock_status', $product->stock_status) === 'out_of_stock')>ناموجود</option>
-                    <option value="made_to_order" @selected(old('stock_status', $product->stock_status) === 'made_to_order')>سفارشی/تولید بر اساس سفارش</option>
-                </select>
-            </div>
-            <div class="flex flex-1 items-end gap-6 pb-2">
-                <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? false))>
-                    فعال و نمایان در سایت
-                </label>
-                <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false))>
-                    محصول ویژه (نمایش در صفحه اصلی)
-                </label>
-            </div>
-            <div class="w-32">
-                <label class="mb-1 block text-sm font-medium">ترتیب نمایش</label>
-                <input type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order ?? 0) }}"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm" dir="ltr">
+            <div>
+                <p class="admin-label">توضیحات کامل</p>
+                <x-rich-text-editor name="description" :value="old('description', $product->description)" />
             </div>
         </div>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-5">
         <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-sm font-medium">مشخصات فنی</h2>
+            <h2 class="admin-card-title">مشخصات فنی</h2>
             <button type="button" @click="specifications.push({key: '', value: ''})"
-                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                    class="admin-chip-button">
                 + افزودن مشخصه
             </button>
         </div>
@@ -156,12 +93,12 @@
                 <div class="flex-1">
                     <label class="mb-1 block text-xs text-neutral-500">عنوان (مثلاً قطر)</label>
                     <input :name="`specifications[${index}][key]`" x-model="spec.key"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <div class="flex-1">
                     <label class="mb-1 block text-xs text-neutral-500">مقدار (مثلاً ۲۰ سانتی‌متر)</label>
                     <input :name="`specifications[${index}][value]`" x-model="spec.value"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <button type="button" @click="specifications.splice(index, 1)" class="text-xs text-red-600 hover:text-red-800">
                     حذف
@@ -170,12 +107,12 @@
         </template>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6" x-show="type === 'priced'" x-cloak>
+    <div class="admin-card p-5" x-show="type === 'priced'" x-cloak>
         <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-sm font-medium">تنوع‌ها (ابعاد/اندازه و قیمت)</h2>
+            <h2 class="admin-card-title">تنوع‌ها (ابعاد/اندازه و قیمت)</h2>
             <button type="button"
                     @click="variants.push({id: null, label: '', price_toman: 0, stock_quantity: null, is_default: variants.length === 0})"
-                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                    class="admin-chip-button">
                 + افزودن تنوع
             </button>
         </div>
@@ -185,22 +122,22 @@
         </template>
 
         <template x-for="(variant, index) in variants" :key="index">
-            <div class="mb-3 flex flex-wrap items-end gap-3 rounded border border-neutral-100 p-3">
+            <div class="mb-3 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 bg-neutral-50/60 p-3">
                 <input type="hidden" :name="`variants[${index}][id]`" x-model="variant.id">
                 <div class="flex-1">
                     <label class="mb-1 block text-xs text-neutral-500">برچسب (مثلاً ۴۰×۶۰ سانتی‌متر)</label>
                     <input :name="`variants[${index}][label]`" x-model="variant.label" required
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <div class="w-32">
                     <label class="mb-1 block text-xs text-neutral-500">قیمت (تومان)</label>
                     <input type="number" min="0" :name="`variants[${index}][price_toman]`" x-model="variant.price_toman" required
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm" dir="ltr">
+                           class="w-full admin-input admin-input-sm" dir="ltr">
                 </div>
                 <div class="w-28">
                     <label class="mb-1 block text-xs text-neutral-500">موجودی</label>
                     <input type="number" min="0" :name="`variants[${index}][stock_quantity]`" x-model="variant.stock_quantity"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm" dir="ltr">
+                           class="w-full admin-input admin-input-sm" dir="ltr">
                 </div>
                 <label class="flex items-center gap-1 text-xs">
                     <input type="checkbox" :name="`variants[${index}][is_default]`" value="1" x-model="variant.is_default">
@@ -213,14 +150,14 @@
         </template>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 class="mb-1 text-sm font-medium">سفارشی‌سازی — شماتیک‌ها و فرم سفارش</h2>
+    <div class="admin-card p-5">
+        <h2 class="admin-card-title mb-1">سفارشی‌سازی — شماتیک‌ها و فرم سفارش</h2>
         <p class="mb-4 text-xs text-neutral-500">
             فیلدهای این بخش در کارت «مشخصات و سفارش» صفحه‌ی محصول نمایش داده می‌شوند و مشتری هنگام سفارش (یا استعلام قیمت) باید آن‌ها را پر کند.
             برای هر بُعد، حرفی را بنویسید که روی تصویر شماتیک آمده است. بدون هیچ فیلدی، محصول فرم سفارشی ندارد.
         </p>
 
-        <div class="mb-5 rounded border border-neutral-100 p-3">
+        <div class="mb-5 rounded-lg border border-neutral-200 bg-neutral-50/60 p-3">
             <label class="mb-2 block text-sm font-medium">تصاویر شماتیک (کنار تصویر محصول نمایش داده می‌شوند)</label>
             @if ($product->exists && $product->schematics->isNotEmpty())
                 <div class="mb-3 flex flex-wrap gap-4">
@@ -248,12 +185,12 @@
             <div class="flex gap-2">
                 <button type="button"
                         @click="dimensionFields.push({id: null, type: 'number', options: '', code: '', label: '', unit: 'mm', is_required: true, min_value: null, max_value: null})"
-                        class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                        class="admin-chip-button">
                     + بُعد (عدد)
                 </button>
                 <button type="button"
                         @click="dimensionFields.push({id: null, type: 'choice', options: '', code: '', label: '', unit: 'mm', is_required: true, min_value: null, max_value: null})"
-                        class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                        class="admin-chip-button">
                     + گزینه‌ی انتخابی (مثلاً جنس الیاف)
                 </button>
             </div>
@@ -264,7 +201,7 @@
         </template>
 
         <template x-for="(field, index) in dimensionFields" :key="index">
-            <div class="mb-3 flex flex-wrap items-end gap-3 rounded border border-neutral-100 p-3">
+            <div class="mb-3 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 bg-neutral-50/60 p-3">
                 <input type="hidden" :name="`dimension_fields[${index}][id]`" x-model="field.id">
                 <input type="hidden" :name="`dimension_fields[${index}][type]`" :value="field.type || 'number'">
                 <span class="w-full text-xs font-medium text-neutral-500" x-text="field.type === 'choice' ? 'گزینه‌ی انتخابی' : 'بُعد (عدد)'"></span>
@@ -276,18 +213,18 @@
                 <div class="min-w-40 flex-1">
                     <label class="mb-1 block text-xs text-neutral-500" x-text="field.type === 'choice' ? 'عنوان (مثلاً جنس الیاف)' : 'عنوان (مثلاً قطر خارجی)'"></label>
                     <input :name="`dimension_fields[${index}][label]`" x-model="field.label" required
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <div class="w-full" x-show="field.type === 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">گزینه‌ها (هر گزینه در یک خط، یا جدا با کاما)</label>
                     <textarea :name="`dimension_fields[${index}][options]`" x-model="field.options" rows="3" :required="field.type === 'choice'"
                               placeholder="نایلون (PA)&#10;PET&#10;PP&#10;سایر"
-                              class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"></textarea>
+                              class="w-full admin-input admin-input-sm"></textarea>
                 </div>
                 <div class="w-28" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">واحد</label>
                     <select :name="`dimension_fields[${index}][unit]`" x-model="field.unit"
-                            class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                            class="w-full admin-input admin-input-sm">
                         @foreach (\App\Models\ProductDimensionField::UNITS as $unit => $unitLabel)
                             <option value="{{ $unit }}">{{ $unitLabel }}</option>
                         @endforeach
@@ -296,12 +233,12 @@
                 <div class="w-24" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">حداقل</label>
                     <input type="number" step="any" min="0" :name="`dimension_fields[${index}][min_value]`" x-model="field.min_value" dir="ltr"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <div class="w-24" x-show="field.type !== 'choice'">
                     <label class="mb-1 block text-xs text-neutral-500">حداکثر</label>
                     <input type="number" step="any" min="0" :name="`dimension_fields[${index}][max_value]`" x-model="field.max_value" dir="ltr"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <label class="flex items-center gap-1 pb-2 text-xs">
                     <input type="hidden" :name="`dimension_fields[${index}][is_required]`" value="0">
@@ -319,17 +256,17 @@
         </template>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6"
+    <div class="admin-card p-5"
          x-data="{ highlights: {{ json_encode(old('highlights') ? array_values(array_map(fn ($row) => ['id' => $row['id'] ?? null, 'title' => $row['title'] ?? '', 'image_url' => null], old('highlights'))) : $highlights->map(fn ($highlight) => [
              'id' => $highlight->id,
              'title' => $highlight->title,
              'image_url' => $highlight->image?->url(),
          ])->values()) }} }">
         <div class="mb-1 flex items-center justify-between">
-            <h2 class="text-sm font-medium">ویژگی‌های کلیدی (کنار تصویر محصول)</h2>
+            <h2 class="admin-card-title">ویژگی‌های کلیدی (کنار تصویر محصول)</h2>
             <button type="button" x-show="highlights.length < {{ \App\Models\ProductHighlight::MAX_PER_PRODUCT }}"
                     @click="highlights.push({ id: null, title: '', image_url: null })"
-                    class="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">+ افزودن ویژگی</button>
+                    class="admin-chip-button">+ افزودن ویژگی</button>
         </div>
         <p class="mb-4 text-xs text-neutral-500">
             حداکثر {{ \App\Models\ProductHighlight::MAX_PER_PRODUCT }} مورد — مثلاً «الیاف مقاوم با طول عمر بالا». تصویر هر ویژگی (مثلاً نمای نزدیک) به شکل دایره نمایش داده می‌شود.
@@ -340,7 +277,7 @@
         </template>
 
         <template x-for="(highlight, index) in highlights" :key="index">
-            <div class="mb-3 flex flex-wrap items-center gap-3 rounded border border-neutral-100 p-3">
+            <div class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50/60 p-3">
                 <input type="hidden" :name="`highlights[${index}][id]`" :value="highlight.id ?? ''">
                 <template x-if="highlight.image_url">
                     <img :src="highlight.image_url" alt="" class="h-14 w-14 rounded-full border border-neutral-200 object-cover">
@@ -348,7 +285,7 @@
                 <div class="min-w-48 flex-1">
                     <label class="mb-1 block text-xs text-neutral-500">عنوان</label>
                     <input :name="`highlights[${index}][title]`" x-model="highlight.title" required maxlength="120"
-                           class="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm">
+                           class="w-full admin-input admin-input-sm">
                 </div>
                 <div>
                     <label class="mb-1 block text-xs text-neutral-500" x-text="highlight.image_url ? 'تعویض تصویر' : 'تصویر (اختیاری)'"></label>
@@ -362,8 +299,99 @@
         </template>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 class="mb-1 text-sm font-medium">کاربردها</h2>
+    <x-admin.seo-card :meta-title="old('meta_title', $product->meta_title)" :meta-description="old('meta_description', $product->meta_description)"
+                      :url-prefix="url('products').'/'" :slug="$product->slug" fallback-title-field="name" />
+    </div>
+
+    {{-- Sidebar --}}
+    <div class="space-y-6">
+        <div class="admin-card">
+            <div class="admin-card-header"><h2 class="admin-card-title">انتشار و فروش</h2></div>
+            <div class="admin-card-body">
+                <label class="flex items-start gap-2 text-sm">
+                    <input type="checkbox" name="is_active" value="1" class="admin-check mt-0.5" @checked(old('is_active', $product->is_active ?? false))>
+                    <span><span class="font-medium">فعال</span> — در سایت نمایش داده شود</span>
+                </label>
+                <label class="flex items-start gap-2 text-sm">
+                    <input type="checkbox" name="is_featured" value="1" class="admin-check mt-0.5" @checked(old('is_featured', $product->is_featured ?? false))>
+                    <span><span class="font-medium">محصول ویژه</span> — در صفحه اصلی</span>
+                </label>
+
+                <div>
+                    <p class="admin-label">نوع فروش</p>
+                    <div class="grid gap-2">
+                        <label class="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm transition"
+                               :class="type === 'quote' ? 'border-brand-accent bg-orange-50/50' : 'border-neutral-200'">
+                            <input type="radio" name="type" value="quote" x-model="type" class="mt-1 accent-brand-accent-dark">
+                            <span><span class="font-medium">استعلامی</span><br><span class="text-xs text-neutral-500">بدون قیمت — مشتری درخواست قیمت می‌دهد</span></span>
+                        </label>
+                        <label class="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm transition"
+                               :class="type === 'priced' ? 'border-brand-accent bg-orange-50/50' : 'border-neutral-200'">
+                            <input type="radio" name="type" value="priced" x-model="type" class="mt-1 accent-brand-accent-dark">
+                            <span><span class="font-medium">قیمت‌دار</span><br><span class="text-xs text-neutral-500">با تنوع (ابعاد) و قیمت مشخص</span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="field-stock_status" class="admin-label">موجودی</label>
+                        <select id="field-stock_status" name="stock_status" class="admin-input">
+                            <option value="">— نامشخص —</option>
+                            <option value="in_stock" @selected(old('stock_status', $product->stock_status) === 'in_stock')>موجود</option>
+                            <option value="out_of_stock" @selected(old('stock_status', $product->stock_status) === 'out_of_stock')>ناموجود</option>
+                            <option value="made_to_order" @selected(old('stock_status', $product->stock_status) === 'made_to_order')>تولید سفارشی</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="field-sort_order" class="admin-label">ترتیب نمایش</label>
+                        <input id="field-sort_order" type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order ?? 0) }}" class="admin-input" dir="ltr">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-header"><h2 class="admin-card-title">تصاویر محصول (گالری)</h2></div>
+            <div class="p-5">
+                <x-admin.media-picker name="image_ids[]" multiple :items="$galleryItems" empty-text="هنوز تصویری برای محصول انتخاب نشده است." />
+                <p class="admin-hint">پیشنهاد: مربعی، حداقل ۸۰۰×۸۰۰ پیکسل، پس‌زمینه‌ی روشن.</p>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-header"><h2 class="admin-card-title">دسته‌بندی</h2></div>
+            <div class="admin-card-body">
+                <div>
+                    <label for="field-primary_category_id" class="admin-label">دسته اصلی</label>
+                    <select id="field-primary_category_id" name="primary_category_id" class="admin-input">
+                        <option value="">— انتخاب کنید —</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" @selected((int) old('primary_category_id', $product->primary_category_id) === $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div x-data="{ filter: '' }">
+                    <p class="admin-label">دسته‌های دیگر</p>
+                    @if ($categories->count() > 8)
+                        <input type="search" x-model="filter" placeholder="جستجوی دسته…" class="admin-input admin-input-sm mb-2">
+                    @endif
+                    <div class="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-neutral-200 p-2">
+                        @foreach ($categories as $category)
+                            <label class="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-neutral-50"
+                                   x-show="filter === '' || {{ \Illuminate\Support\Js::from($category->name) }}.includes(filter)">
+                                <input type="checkbox" name="category_ids[]" value="{{ $category->id }}" class="admin-check"
+                                       @checked(in_array($category->id, old('category_ids', $selectedCategoryIds)))>
+                                {{ $category->name }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="admin-card p-5">
+        <h2 class="admin-card-title mb-1">کاربردها</h2>
         <p class="mb-4 text-xs text-neutral-500">
             کاربردهای این محصول را انتخاب کنید. برای افزودن یا ویرایش کاربردها و آیکون‌هایشان به
             <a href="{{ route('admin.applications.index') }}" class="underline" target="_blank">صفحه‌ی کاربردها</a> بروید.
@@ -387,40 +415,11 @@
             </div>
         @endif
     </div>
-
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 class="mb-3 text-sm font-medium">گالری تصاویر</h2>
-        @if ($media->isEmpty())
-            <p class="text-sm text-neutral-500">
-                هنوز هیچ فایلی در <a href="{{ route('admin.media.index') }}" class="underline">کتابخانه مدیا</a> آپلود نشده است.
-            </p>
-        @else
-            <div class="grid grid-cols-4 gap-3 sm:grid-cols-6">
-                @foreach ($media as $item)
-                    <label class="cursor-pointer">
-                        <input type="checkbox" name="image_ids[]" value="{{ $item->id }}"
-                               class="peer sr-only"
-                               @checked(in_array($item->id, old('image_ids', $selectedImageIds)))>
-                        <img src="{{ $item->url() }}" alt="{{ $item->alt_text }}"
-                             class="aspect-square w-full rounded border-2 border-transparent object-cover peer-checked:border-neutral-900">
-                    </label>
-                @endforeach
-            </div>
-        @endif
+    </div>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
-        <p class="mb-2 text-sm font-medium text-neutral-500">SEO (اختیاری)</p>
-        <div class="space-y-3">
-            <input name="meta_title" value="{{ old('meta_title', $product->meta_title) }}" placeholder="عنوان متا"
-                   class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
-            <textarea name="meta_description" rows="2" placeholder="توضیحات متا"
-                      class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('meta_description', $product->meta_description) }}</textarea>
-        </div>
-    </div>
-
-    <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
-        ذخیره
-    </button>
+    <x-admin.save-bar :cancel="route('admin.products.index')"
+                      :view="$product->exists && $product->is_active ? route('products.show', $product) : null"
+                      :label="$product->exists ? 'ذخیره تغییرات' : 'ایجاد محصول'" />
 </form>
 @endsection

@@ -11,7 +11,7 @@
             فقط وقتی اجرا می‌شوند که آدرس در سایت جدید وجود نداشته باشد.
         </p>
     </div>
-    <a href="{{ route('admin.redirects.create') }}" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">+ ریدایرکت جدید</a>
+    <a href="{{ route('admin.redirects.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">+ ریدایرکت جدید</a>
 </div>
 
 <div class="mb-4 flex flex-wrap gap-2 text-xs">
@@ -29,7 +29,7 @@
     @if ($source)<input type="hidden" name="source" value="{{ $source }}">@endif
     <label for="q" class="sr-only">جستجو</label>
     <input id="q" name="q" value="{{ $search }}" placeholder="جستجو در آدرس قدیمی یا جدید"
-           class="w-full max-w-sm rounded border border-neutral-300 px-3 py-2 text-sm">
+           class="w-full max-w-sm admin-input">
     <button type="submit" class="rounded border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50">جستجو</button>
 </form>
 
@@ -66,6 +66,6 @@
             </tbody>
         </table>
     </div>
-    <div class="mt-6">{{ $redirects->links() }}</div>
+    <x-admin.pagination :paginator="$redirects" />
 @endif
 @endsection

@@ -7,18 +7,24 @@ use App\Http\Requests\Admin\StoreProductCategoryRequest;
 use App\Models\ProductCategory;
 use App\Support\PersianSlug;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProductCategoryController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->query('q', ''));
+
         $categories = ProductCategory::query()
             ->withCount('primaryProducts')
             ->with('parent')
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->paginate(20);
+            ->orderBy('id')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.categories.index', ['categories' => $categories]);
     }

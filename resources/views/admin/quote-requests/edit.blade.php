@@ -3,10 +3,10 @@
 @section('title', 'درخواست استعلام قیمت')
 
 @section('content')
-<h1 class="mb-6 text-lg font-semibold">درخواست استعلام قیمت</h1>
+<h1 class="mb-6 text-xl font-bold text-neutral-900">درخواست استعلام قیمت</h1>
 
 <div class="grid gap-6 lg:grid-cols-2">
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">اطلاعات درخواست</h2>
         <dl class="space-y-3 text-sm">
             <div><dt class="text-neutral-500">نام</dt><dd class="font-medium">{{ $quoteRequest->name }}</dd></div>
@@ -43,7 +43,7 @@
         </dl>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <div class="mb-6 rounded border border-neutral-200 bg-neutral-50 p-4">
             @if ($quoteRequest->order)
                 <p class="text-sm">
@@ -53,7 +53,7 @@
             @else
                 <p class="mb-3 text-sm text-neutral-600">مشتری قیمت را پذیرفت؟ سفارش را با اطلاعات و ابعاد همین درخواست ثبت کنید.</p>
                 <a href="{{ route('admin.orders.create', ['quote_request' => $quoteRequest->id]) }}"
-                   class="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+                   class="inline-block inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
                     ثبت سفارش از این درخواست
                 </a>
             @endif
@@ -69,8 +69,8 @@
             @method('PUT')
 
             <div>
-                <label class="mb-1 block text-sm font-medium">وضعیت</label>
-                <select name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label class="admin-label">وضعیت</label>
+                <select name="status" class="admin-input">
                     <option value="new" @selected($quoteRequest->status === 'new')>جدید</option>
                     <option value="contacted" @selected($quoteRequest->status === 'contacted')>تماس گرفته شد</option>
                     <option value="quoted" @selected($quoteRequest->status === 'quoted')>قیمت ارسال شد</option>
@@ -79,17 +79,17 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">یادداشت داخلی</label>
-                <textarea name="admin_notes" rows="5" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('admin_notes', $quoteRequest->admin_notes) }}</textarea>
+                <label class="admin-label">یادداشت داخلی</label>
+                <textarea name="admin_notes" rows="5" class="admin-input">{{ old('admin_notes', $quoteRequest->admin_notes) }}</textarea>
             </div>
 
-            <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
                 ذخیره
             </button>
         </form>
 
         <form method="POST" action="{{ route('admin.quote-requests.destroy', $quoteRequest) }}" class="mt-4"
-              onsubmit="return confirm('این درخواست حذف شود؟');">
+              data-confirm="این درخواست حذف شود؟">
             @csrf @method('DELETE')
             <button type="submit" class="text-sm text-red-600 hover:text-red-800">حذف درخواست</button>
         </form>

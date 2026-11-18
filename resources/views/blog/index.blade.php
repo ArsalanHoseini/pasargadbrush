@@ -3,6 +3,31 @@
 @section('title', isset($tag) ? 'مقالات با برچسب «'.$tag->name.'»' : 'مقالات')
 @section('meta_description', 'مقالات و راهنمای فنی برس و فرچه صنعتی')
 
+@php
+    $listingUrl = isset($tag) ? route('blog.tag', $tag) : route('blog.index');
+    $listingName = isset($tag) ? 'مقالات با برچسب «'.$tag->name.'»' : 'مقالات';
+    $listingCrumbs = [['صفحه اصلی', route('home')], ['مقالات', route('blog.index')]];
+
+    if (isset($tag)) {
+        $listingCrumbs[] = [$listingName, $listingUrl];
+    }
+
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('CollectionPage', $listingUrl, $listingName, 'مقالات و راهنمای فنی برس و فرچه صنعتی', hasBreadcrumb: true, extra: [
+            'mainEntity' => [
+                '@type' => 'ItemList',
+                'itemListElement' => collect([$featured ?? null, ...$posts->items()])->filter()->values()->map(fn ($listedPost, $index) => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => route('blog.show', $listedPost->slug),
+                    'name' => $listedPost->title,
+                ])->all(),
+            ],
+        ]),
+        \App\Services\Seo\StructuredData::breadcrumbs($listingUrl, $listingCrumbs),
+    );
+@endphp
+
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
     <div class="mb-8 flex items-center justify-between">
@@ -21,7 +46,7 @@
            class="mb-8 flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-4 transition hover:shadow-md sm:flex-row">
             <div class="aspect-video w-full overflow-hidden rounded bg-neutral-100 sm:w-72 sm:shrink-0">
                 @if ($featured->featuredImage->isNotEmpty())
-                    <img src="{{ $featured->featuredImage->first()->url() }}" alt="{{ $featured->title }}"
+                    <img src="{{ $featured->featuredImage->first()->thumbnailUrl(480) }}" alt="" width="480" height="270"
                          class="h-full w-full object-cover" loading="lazy">
                 @endif
             </div>
@@ -41,7 +66,7 @@
                 <a href="{{ route('blog.show', $post) }}" class="group rounded-lg border border-neutral-200 bg-white p-4 transition hover:shadow-md">
                     <div class="mb-3 aspect-video overflow-hidden rounded bg-neutral-100">
                         @if ($post->featuredImage->isNotEmpty())
-                            <img src="{{ $post->featuredImage->first()->url() }}" alt="{{ $post->title }}"
+                            <img src="{{ $post->featuredImage->first()->thumbnailUrl(480) }}" alt="" width="480" height="270"
                                  class="h-full w-full object-cover" loading="lazy">
                         @endif
                     </div>

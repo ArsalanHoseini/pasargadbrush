@@ -3,36 +3,30 @@
 @section('title', 'سفارش '.$order->order_number)
 
 @section('content')
-<h1 class="mb-1 text-lg font-semibold" dir="ltr">{{ $order->order_number }}</h1>
-<p class="mb-6 text-xs text-neutral-500">
-    @if ($order->source === \App\Models\Order::SOURCE_MANUAL)
-        ثبت دستی{{ $order->createdBy ? ' توسط '.$order->createdBy->name : '' }}
-    @else
-        ثبت‌شده توسط مشتری در سایت
-    @endif
-    — {{ persian_date($order->placed_at) }}
-</p>
+@php
+    $statusLabel = \App\Models\Order::STATUS_LABELS[$order->status] ?? $order->status;
+    $origin = $order->source === \App\Models\Order::SOURCE_MANUAL
+        ? 'ثبت دستی'.($order->createdBy ? ' توسط '.$order->createdBy->name : '')
+        : 'ثبت‌شده توسط مشتری در سایت';
+@endphp
+<x-admin.page-header :title="'سفارش '.$order->order_number" :description="$statusLabel.' — '.$origin.' — '.persian_date($order->placed_at)">
+    <x-slot:actions>
+        @if ($order->customer)
+            <x-admin.button variant="secondary" icon="chat-bubble"
+                :href="$order->conversation ? route('admin.conversations.show', $order->conversation) : route('admin.conversations.create', ['order' => $order->id])">
+                {{ $order->conversation ? 'گفتگو با مشتری' : 'پیام به مشتری' }}
+            </x-admin.button>
+        @endif
+        <x-admin.button variant="secondary" icon="printer" :href="route('admin.orders.print', [$order, 'invoice'])" target="_blank">فاکتور</x-admin.button>
+        <x-admin.button variant="secondary" icon="truck" :href="route('admin.orders.print', [$order, 'label'])" target="_blank">برچسب ارسال</x-admin.button>
+    </x-slot:actions>
+</x-admin.page-header>
 
-@if ($order->customer)
-    <p class="-mt-4 mb-6">
-        <a href="{{ $order->conversation ? route('admin.conversations.show', $order->conversation) : route('admin.conversations.create', ['order' => $order->id]) }}"
-           class="text-sm text-blue-700 hover:underline">
-            {{ $order->conversation ? 'مشاهده گفتگو با مشتری درباره‌ی این سفارش' : 'ارسال پیام به مشتری درباره‌ی این سفارش' }}
-        </a>
-    </p>
-@endif
-
-@if ($errors->any())
-    <div class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        @foreach ($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
+<x-admin.form-errors />
 
 <div class="grid gap-6 lg:grid-cols-2">
     <div class="space-y-6">
-        <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="admin-card p-6">
             <h2 class="mb-4 text-sm font-medium text-neutral-500">مشتری</h2>
             <dl class="space-y-2 text-sm">
                 <div><dt class="text-neutral-500">نام</dt><dd class="font-medium">{{ $order->customer_name ?? $order->customer?->name }}</dd></div>
@@ -52,7 +46,7 @@
         </div>
 
         @if ($order->shippingAddress)
-            <div class="rounded-lg border border-neutral-200 bg-white p-6">
+            <div class="admin-card p-6">
                 <h2 class="mb-4 text-sm font-medium text-neutral-500">آدرس ارسال</h2>
                 <p class="text-sm">{{ $order->shippingAddress->province }}، {{ $order->shippingAddress->city }}</p>
                 <p class="text-sm text-neutral-600">{{ $order->shippingAddress->address_line }}</p>
@@ -62,7 +56,7 @@
             </div>
         @endif
 
-        <div class="rounded-lg border border-neutral-200 bg-white p-6">
+        <div class="admin-card p-6">
             <h2 class="mb-4 text-sm font-medium text-neutral-500">اقلام سفارش</h2>
             <ul class="divide-y divide-neutral-100 text-sm">
                 @foreach ($order->items as $item)
@@ -95,7 +89,7 @@
         </div>
     </div>
 
-    <div class="rounded-lg border border-neutral-200 bg-white p-6">
+    <div class="admin-card p-6">
         <h2 class="mb-4 text-sm font-medium text-neutral-500">مدیریت سفارش</h2>
         <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="space-y-4">
             @csrf
@@ -122,8 +116,8 @@
             @endif
 
             <div>
-                <label class="mb-1 block text-sm font-medium">وضعیت سفارش</label>
-                <select name="status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label class="admin-label">وضعیت سفارش</label>
+                <select name="status" class="admin-input">
                     @foreach (\App\Models\Order::STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                     @endforeach
@@ -132,26 +126,26 @@
 
             @if ($shipping->method !== \App\Services\Checkout\ShippingMethod::CashOnDelivery)
                 <div>
-                    <label class="mb-1 block text-sm font-medium">هزینه ارسال (تومان)</label>
+                    <label class="admin-label">هزینه ارسال (تومان)</label>
                     <input name="shipping_cost_toman" type="number" min="0" dir="ltr"
                            value="{{ old('shipping_cost_toman', $order->shipping_cost_rial > 0 ? intdiv($order->shipping_cost_rial, 10) : '') }}"
-                           class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                           class="admin-input">
                     <p class="mt-1 text-xs text-neutral-500">جمع کل سفارش بر اساس این مبلغ دوباره محاسبه می‌شود.</p>
                 </div>
             @endif
 
             <div>
-                <label class="mb-1 block text-sm font-medium">کد رهگیری مرسوله</label>
+                <label class="admin-label">کد رهگیری مرسوله</label>
                 <input name="shipment_tracking_code" value="{{ old('shipment_tracking_code', $order->shipment_tracking_code) }}" dir="ltr"
-                       class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                       class="admin-input">
                 <p class="mt-1 text-xs text-neutral-500">
                     کد رهگیری پست یا باربری — در صفحه‌ی پیگیری سفارش به مشتری نمایش داده می‌شود.
                 </p>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">وضعیت پرداخت</label>
-                <select name="payment_status" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
+                <label class="admin-label">وضعیت پرداخت</label>
+                <select name="payment_status" class="admin-input">
                     @foreach (\App\Models\Order::PAYMENT_STATUS_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($order->payment_status === $value)>{{ $label }}</option>
                     @endforeach
@@ -162,8 +156,8 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">یادداشت داخلی</label>
-                <textarea name="notes" rows="4" class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('notes', $order->notes) }}</textarea>
+                <label class="admin-label">توضیحات سفارش</label>
+                <textarea name="notes" rows="4" class="admin-input">{{ old('notes', $order->notes) }}</textarea>
             </div>
 
             <label class="flex items-start gap-2 rounded border border-neutral-200 bg-neutral-50 p-3 text-sm">
@@ -178,10 +172,47 @@
                 </span>
             </label>
 
-            <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-sm text-white hover:bg-neutral-700">
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-accent-dark px-5 py-2 text-sm font-medium text-white hover:bg-brand-accent-darker">
                 ذخیره
             </button>
         </form>
     </div>
 </div>
+
+<section id="timeline" class="mt-6 rounded-xl border border-neutral-200 bg-white p-6">
+    <h2 class="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-500"><x-admin.icon name="clock" class="size-4" /> تاریخچه و یادداشت‌های داخلی</h2>
+
+    <form method="POST" action="{{ route('admin.orders.notes.store', $order) }}" class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start">
+        @csrf
+        <textarea name="body" rows="2" required maxlength="2000" placeholder="یادداشتی برای همکاران بنویسید (به مشتری نمایش داده نمی‌شود)…" aria-label="یادداشت داخلی"
+                  class="w-full flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20">{{ old('body') }}</textarea>
+        <x-admin.button icon="plus">ثبت یادداشت</x-admin.button>
+    </form>
+
+    <ol class="relative space-y-5 border-r border-neutral-200 pr-5">
+        @foreach ($timeline as $entry)
+            <li class="relative">
+                <span @class([
+                    'absolute -right-[1.65rem] top-1 size-3 rounded-full ring-4 ring-white',
+                    'bg-amber-400' => $entry['type'] === 'note',
+                    'bg-brand-accent' => $entry['type'] === 'change',
+                    'bg-green-500' => $entry['type'] === 'created',
+                ])></span>
+                <p class="text-sm font-medium">
+                    {{ $entry['title'] }}
+                    <span class="font-normal text-neutral-500">— {{ $entry['user'] ?? 'سیستم' }}، {{ persian_date($entry['at'], \App\Support\PersianDate::COMPACT) }}</span>
+                </p>
+                @if ($entry['type'] === 'note')
+                    <p class="mt-1 whitespace-pre-line rounded-lg bg-amber-50 p-3 text-sm text-neutral-800">{{ $entry['details'][0] }}</p>
+                @elseif ($entry['details'] !== [])
+                    <ul class="mt-1 space-y-0.5 text-sm text-neutral-600">
+                        @foreach ($entry['details'] as $detail)
+                            <li>{{ $detail }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</section>
 @endsection

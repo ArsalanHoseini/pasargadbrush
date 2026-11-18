@@ -29,6 +29,7 @@ class ConversationController extends Controller
             'conversations' => $this->customer($request)->conversations()
                 ->with('order', 'quoteRequest.product')
                 ->latest('last_message_at')
+                ->latest('id')
                 ->paginate(15),
         ]);
     }

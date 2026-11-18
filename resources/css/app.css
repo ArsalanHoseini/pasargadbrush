@@ -3,26 +3,13 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Two files instead of four (PageSpeed): Regular also serves «medium» (500)
+   and Bold also serves «semibold» (600), without synthetic bolding. Both are
+   preloaded in layouts/public.blade.php. */
 @font-face {
     font-family: 'Vazirmatn';
     src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Vazirmatn';
-    src: url('../fonts/Vazirmatn-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Vazirmatn';
-    src: url('../fonts/Vazirmatn-SemiBold.woff2') format('woff2');
-    font-weight: 600;
+    font-weight: 100 500;
     font-style: normal;
     font-display: swap;
 }
@@ -30,7 +17,7 @@
 @font-face {
     font-family: 'Vazirmatn';
     src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2');
-    font-weight: 700;
+    font-weight: 600 900;
     font-style: normal;
     font-display: swap;
 }
@@ -46,7 +33,10 @@
     --color-brand-charcoal-deep: #121212;
     --color-brand-steel: #2a2f36;
     --color-brand-accent: #ff7700;
-    --color-brand-accent-dark: #d85f00;
+    --color-brand-accent-dark: #b85300;
+    --color-brand-accent-darker: #9a4500;
+    /* Gold accent of the previous WordPress footer, kept for the rebuilt footer. */
+    --color-brand-gold: #ffc032;
 }
 
 /* Faint industrial dot-grid texture, used on dark hero sections for depth
@@ -55,6 +45,113 @@
     background-image: radial-gradient(circle, color-mix(in srgb, white 14%, transparent) 1px, transparent 1px);
     background-size: 28px 28px;
 }
+
+/* Homepage hero: warm light suggests the workshop without replacing real
+   product photography with a decorative stock image. */
+.hero-industrial {
+    background:
+        radial-gradient(circle at 78% 18%, rgb(255 119 0 / 14%), transparent 31rem),
+        radial-gradient(circle at 15% 85%, rgb(255 192 50 / 7%), transparent 25rem),
+        linear-gradient(145deg, #181818 0%, #0d0d0d 58%, #15120f 100%);
+}
+
+/* ---------- Admin panel form primitives ---------- */
+@layer components {
+    .admin-card {
+        @apply rounded-xl border border-neutral-200 bg-white;
+    }
+
+    .admin-card-header {
+        @apply flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-5 py-3.5;
+    }
+
+    .admin-card-title {
+        @apply text-sm font-semibold text-neutral-900;
+    }
+
+    .admin-card-body {
+        @apply space-y-4 p-5;
+    }
+
+    .admin-label {
+        @apply mb-1.5 block text-sm font-medium text-neutral-800;
+    }
+
+    .admin-input {
+        @apply block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-xs transition placeholder:text-neutral-400 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20 disabled:bg-neutral-50;
+    }
+
+    .admin-input-sm {
+        @apply px-2.5 py-1.5;
+    }
+
+    .admin-hint {
+        @apply mt-1.5 text-xs leading-5 text-neutral-500;
+    }
+
+    .admin-check {
+        @apply size-4 rounded border-neutral-300 accent-brand-accent-dark;
+    }
+
+    .admin-chip-button {
+        @apply inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-50;
+    }
+}
+
+/* Quill (admin editor): RTL toolbar, Persian heading labels, sticky toolbar. */
+.admin-editor .ql-toolbar.ql-snow {
+    position: sticky;
+    top: 4rem;
+    z-index: 10;
+    border-color: var(--color-neutral-300);
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: var(--color-neutral-50);
+    direction: ltr;
+    text-align: right;
+}
+
+.admin-editor .ql-container.ql-snow {
+    border-color: var(--color-neutral-300);
+    border-radius: 0 0 0.5rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.9375rem;
+}
+
+.admin-editor .ql-editor {
+    min-height: 320px;
+    line-height: 2;
+    text-align: right;
+}
+
+.admin-editor .ql-editor.ql-blank::before {
+    right: 15px;
+    left: 15px;
+    font-style: normal;
+    color: var(--color-neutral-400);
+}
+
+.admin-editor .ql-editor :where(h1) { font-size: 1.75rem; font-weight: 700; margin-block: 0.75em 0.4em; }
+.admin-editor .ql-editor :where(h2) { font-size: 1.4rem; font-weight: 700; margin-block: 0.75em 0.4em; }
+.admin-editor .ql-editor :where(h3) { font-size: 1.2rem; font-weight: 600; margin-block: 0.6em 0.3em; }
+.admin-editor .ql-editor :where(h4) { font-size: 1.05rem; font-weight: 600; margin-block: 0.5em 0.3em; }
+.admin-editor .ql-editor :where(img) { max-width: 100%; border-radius: 0.5rem; }
+.admin-editor .ql-editor :where(blockquote) { border-right: 4px solid var(--color-neutral-300); border-left: 0; padding-right: 1rem; padding-left: 0; }
+.admin-editor .ql-editor :where(ol, ul) { padding-right: 1.5em; padding-left: 0; }
+.admin-editor .ql-editor li[data-list] { padding-right: 1.5em; padding-left: 0; }
+.admin-editor .ql-editor li[data-list] > .ql-ui:before { margin-right: -1.5em; margin-left: 0.3em; text-align: left; }
+
+.admin-editor .ql-snow .ql-picker.ql-header { width: 128px; }
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-label::before,
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: 'پاراگراف'; font-family: 'Vazirmatn', sans-serif; }
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='1']::before,
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='1']::before { content: 'تیتر ۱ — H1'; }
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='2']::before,
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='2']::before { content: 'تیتر ۲ — H2'; }
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='3']::before,
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='3']::before { content: 'تیتر ۳ — H3'; }
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-label[data-value='4']::before,
+.admin-editor .ql-snow .ql-picker.ql-header .ql-picker-item[data-value='4']::before { content: 'تیتر ۴ — H4'; }
+.admin-editor .ql-snow .ql-picker-options { direction: rtl; text-align: right; }
 
 [data-animate] {
     will-change: transform, opacity;
@@ -88,6 +185,22 @@
 .article-content :where(img) {
     border-radius: 0.5rem;
     margin-block: 1em;
+}
+
+/* WordPress «[caption]» images, stored as <figure> (wp:repair-post-bodies). */
+.article-content :where(figure) {
+    margin-block: 1.5em;
+    text-align: center;
+}
+
+.article-content :where(figure img) {
+    margin-inline: auto;
+    margin-bottom: 0.5em;
+}
+
+.article-content :where(figcaption) {
+    font-size: 0.75rem;
+    color: var(--color-neutral-500);
 }
 
 html {

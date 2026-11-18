@@ -1,39 +1,85 @@
 @extends('layouts.public')
 
-@section('title', $post->meta_title ?? $post->title)
-@section('meta_description', $post->meta_description ?? \Illuminate\Support\Str::limit(strip_tags($post->body), 150))
-@section('canonical', url()->current())
+@php
+    $postUrl = route('blog.show', $post->slug);
+    $postDescription = \App\Services\Seo\PostMarkdown::description($post);
+    $coverImage = $post->featuredImage->first();
+    // The image's own alt when it says something, else the article title.
+    $coverAlt = \App\Services\Seo\HtmlToMarkdown::isMeaningfulAlt($coverImage?->alt_text) ? $coverImage->alt_text : $post->title;
+    $breadcrumbs = array_values(array_filter([
+        ['صفحه اصلی', route('home')],
+        ['مقالات', route('blog.index')],
+        $post->category ? [$post->category->name, null] : null,
+        [$post->title, $postUrl],
+    ]));
 
-@push('structured-data')
-<script type="application/ld+json">
-{
-    "@@context": "https://schema.org",
-    "@@type": "BlogPosting",
-    "headline": {!! json_encode($post->title, JSON_UNESCAPED_UNICODE) !!},
-    "datePublished": {!! json_encode($post->published_at?->toIso8601String()) !!}
-    @if ($post->featuredImage->isNotEmpty())
-    ,"image": {!! json_encode($post->featuredImage->first()->url()) !!}
+    app(\App\Services\Seo\SchemaGraph::class)->add(
+        \App\Services\Seo\StructuredData::webPage('WebPage', $postUrl, $post->meta_title ?: $post->title, $postDescription, hasBreadcrumb: true, extra: array_filter([
+            'primaryImageOfPage' => $coverImage ? ['@type' => 'ImageObject', 'url' => $coverImage->url()] : null,
+            'datePublished' => $post->published_at?->toIso8601String(),
+            'dateModified' => ($post->updated_at ?? $post->published_at)?->toIso8601String(),
+        ])),
+        \App\Services\Seo\StructuredData::breadcrumbs($postUrl, array_values(array_filter($breadcrumbs, fn ($crumb) => $crumb[1] !== null))),
+        \App\Services\Seo\StructuredData::blogPosting($post),
+    );
+@endphp
+
+@section('title', $post->meta_title ?: $post->title)
+@section('meta_description', $postDescription)
+@section('canonical', $postUrl)
+@section('og_type', 'article')
+@if ($coverImage)
+    @section('og_image', $coverImage->url())
+@endif
+
+@push('meta')
+    <link rel="alternate" type="text/markdown" href="{{ route('blog.markdown', $post->slug) }}" title="{{ $post->title }} (Markdown)">
+    @if ($post->published_at)
+        <meta property="article:published_time" content="{{ $post->published_at->toIso8601String() }}">
     @endif
-}
-</script>
+    <meta property="article:modified_time" content="{{ ($post->updated_at ?? $post->published_at)?->toIso8601String() }}">
+    <meta property="article:author" content="{{ \App\Services\Seo\PostMarkdown::authorName($post) }}">
+    @if ($post->category)
+        <meta property="article:section" content="{{ $post->category->name }}">
+    @endif
+    @foreach ($post->tags as $tag)
+        <meta property="article:tag" content="{{ $tag->name }}">
+    @endforeach
 @endpush
 
 @section('content')
 <article class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
     <nav class="mb-6 text-xs text-neutral-500" aria-label="مسیر صفحه">
-        <a href="{{ route('home') }}" class="hover:text-neutral-800">صفحه اصلی</a>
-        <span class="mx-1">/</span>
-        <a href="{{ route('blog.index') }}" class="hover:text-neutral-800">مقالات</a>
+        <ol class="flex flex-wrap items-center gap-y-1">
+            @foreach ($breadcrumbs as [$crumbName, $crumbUrl])
+                <li class="flex items-center">
+                    @if ($loop->last)
+                        <span class="text-neutral-700" aria-current="page">{{ $crumbName }}</span>
+                    @else
+                        @if ($crumbUrl)
+                            <a href="{{ $crumbUrl }}" class="hover:text-neutral-800">{{ $crumbName }}</a>
+                        @else
+                            <span>{{ $crumbName }}</span>
+                        @endif
+                        <span class="mx-1" aria-hidden="true">/</span>
+                    @endif
+                </li>
+            @endforeach
+        </ol>
     </nav>
 
     <h1 class="mb-3 text-2xl font-bold text-neutral-900">{{ $post->title }}</h1>
     <p class="mb-8 text-xs text-neutral-500">
-        <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ persian_date($post->published_at, \App\Support\PersianDate::DATE) }}</time> · {{ $post->reading_time }} دقیقه مطالعه · {{ $post->view_count }} بازدید
+        <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ persian_date($post->published_at, \App\Support\PersianDate::DATE) }}</time>
+        @if ($post->category)
+            · {{ $post->category->name }}
+        @endif
+        · {{ \App\Support\PersianDigits::toPersian((string) $post->reading_time) }} دقیقه مطالعه · {{ \App\Support\PersianDigits::toPersian((string) $post->view_count) }} بازدید
     </p>
 
-    @if ($post->featuredImage->isNotEmpty())
+    @if ($coverImage)
         <div class="mb-8 aspect-video overflow-hidden rounded-lg bg-neutral-100">
-            <img src="{{ $post->featuredImage->first()->url() }}" alt="{{ $post->title }}" class="h-full w-full object-cover">
+            <img src="{{ $coverImage->thumbnailUrl(960) }}" alt="{{ $coverAlt }}" width="960" height="540" class="h-full w-full object-cover" fetchpriority="high">
         </div>
     @endif
 
@@ -109,7 +155,7 @@
                 <textarea name="body" rows="4" placeholder="دیدگاه شما *" required
                           class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">{{ old('body') }}</textarea>
 
-                <button type="submit" class="rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+                <button type="submit" class="rounded-full bg-brand-accent-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-darker">
                     ارسال دیدگاه
                 </button>
             </form>

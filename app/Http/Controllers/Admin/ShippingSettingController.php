@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Setting;
 use App\Services\Checkout\ShippingCalculator;
 use App\Services\Checkout\ShippingMethod;
@@ -43,6 +44,8 @@ class ShippingSettingController extends Controller
         $this->store(ShippingCalculator::METHOD_SETTING, $data['shipping_method']);
         $this->store(ShippingCalculator::FLAT_RATE_SETTING, $this->toRial($data['flat_rate_toman'] ?? null));
         $this->store(ShippingCalculator::FREE_THRESHOLD_SETTING, $this->toRial($data['free_threshold_toman'] ?? null));
+
+        AuditLog::record('shipping.updated');
 
         return redirect()->route('admin.shipping.edit')->with('status', 'تنظیمات ارسال ذخیره شد.');
     }

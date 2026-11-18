@@ -36,7 +36,7 @@
                    class="w-full rounded border border-neutral-300 px-3 py-2 text-sm">
         </div>
 
-        <button type="submit" class="w-full rounded-full bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-dark">
+        <button type="submit" class="w-full rounded-full bg-brand-accent-dark px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent-darker">
             مشاهده وضعیت سفارش
         </button>
     </form>

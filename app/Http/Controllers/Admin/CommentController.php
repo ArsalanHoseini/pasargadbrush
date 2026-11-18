@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Comment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CommentController extends Controller
@@ -18,6 +20,7 @@ class CommentController extends Controller
             ->with('post')
             ->when($status !== 'all', fn ($query) => $query->where('status', $status))
             ->latest()
+            ->latest('id')
             ->paginate(20)
             ->withQueryString();
 
@@ -46,5 +49,32 @@ class CommentController extends Controller
         $comment->delete();
 
         return back()->with('status', 'دیدگاه حذف شد.');
+    }
+
+    /**
+     * Approve, mark as spam or delete several comments at once.
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['approve', 'spam', 'delete'])],
+        ], ['ids.required' => 'هیچ موردی انتخاب نشده است.']);
+
+        $selected = Comment::query()->whereKey($data['ids']);
+        AuditLog::record('comment.bulk', null, ['action' => $data['action'], 'ids' => array_map('intval', $data['ids'])]);
+
+        $count = match ($data['action']) {
+            'approve' => $selected->update(['status' => 'approved']),
+            'spam' => $selected->update(['status' => 'spam']),
+            'delete' => $selected->delete(),
+        };
+
+        return back()->with('status', $count.' دیدگاه '.match ($data['action']) {
+            'approve' => 'تأیید شد.',
+            'spam' => 'به عنوان اسپم علامت‌گذاری شد.',
+            'delete' => 'حذف شد.',
+        });
     }
 }
